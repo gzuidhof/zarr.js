@@ -12,7 +12,7 @@
   "author": "Guido Zuidhof <me@guido.io>",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "github.com/gzuidhof/zarr.js"
   },
   "license": "MIT",
   "engines": {
