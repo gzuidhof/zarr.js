@@ -1,15 +1,33 @@
 import { normalizeStoragePath } from "../util";
-import { Store } from "./types";
+import { Store, StoreProxy } from "./types";
 
-function pathToPrefix(path?: string): string {
+/**
+ * A store proxy allows for accessing, setting and deleting the keys in the store using
+ * store.["a"] or even store.a notation.
+ */
+export function createProxyForStore<S, T>(store: S & Store<T>): S & StoreProxy<T> {
+    return new Proxy(store as S & Store<T> & StoreProxy<T>, {
+        set(target, key, value, receiver) {
+            return target.setItem(key as string, value)
+        },
+        get(target, key, receiver) {
+            return target.getItem(key as string);
+        },
+        deleteProperty(target, key) {
+            return target.deleteItem(key as string);
+        },
+    });
+}
+
+export function pathToPrefix(path: string): string {
     // assume path already normalized
-    if (path) {
+    if (path.length > 0) {
         return path + '/';
     }
     return '';
 }
 
-function listDirFromKeys(store: Store, path?: string): string[] {
+function listDirFromKeys(store: Store<any>, path: string): string[] {
     // assume path already normalized
     const prefix = pathToPrefix(path);
     const children = new Set<string>();
@@ -30,7 +48,10 @@ function listDirFromKeys(store: Store, path?: string): string[] {
     `MutableMapping` interface."""
  * @param store 
  */
-function listDir(store: Store, path?: string): string[] {
+export function listDir(store: Store<any>, path?: string): string[] {
+    if (path === undefined) {
+        path = "";
+    }
     path = normalizeStoragePath(path);
     if (store.listDir) {
         return store.listDir(path);
