@@ -1,5 +1,4 @@
-import { Store, StoreProxy } from "../../src/store/types";
-import { createProxyForStore } from "../../src/store";
+import { Store } from "../../src/store/types";
 import { MemoryStore } from "../../src/store/memoryStore";
 
 describe("Test MemoryStore", () => {

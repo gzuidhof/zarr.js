@@ -1,5 +1,5 @@
-import { Store, StoreProxy } from "./types";
-import { createProxyForStore } from ".";
+import { Store } from "./types";
+import { createProxy, MutableMappingProxy } from "../mutableMapping";
 
 export class MemoryStore<T> implements Store<T> {
     listDir?= undefined;
@@ -9,8 +9,8 @@ export class MemoryStore<T> implements Store<T> {
         this.root = root;
     }
 
-    public getProxy(): this & StoreProxy<T> {
-        return createProxyForStore(this);
+    public getProxy(): this & MutableMappingProxy<T> {
+        return createProxy(this);
     }
 
     private getParent(item: string): [any, string] {
