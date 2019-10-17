@@ -17,6 +17,7 @@ describe("Human Readable Size", () => {
 
 describe("NormalizePath", () => {
     test.each([
+        [null, ""],
         ["a", "a"],
         ["a/a", "a/a"],
         ["a//a", "a/a"],
@@ -41,7 +42,6 @@ describe("NormalizePath", () => {
         "a/..",
         "a/./a",
         undefined,
-        null
     ])("doesn't allow relative paths, rejects invalid input: output %s, expected %p", (input) => {
         expect(() => util.normalizeStoragePath(input)).toThrow();
     })

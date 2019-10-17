@@ -1,3 +1,3 @@
-export const METADATA_FILENAME = ".zarray"
-export const GROUP_FILENAME = ".zgroup"
-export const ATTRIBUTES_FILENAME = ".zattributes"
+export const ARRAY_META_KEY = ".zarray";
+export const GROUP_META_KEY = ".zgroup";
+export const ATTRS_META_KEY = ".zattributes";

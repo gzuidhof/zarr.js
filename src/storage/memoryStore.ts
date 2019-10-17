@@ -30,7 +30,7 @@ export class MemoryStore<T> implements Store<T> {
 
     private requireParent(item: string): [any, string] {
         let parent = this.root;
-        const segments = item.split('/')
+        const segments = item.split('/');
 
         // require the parent container
         for (const k of segments.slice(0, segments.length - 1)) {
@@ -41,27 +41,37 @@ export class MemoryStore<T> implements Store<T> {
             parent = parent[k];
         }
 
-        return [parent, segments[segments.length - 1]]
+        return [parent, segments[segments.length - 1]];
     }
 
     getItem(item: string) {
-        const [parent, key] = this.getParent(item)
+        const [parent, key] = this.getParent(item);
         const value = parent[key];
         if (value === undefined) {
             throw new Error(`Item ${item} not in store`);
         }
-        return value
+        return value;
     }
 
     setItem(item: string, value: any): boolean {
-        const [parent, key] = this.requireParent(item)
+        const [parent, key] = this.requireParent(item);
         parent[key] = value;
-        return true
+        return true;
     }
 
     deleteItem(item: string): boolean {
         const [parent, key] = this.getParent(item);
         return delete parent[key];
+    }
+
+    containsItem(item: string): boolean {
+        // TODO: more sane implementation
+        try {
+            return this.getItem(item) !== undefined;
+        }
+        catch {
+            return false;
+        }
     }
 
     keys(): string[] {

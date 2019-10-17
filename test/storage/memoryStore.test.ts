@@ -1,5 +1,5 @@
-import { Store } from "../../src/store/types";
-import { MemoryStore } from "../../src/store/memoryStore";
+import { Store } from "../../src/storage/types";
+import { MemoryStore } from "../../src/storage/memoryStore";
 
 describe("Test MemoryStore", () => {
     const memStore = new MemoryStore<number>().getProxy();

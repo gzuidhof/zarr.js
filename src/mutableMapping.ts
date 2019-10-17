@@ -2,6 +2,8 @@ export interface MutableMapping<T> {
     getItem(item: string): T;
     setItem(item: string, value: T): boolean;
     deleteItem(item: string): boolean;
+    containsItem(item: string): boolean;
+
     getProxy(): this & MutableMappingProxy<T>;
 
     // length(): number;
@@ -26,5 +28,8 @@ export function createProxy<S, T>(mapping: S & MutableMapping<T>): S & MutableMa
         deleteProperty(target, key) {
             return target.deleteItem(key as string);
         },
+        has(target, key) {
+            return target.containsItem(key as string);
+        }
     });
 }

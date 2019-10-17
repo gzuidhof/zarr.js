@@ -8,7 +8,7 @@ const FIXTURES_FOLDER = path.resolve(__dirname, `../fixtures`);
 const { ZarrMetadata } = createCheckers(typesTI);
 
 describe("ZarrMetadata Typings", () => {
-    const metadataPath = path.join(FIXTURES_FOLDER, `empty.zarr/${NAMES.METADATA_FILENAME}`);
+    const metadataPath = path.join(FIXTURES_FOLDER, `empty.zarr/${NAMES.ARRAY_META_KEY}`);
     const simpleMetadata = JSON.parse(readFileSync(metadataPath, { encoding: "utf8" }));
 
     it("Simple ZarrMetadata is valid", () => {

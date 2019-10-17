@@ -17,7 +17,11 @@ export function humanReadableSize(size: number) {
     return `${(size / (2 ** 50)).toFixed(1)}P`;
 }
 
-export function normalizeStoragePath(path: string | String): string {
+export function normalizeStoragePath(path: string | String | null): string {
+    if (path === null) {
+        return "";
+    }
+
     if (path instanceof String) {
         path = path.valueOf();
     }
@@ -36,14 +40,14 @@ export function normalizeStoragePath(path: string | String): string {
 
 
     // collapse any repeated slashes
-    path = path.replace(/\/\/+/g, "/")
+    path = path.replace(/\/\/+/g, "/");
 
     // don't allow path segments with just '.' or '..'
     const segments = path.split('/');
 
     for (const s of segments) {
         if (s === "." || s === "..") {
-            throw Error("path containing '.' or '..' segment not allowed")
+            throw Error("path containing '.' or '..' segment not allowed");
         }
     }
     return path as string;

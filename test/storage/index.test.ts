@@ -1,5 +1,5 @@
-import { Store } from "../../src/store/types";
-import { pathToPrefix } from "../../src/store";
+import { Store } from "../../src/storage/types";
+import { pathToPrefix } from "../../src/storage";
 
 describe("Store core functionality", () => {
     it("creates prefixes", () => {

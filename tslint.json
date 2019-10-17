@@ -1,4 +1,10 @@
 {
+  "rules": {
+    "semicolon": [
+      true,
+      "always"
+    ]
+  },
   "extends": [
     "tslint-config-standard",
     "tslint-config-prettier"
