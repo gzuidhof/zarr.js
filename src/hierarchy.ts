@@ -6,7 +6,6 @@ import { ContainsArrayError } from './errors';
 
 
 class Group<T> implements MutableMapping<T> {
-
     /**
      * A Store providing the underlying storage for the group.
      */
@@ -45,5 +44,21 @@ class Group<T> implements MutableMapping<T> {
         if (containsArray(store, this.path)) {
             throw new ContainsArrayError(this.path);
         }
+    }
+
+    getItem(item: string): T {
+        throw new Error("Method not implemented.");
+    }
+    setItem(item: string, value: T): boolean {
+        throw new Error("Method not implemented.");
+    }
+    deleteItem(item: string): boolean {
+        throw new Error("Method not implemented.");
+    }
+    containsItem(item: string): boolean {
+        throw new Error("Method not implemented.");
+    }
+    proxy(): import("./mutableMapping").MutableMappingProxy<T> {
+        throw new Error("Method not implemented.");
     }
 }

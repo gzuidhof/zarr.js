@@ -31,4 +31,7 @@ export class ObjectStore<T> implements Store<T> {
     proxy(): MutableMappingProxy<T> {
         return createProxy(this);
     }
+    keys(): string[] {
+        throw new Error("Method not implemented.");
+    }
 }
