@@ -9,14 +9,14 @@ import { PermissionError } from './errors';
  * instantiated directly, will be available via the `.attrs` property of an array or
  * group.
  */
-class Attributes<T, M extends ZarrMetadataType> implements MutableMapping<T> {
-    store: Store<T>;
+export class Attributes<M extends ZarrMetadataType> implements MutableMapping<any> {
+    store: Store<string>;
     key: string;
     readOnly: boolean;
     cache: boolean;
     private cachedValue: M | null;
 
-    constructor(store: Store<T>, key: string, readOnly = false, cache = true) {
+    constructor(store: Store<string>, key: string, readOnly = false, cache = true) {
         this.store = store;
         this.key = key;
         this.readOnly = readOnly;
@@ -24,16 +24,6 @@ class Attributes<T, M extends ZarrMetadataType> implements MutableMapping<T> {
         this.cachedValue = null;
     }
 
-    private getNoSync(): M {
-        try {
-            const data = this.store.getItem(this.key);
-            // TODO fix typing
-            return parseMetadata<M>(data as unknown as string);
-        } catch {
-            console.warn("Couldn't get attributes");
-            return {} as M;
-        }
-    }
     /**
      * Retrieve all attributes as a JSON object.
      */
@@ -48,27 +38,70 @@ class Attributes<T, M extends ZarrMetadataType> implements MutableMapping<T> {
         return o;
     }
 
-    public setItem(item: string, value: any): boolean {
+    private getNoSync(): M {
+        try {
+            const data = this.store.getItem(this.key);
+            // TODO fix typing?
+            return parseMetadata<M>(data);
+        } catch {
+            return {} as M;
+        }
+    }
+
+    private setNoSync(key: string, value: any) {
+        const d = this.getNoSync();
+        (d as any)[key] = value;
+        this.putNoSync(d);
+        return true;
+    }
+
+    private putNoSync(m: M) {
+        this.store.setItem(this.key, JSON.stringify(m));
+        if (this.cache) {
+            this.cachedValue = m;
+        }
+    }
+
+    private delNoSync(key: string): boolean {
+        const d = this.getNoSync();
+        delete (d as any)[key];
+        this.putNoSync(d);
+        return true;
+    }
+
+    /**
+     * Overwrite all attributes with the provided object in a single operation
+     */
+    put(d: M) {
         if (this.readOnly) {
             throw new PermissionError("attributes are read-only");
         }
-        throw new Error("Method not implemented.");
+        this.putNoSync(d);
     }
 
-    getItem(item: string): T {
-        return this.asObject()[item];
-    }
-    deleteItem(item: string): boolean {
+    setItem(key: string, value: any): boolean {
         if (this.readOnly) {
             throw new PermissionError("attributes are read-only");
         }
-        throw new Error("Method not implemented.");
-    }
-    containsItem(item: string): boolean {
-        return this.asObject()[item] !== undefined;
+        return this.setNoSync(key, value);
     }
 
-    getProxy(): this & MutableMappingProxy<T> {
+    getItem(key: string): any {
+        return (this.asObject() as any)[key];
+    }
+
+    deleteItem(key: string): boolean {
+        if (this.readOnly) {
+            throw new PermissionError("attributes are read-only");
+        }
+        return this.delNoSync(key);
+    }
+
+    containsItem(key: string): boolean {
+        return (this.asObject() as any)[key] !== undefined;
+    }
+
+    proxy(): MutableMappingProxy<any> {
         return createProxy(this);
     }
 }

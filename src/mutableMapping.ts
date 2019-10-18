@@ -4,7 +4,7 @@ export interface MutableMapping<T> {
     deleteItem(item: string): boolean;
     containsItem(item: string): boolean;
 
-    getProxy(): this & MutableMappingProxy<T>;
+    proxy(): MutableMappingProxy<T>;
 
     // length(): number;
 }
@@ -20,7 +20,7 @@ export interface MutableMappingProxy<T> {
 export function createProxy<S, T>(mapping: S & MutableMapping<T>): S & MutableMappingProxy<T> {
     return new Proxy(mapping as S & MutableMapping<T> & MutableMappingProxy<T>, {
         set(target, key, value, receiver) {
-            return target.setItem(key as string, value)
+            return target.setItem(key as string, value);
         },
         get(target, key, receiver) {
             return target.getItem(key as string);

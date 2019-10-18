@@ -2,7 +2,7 @@ import { Store } from "../../src/storage/types";
 import { MemoryStore } from "../../src/storage/memoryStore";
 
 describe("Test MemoryStore", () => {
-    const memStore = new MemoryStore<number>().getProxy();
+    const memStore = new MemoryStore<number>().proxy();
 
     it("proxy works", () => {
         expect(() => memStore["a"]).toThrow();
@@ -14,4 +14,4 @@ describe("Test MemoryStore", () => {
         expect(() => memStore["a"]).toThrow();
     });
 
-})
+});

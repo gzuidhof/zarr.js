@@ -9,7 +9,7 @@ export class MemoryStore<T> implements Store<T> {
         this.root = root;
     }
 
-    public getProxy(): this & MutableMappingProxy<T> {
+    public proxy(): MutableMappingProxy<T> {
         return createProxy(this);
     }
 

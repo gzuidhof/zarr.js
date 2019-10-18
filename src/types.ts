@@ -1,5 +1,5 @@
 export type ZarrMetadataType = ZarrMetadata | ZarrGroupMetadata | UserAttributes;
-export type UserAttributes = any;
+export type UserAttributes = object;
 
 export interface ZarrMetadata {
 
