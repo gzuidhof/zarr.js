@@ -1,3 +1,6 @@
+export type ZarrMetadataType = ZarrMetadata | ZarrGroupMetadata | UserAttributes;
+export type UserAttributes = any;
+
 export interface ZarrMetadata {
 
     /**
@@ -20,7 +23,7 @@ export interface ZarrMetadata {
      */
     compressor: null | {
         id: string;
-    }
+    };
 
     /**
      * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
@@ -37,7 +40,7 @@ export interface ZarrMetadata {
      */
     filters: null | {
         id: string;
-    }
+    };
 }
 
 export interface ZarrGroupMetadata {

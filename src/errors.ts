@@ -27,3 +27,9 @@ export class PathNotFoundError extends Error {
         super(`nothing not found at path ${path}`);
     }
 }
+
+export class PermissionError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
