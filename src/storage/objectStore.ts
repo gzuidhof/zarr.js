@@ -1,5 +1,6 @@
 import { Store, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
+import { KeyError } from "../errors";
 
 export class ObjectStore<T extends ValidStoreType> implements Store<T> {
     listDir?: undefined;
@@ -17,7 +18,7 @@ export class ObjectStore<T extends ValidStoreType> implements Store<T> {
 
     getItem(item: string): T {
         if (!this.object.hasOwnProperty(item)) {
-            throw new Error(`Item ${item} not in store`);
+            throw new KeyError(item);
         }
         return this.object[item];
     }

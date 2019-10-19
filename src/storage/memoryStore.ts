@@ -1,5 +1,6 @@
 import { Store, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
+import { KeyError } from "../errors";
 
 export class MemoryStore<T extends ValidStoreType> implements Store<T> {
     listDir?: undefined;
@@ -52,7 +53,7 @@ export class MemoryStore<T extends ValidStoreType> implements Store<T> {
         const [parent, key] = this.getParent(item);
         const value = parent[key];
         if (value === undefined) {
-            throw new Error(`Item ${item} not in store`);
+            throw new KeyError(item);
         }
         return value;
     }
