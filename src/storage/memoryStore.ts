@@ -1,7 +1,7 @@
-import { Store } from "./types";
+import { Store, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
 
-export class MemoryStore<T> implements Store<T> {
+export class MemoryStore<T extends ValidStoreType> implements Store<T> {
     listDir?= undefined;
     root: { [key: string]: any };
 

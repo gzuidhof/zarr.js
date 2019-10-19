@@ -1,3 +1,6 @@
+/**
+ * Closely resembles the functions on the MutableMapping type in Python.
+ */
 export interface MutableMapping<T> {
     getItem(item: string): T;
     setItem(item: string, value: T): boolean;

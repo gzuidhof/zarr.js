@@ -1,4 +1,4 @@
-export type ZarrMetadataType = ZarrMetadata | ZarrGroupMetadata | UserAttributes;
+export type ZarrMetadataType = ZarrMetadata | ZarrGroupMetadata;
 export type UserAttributes = object;
 
 export interface ZarrMetadata {
@@ -12,6 +12,11 @@ export interface ZarrMetadata {
      * A list of integers defining the length of each dimension of the array.
      */
     shape: number[];
+
+    /**
+     * A list of integers defining the length of each dimension of a chunk of the array. Note that all chunks within a Zarr array have the same shape.
+     */
+    chunks: number[];
 
     /**
      * A string or list defining a valid data type for the array. See https://zarr.readthedocs.io/en/stable/spec/v2.html#data-type-encoding

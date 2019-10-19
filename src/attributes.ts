@@ -1,7 +1,7 @@
 import { MutableMapping, MutableMappingProxy, createProxy } from './mutableMapping';
-import { Store } from './storage/types';
+import { Store, ValidStoreType } from './storage/types';
 import { parseMetadata } from './metadata';
-import { ZarrMetadataType } from './types';
+import { ZarrMetadataType, UserAttributes } from './types';
 import { PermissionError } from './errors';
 
 /**
@@ -9,14 +9,14 @@ import { PermissionError } from './errors';
  * instantiated directly, will be available via the `.attrs` property of an array or
  * group.
  */
-export class Attributes<M extends ZarrMetadataType> implements MutableMapping<any> {
-    store: Store<string>;
+export class Attributes<M extends UserAttributes> implements MutableMapping<any> {
+    store: Store<ValidStoreType>;
     key: string;
     readOnly: boolean;
     cache: boolean;
     private cachedValue: M | null;
 
-    constructor(store: Store<string>, key: string, readOnly = false, cache = true) {
+    constructor(store: Store<ValidStoreType>, key: string, readOnly: boolean, cache = true) {
         this.store = store;
         this.key = key;
         this.readOnly = readOnly;

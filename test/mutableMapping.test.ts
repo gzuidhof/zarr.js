@@ -1,13 +1,15 @@
 
 import { createProxy } from "../src/mutableMapping";
+import { MutableMapping } from '../dist/types/mutableMapping';
 
 describe("Store Proxy", () => {
-    const mockStore = {
+    const mockStore: MutableMapping<any> = {
         getItem: jest.fn(),
         setItem: jest.fn(),
         deleteItem: jest.fn(),
-        getProxy: jest.fn(),
-    }
+        containsItem: jest.fn(),
+        proxy: jest.fn(),
+    };
 
     const proxyStore = createProxy(mockStore);
 
@@ -27,5 +29,11 @@ describe("Store Proxy", () => {
         (mockStore.deleteItem as jest.Mock).mockReturnValue(true);
         delete proxyStore["a"];
         expect(mockStore.deleteItem).toHaveBeenCalledWith("a");
+    });
+
+    it("catches contains", () => {
+        (mockStore.containsItem as jest.Mock).mockReturnValue(true);
+        "a" in proxyStore;
+        expect(mockStore.containsItem).toHaveBeenCalledWith("a");
     });
 });

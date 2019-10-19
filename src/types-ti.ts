@@ -7,6 +7,7 @@ import * as t from "ts-interface-checker";
 export const ZarrMetadata = t.iface([], {
   "zarr_format": t.union(t.lit(1), t.lit(2)),
   "shape": t.array("number"),
+  "chunks": t.array("number"),
   "dtype": t.union("string", t.array("string")),
   "compressor": t.union("null", t.iface([], {
     "id": "string",

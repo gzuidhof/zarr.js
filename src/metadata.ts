@@ -1,6 +1,7 @@
-import { ZarrMetadataType } from './types';
+import { ZarrMetadataType, UserAttributes } from './types';
+import { ValidStoreType } from './storage/types';
 
-export function parseMetadata<ZarrMetadataType>(s: string | ZarrMetadataType): ZarrMetadataType {
+export function parseMetadata<Z extends ZarrMetadataType | UserAttributes>(s: ValidStoreType | ZarrMetadataType): Z {
 
     // Here we allow that a store may return an already-parsed metadata object,
     // or a string of JSON that we will parse here. We allow for an already-parsed
@@ -9,8 +10,8 @@ export function parseMetadata<ZarrMetadataType>(s: string | ZarrMetadataType): Z
 
     if (typeof s !== 'string') {
         // Assuming it's already parsed
-        return s;
+        return s as Z;
     }
 
-    return JSON.parse(s as string);
+    return JSON.parse(s);
 }

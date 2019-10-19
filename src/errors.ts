@@ -33,3 +33,9 @@ export class PermissionError extends Error {
         super(message);
     }
 }
+
+export class KeyError extends Error {
+    constructor(key: string) {
+        super(`key ${key} not present`);
+    }
+}

@@ -1,12 +1,12 @@
 import { normalizeStoragePath } from "../util";
-import { Store } from "./types";
+import { Store, ValidStoreType } from "./types";
 import { ARRAY_META_KEY, GROUP_META_KEY } from '../names';
 
 
 /**
  * Return true if the store contains an array at the given logical path.
  */
-export function containsArray<T>(store: Store<T>, path: string | null = null) {
+export function containsArray<T>(store: Store<ValidStoreType>, path: string | null = null) {
     path = normalizeStoragePath(path);
     const prefix = pathToPrefix(path);
     const key = prefix + ARRAY_META_KEY;
@@ -16,7 +16,7 @@ export function containsArray<T>(store: Store<T>, path: string | null = null) {
 /**
  * Return true if the store contains a group at the given logical path.
  */
-export function containsGroup<T>(store: Store<T>, path: string | null = null) {
+export function containsGroup<T>(store: Store<ValidStoreType>, path: string | null = null) {
     path = normalizeStoragePath(path);
     const prefix = pathToPrefix(path);
     const key = prefix + GROUP_META_KEY;

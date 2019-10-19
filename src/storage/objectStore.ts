@@ -1,7 +1,7 @@
-import { Store } from "./types";
+import { Store, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
 
-export class ObjectStore<T> implements Store<T> {
+export class ObjectStore<T extends ValidStoreType> implements Store<T> {
     listDir?: undefined;
 
     public object: {
@@ -32,6 +32,6 @@ export class ObjectStore<T> implements Store<T> {
         return createProxy(this);
     }
     keys(): string[] {
-        throw new Error("Method not implemented.");
+        return Object.getOwnPropertyNames(this.object);
     }
 }
