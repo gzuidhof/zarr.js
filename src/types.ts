@@ -12,7 +12,7 @@ export type Order = "C" | "F";
 /**
  * Currently supported dtypes are listed here only.
  */
-export type DtypeString = "<i4" | "<i8" | "<f4";
+export type DtypeString = "<i4" | "<i8" | "<f4" | "<f8";
 /**
  * User interface for chunking.
  * - `null` or `true`: Automatic chunking (zarr will try to guess an appropriate) - not supported yet.

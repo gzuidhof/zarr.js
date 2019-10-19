@@ -9,7 +9,7 @@ import { parseMetadata } from './metadata';
 import { Attributes } from './attributes';
 
 
-class Group implements MutableMapping<Group> {
+export class Group implements MutableMapping<Group> {
     /**
      * A `Store` providing the underlying storage for the group.
      */
@@ -30,7 +30,7 @@ class Group implements MutableMapping<Group> {
             }
             return this.path;
         }
-        return "";
+        return "/";
     }
 
     /**
@@ -60,10 +60,10 @@ class Group implements MutableMapping<Group> {
     }
 
     private keyPrefix: string;
-    private readOnly: boolean;
+    public readOnly: boolean;
     private meta: ZarrGroupMetadata;
 
-    constructor(store: Store<ValidStoreType>, path: string | null, readOnly = false, chunkStore: Store<ValidStoreType> | null, cacheAttrs = true) {
+    constructor(store: Store<ValidStoreType>, path: string | null = null, readOnly = false, chunkStore: Store<ValidStoreType> | null = null, cacheAttrs = true) {
         this.store = store;
         this._chunkStore = chunkStore;
         this.path = normalizeStoragePath(path);

@@ -6,7 +6,8 @@ import { ZarrArrayMetadata, UserAttributes } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
-export default class ZarrArray {
+
+export class ZarrArray {
 
   public store: Store<ValidStoreType>;
 
@@ -29,23 +30,27 @@ export default class ZarrArray {
   public attrs: Attributes<UserAttributes>;
 
   /**
-   * Group name following h5py convention.
+   * Array name following h5py convention.
    */
-  public get name(): string {
+  public get name(): string | null {
     if (this.path.length > 0) {
       if (this.path[0] !== "/") {
         return "/" + this.path;
       }
       return this.path;
     }
-    return "";
+    return null;
   }
 
   /**
    * Final component of name.
    */
-  public get basename(): string {
-    const parts = this.name.split("/");
+  public get basename(): string | null {
+    const name = this.name;
+    if (name === null) {
+      return null;
+    }
+    const parts = name.split("/");
     return parts[parts.length - 1];
   }
 
@@ -97,8 +102,6 @@ export default class ZarrArray {
     return this.shape[0];
   }
 
-
-
   /**
    * Instantiate an array from an initialized store.
    * @param store Array store, already initialized.
@@ -110,7 +113,7 @@ export default class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  constructor(store: Store<ValidStoreType>, path: string | null = null, readOnly = false, chunkStore: Store<ValidStoreType> | null, cacheMetadata = true, cacheAttrs = true) {
+  constructor(store: Store<ValidStoreType>, path: null | string = null, readOnly: boolean = false, chunkStore: Store<ValidStoreType> | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 

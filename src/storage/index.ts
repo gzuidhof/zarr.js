@@ -57,7 +57,7 @@ function requireParentGroup(store: Store<any>, path: string, chunkStore: Store<a
 
     const segments = path.split("/");
     let p = "";
-    for (const s of segments) {
+    for (const s of segments.slice(0, segments.length - 1)) {
         p += s;
         if (containsArray(store, p)) {
             initGroupMetadata(store, p, chunkStore,
@@ -100,10 +100,19 @@ function initGroupMetadata(store: Store<ValidStoreType>, path: string | null = n
     const key = pathToPrefix(path) + GROUP_META_KEY;
     store.setItem(key, JSON.stringify(metadata));
 }
+/**
+ *  Initialize a group store. Note that this is a low-level function and there should be no
+ *  need to call this directly from user code.
+ */
+export function initGroup(store: Store<ValidStoreType>, path: string | null = null, chunkStore: null | Store<ValidStoreType> = null, overwrite = false) {
+    path = normalizeStoragePath(path);
+    requireParentGroup(store, path, chunkStore, overwrite);
+    initGroupMetadata(store, path, chunkStore, overwrite);
+}
 
 function initArrayMetadata(
     store: Store<ValidStoreType>,
-    shape: number[],
+    shape: number | number[],
     chunks: ChunksArgument,
     dtype: DtypeString,
     path: string,
@@ -151,13 +160,19 @@ function initArrayMetadata(
         compressor: compressor,
         filters: filters,
     };
-    const metaKey = path + ARRAY_META_KEY;
+    const metaKey = pathToPrefix(path) + ARRAY_META_KEY;
     store.setItem(metaKey, JSON.stringify(metadata));
 
 }
+
+/**
+ * 
+ * Initialize an array store with the given configuration. Note that this is a low-level
+ * function and there should be no need to call this directly from user code
+ */
 export function initArray(
     store: Store<ValidStoreType>,
-    shape: number[],
+    shape: number | number[],
     chunks: ChunksArgument,
     dtype: DtypeString,
     path: string | null = null,
