@@ -1,6 +1,21 @@
 export type ZarrMetadataType = ZarrMetadata | ZarrGroupMetadata;
 export type UserAttributes = object;
 
+/**
+ * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
+ */
+export type FillType = number | "NaN" | "Infinity" | "-Infinity" | null;
+export type Order = "C" | "F";
+
+export type ChunksArgument = number | (number | null)[] | boolean | null;
+
+export interface Compressor {
+    id: string;
+}
+export interface Filter {
+    id: string;
+}
+
 export interface ZarrMetadata {
 
     /**
@@ -33,19 +48,17 @@ export interface ZarrMetadata {
     /**
      * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
      */
-    fill_value: number | "NaN" | "Infinity" | "-Infinity" | null;
+    fill_value: FillType;
 
     /**
      * Either `"C"` or `"F"`, defining the layout of bytes within each chunk of the array. `“C”` means row-major order, i.e., the last dimension varies fastest; `“F”` means column-major order, i.e., the first dimension varies fastest.
      */
-    order: "C" | "F";
+    order: Order;
 
     /**
      * A list of JSON objects providing codec configurations, or `null` if no filters are to be applied. Each codec configuration object MUST contain a `"id"` key identifying the codec to be used.
      */
-    filters: null | {
-        id: string;
-    };
+    filters: null | Filter[];
 }
 
 export interface ZarrGroupMetadata {

@@ -1,3 +1,5 @@
+import { Order, FillType, ChunksArgument } from "./types";
+
 export function humanReadableSize(size: number) {
     if (size < 2 ** 10) {
         return `${size}`;
@@ -51,4 +53,61 @@ export function normalizeStoragePath(path: string | String | null): string {
         }
     }
     return path as string;
+}
+
+export function normalizeShape(shape: number | number[]): number[] {
+
+    if (typeof shape === "number") {
+        shape = [shape];
+    }
+    return shape.map(x => Math.floor(x));
+}
+
+export function normalizeChunks(chunks: ChunksArgument, shape: number[]): number[] {
+    // Assume shape is already normalized
+
+    if (chunks === null || chunks === true) {
+        throw new Error("Chunk guessing is not supported yet");
+    }
+
+    if (chunks === false) {
+        return shape;
+    }
+
+    if (typeof chunks === "number") {
+        chunks = [chunks];
+    }
+
+    // handle underspecified chunks
+    if (chunks.length < shape.length) {
+        // assume chunks across remaining dimensions
+        chunks = chunks.concat(shape.slice(chunks.length));
+    }
+
+    return chunks.map((x, idx) => {
+        // handle null or -1 in chunks
+        if (x === -1 || x === null) {
+            return shape[idx];
+        } else {
+            return Math.floor(x);
+        }
+    });
+}
+
+export function normalizeOrder(order: string): Order {
+    order = order.toUpperCase();
+    if (order === "C" || order === "F") {
+        return order;
+    }
+    throw new Error(`Invalid order ${order}, it must be "C" or "F".`);
+}
+
+export function normalizeDtype(dtype: string): string {
+    // 
+    return dtype;
+}
+
+export function normalizeFillValue(fillValue: FillType): FillType {
+    // TODO
+    return fillValue;
 }
