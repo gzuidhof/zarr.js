@@ -1,4 +1,9 @@
-import { Order, FillType, ChunksArgument } from "./types";
+import { Order, FillType, ChunksArgument, DtypeString } from "./types";
+
+import { createCheckers } from "ts-interface-checker";
+import typesTI from "../src/types-ti";
+
+const TypeCheckSuite = createCheckers(typesTI);
 
 export function humanReadableSize(size: number) {
     if (size < 2 ** 10) {
@@ -66,6 +71,8 @@ export function normalizeShape(shape: number | number[]): number[] {
 export function normalizeChunks(chunks: ChunksArgument, shape: number[]): number[] {
     // Assume shape is already normalized
 
+    TypeCheckSuite.ChunksArgument.check(chunks);
+
     if (chunks === null || chunks === true) {
         throw new Error("Chunk guessing is not supported yet");
     }
@@ -96,18 +103,17 @@ export function normalizeChunks(chunks: ChunksArgument, shape: number[]): number
 
 export function normalizeOrder(order: string): Order {
     order = order.toUpperCase();
-    if (order === "C" || order === "F") {
-        return order;
-    }
-    throw new Error(`Invalid order ${order}, it must be "C" or "F".`);
+
+    TypeCheckSuite.Order.check(order);
+    return order as Order;
 }
 
-export function normalizeDtype(dtype: string): string {
-    // 
+export function normalizeDtype(dtype: DtypeString): DtypeString {
+    TypeCheckSuite.DtypeString.check(dtype);
     return dtype;
 }
 
 export function normalizeFillValue(fillValue: FillType): FillType {
-    // TODO
+    TypeCheckSuite.FillType.check(fillValue);
     return fillValue;
 }

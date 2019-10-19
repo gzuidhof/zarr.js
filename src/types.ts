@@ -1,12 +1,26 @@
-export type ZarrMetadataType = ZarrMetadata | ZarrGroupMetadata;
+export type ZarrMetadataType = ZarrArrayMetadata | ZarrGroupMetadata;
 export type UserAttributes = object;
 
 /**
  * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
  */
 export type FillType = number | "NaN" | "Infinity" | "-Infinity" | null;
+/**
+ * Either `"C"` or `"F"`, defining the layout of bytes within each chunk of the array. `“C”` means row-major order, i.e., the last dimension varies fastest; `“F”` means column-major order, i.e., the first dimension varies fastest.
+ */
 export type Order = "C" | "F";
-
+/**
+ * Currently supported dtypes are listed here only.
+ */
+export type DtypeString = "<i4" | "<i8" | "<f4";
+/**
+ * User interface for chunking.
+ * - `null` or `true`: Automatic chunking (zarr will try to guess an appropriate) - not supported yet.
+ * - `false`: No chunking
+ * - `(number | null)[]`: One entry per dimension, the list gets padded with `null` for missing dimensions.
+ *   - `number > 0`: Chunks of given size along dimension.
+ *   - `null` or `-1`: No chunking along this dimension.
+ */
 export type ChunksArgument = number | (number | null)[] | boolean | null;
 
 export interface Compressor {
@@ -16,7 +30,7 @@ export interface Filter {
     id: string;
 }
 
-export interface ZarrMetadata {
+export interface ZarrArrayMetadata {
 
     /**
      * An integer defining the version of the storage specification to which the array store adheres.
@@ -34,9 +48,10 @@ export interface ZarrMetadata {
     chunks: number[];
 
     /**
-     * A string or list defining a valid data type for the array. See https://zarr.readthedocs.io/en/stable/spec/v2.html#data-type-encoding
+     * A string or list defining a valid data type for the array. See https://zarr.readthedocs.io/en/stable/spec/v2.html#data-type-encoding.
+     * Only a subset of types are supported in this library (for now), see the docs.
      */
-    dtype: string | string[];
+    dtype: DtypeString | DtypeString[];
 
     /**
      * A JSON object identifying the primary compression codec and providing configuration parameters, or null if no compressor is to be used. The object MUST contain an "id" key identifying the codec to be used.
@@ -62,5 +77,8 @@ export interface ZarrMetadata {
 }
 
 export interface ZarrGroupMetadata {
+    /**
+     * An integer defining the version of the storage specification to which the array store adheres.
+     */
     zarr_format: 1 | 2;
 }

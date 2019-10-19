@@ -1,7 +1,7 @@
-import { normalizeStoragePath } from '../util';
+import { normalizeStoragePath, normalizeChunks, normalizeDtype, normalizeShape, normalizeOrder, normalizeFillValue } from '../util';
 import { Store, ValidStoreType } from "./types";
 import { ARRAY_META_KEY, GROUP_META_KEY } from '../names';
-import { FillType, Order, Filter, Compressor, ZarrGroupMetadata } from "../types";
+import { FillType, Order, Filter, Compressor, ZarrGroupMetadata, ChunksArgument, DtypeString, ZarrArrayMetadata } from '../types';
 import { ContainsArrayError, ContainsGroupError } from '../errors';
 
 
@@ -87,6 +87,7 @@ export function listDir(store: Store<any>, path: string | null = null): string[]
 function initGroupMetadata(store: Store<ValidStoreType>, path: string | null = null, chunkStore: null | Store<ValidStoreType> = null, overwrite = false) {
     path = normalizeStoragePath(path);
 
+    // Guard conditions
     if (overwrite) {
         throw Error("Group overwriting not implemented yet :(");
     } else if (containsArray(store, path)) {
@@ -102,8 +103,10 @@ function initGroupMetadata(store: Store<ValidStoreType>, path: string | null = n
 
 function initArrayMetadata(
     store: Store<ValidStoreType>,
-    chunks: boolean,
-    path: string | null,
+    shape: number[],
+    chunks: ChunksArgument,
+    dtype: DtypeString,
+    path: string,
     compressor: null | Compressor,
     fillValue: FillType,
     order: Order,
@@ -111,12 +114,52 @@ function initArrayMetadata(
     chunkStore: null | Store<ValidStoreType>,
     filters: null | Filter[]
 ) {
+    // Guard conditions
+    if (overwrite) {
+        throw Error("Array overwriting not implemented yet :(");
+    } else if (containsArray(store, path)) {
+        throw new ContainsArrayError(path);
+    } else if (containsGroup(store, path)) {
+        throw new ContainsGroupError(path);
+    }
+
+    // Normalize metadata,  does type checking too.
+    dtype = normalizeDtype(dtype);
+    shape = normalizeShape(shape);
+    chunks = normalizeChunks(chunks, shape);
+    order = normalizeOrder(order);
+    fillValue = normalizeFillValue(fillValue);
+
+    if (compressor !== null) {
+        throw Error("Compressors are not supported yet");
+    }
+
+    if (filters !== null && filters.length > 0) {
+        throw Error("Filters are not supported yet");
+    }
+    filters = null;
+
+    const metadata: ZarrArrayMetadata = {
+        zarr_format: 2,
+
+        shape: shape,
+        chunks: chunks as number[],
+
+        dtype: dtype,
+        fill_value: fillValue,
+        order: order,
+        compressor: compressor,
+        filters: filters,
+    };
+    const metaKey = path + ARRAY_META_KEY;
+    store.setItem(metaKey, JSON.stringify(metadata));
 
 }
-
 export function initArray(
     store: Store<ValidStoreType>,
-    chunks: boolean,
+    shape: number[],
+    chunks: ChunksArgument,
+    dtype: DtypeString,
     path: string | null = null,
     compressor: null | Compressor = null,
     fillValue: FillType = null,
@@ -128,6 +171,6 @@ export function initArray(
 
     path = normalizeStoragePath(path);
     requireParentGroup(store, path, chunkStore, overwrite);
-    initArrayMetadata(store, chunks, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+    initArrayMetadata(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
 }
 

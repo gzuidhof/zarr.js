@@ -3,6 +3,9 @@ import { createProxy, MutableMappingProxy } from "../mutableMapping";
 
 export class ObjectStore<T extends ValidStoreType> implements Store<T> {
     listDir?: undefined;
+    rmDir?: undefined;
+    getSize?: undefined;
+    rename?: undefined;
 
     public object: {
         [key: string]: T,

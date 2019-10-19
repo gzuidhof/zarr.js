@@ -1,11 +1,11 @@
-import { Store, ValidStoreType } from "./storage/types";
+import { Store, ValidStoreType } from "../storage/types";
 
-import { pathToPrefix } from './storage/index';
-import { normalizeStoragePath } from "./util";
-import { ZarrMetadata, UserAttributes } from './types';
-import { ARRAY_META_KEY, ATTRS_META_KEY } from './names';
-import { Attributes } from "./attributes";
-import { parseMetadata } from "./metadata";
+import { pathToPrefix } from '../storage/index';
+import { normalizeStoragePath } from "../util";
+import { ZarrArrayMetadata, UserAttributes } from '../types';
+import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
+import { Attributes } from "../attributes";
+import { parseMetadata } from "../metadata";
 export default class ZarrArray {
 
   public store: Store<ValidStoreType>;
@@ -25,7 +25,7 @@ export default class ZarrArray {
   public readOnly: boolean;
   public cacheMetadata: boolean;
   public cacheAttrs: boolean;
-  public meta: ZarrMetadata;
+  public meta: ZarrArrayMetadata;
   public attrs: Attributes<UserAttributes>;
 
   /**
@@ -99,7 +99,17 @@ export default class ZarrArray {
 
 
 
-
+  /**
+   * Instantiate an array from an initialized store.
+   * @param store Array store, already initialized.
+   * @param path Storage path.
+   * @param readOnly True if array should be protected against modification.
+   * @param chunkStore Separate storage for chunks. If not provided, `store` will be used for storage of both chunks and metadata.
+   * @param cacheMetadata If true (default), array configuration metadata will be cached for the lifetime of the object.
+   * If false, array metadata will be reloaded prior to all data access and modification operations (may incur overhead depending on storage and data access pattern).
+   * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
+   * If false, user attributes are reloaded from the store prior to all attribute read operations.
+   */
   constructor(store: Store<ValidStoreType>, path: string | null = null, readOnly = false, chunkStore: Store<ValidStoreType> | null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized

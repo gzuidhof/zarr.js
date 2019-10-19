@@ -39,3 +39,21 @@ export class KeyError extends Error {
         super(`key ${key} not present`);
     }
 }
+
+export class TooManyIndicesError extends RangeError {
+    constructor(selection: any[], shape: number[]) {
+        super(`too many indices for array; expected ${shape.length}, got ${selection.length}`);
+    }
+}
+
+export class BoundsCheckError extends RangeError {
+    constructor(dimLength: number) {
+        super(`index out of bounds for dimension with length ${dimLength}`);
+    }
+}
+
+export class InvalidSliceError extends RangeError {
+    constructor(from: any, to: any, stepSize: any, reason: any) {
+        super(`slice arguments slice(${from}, ${to}, ${stepSize}) invalid: ${reason}`);
+    }
+}

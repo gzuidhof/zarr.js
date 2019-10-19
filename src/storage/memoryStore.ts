@@ -2,7 +2,11 @@ import { Store, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
 
 export class MemoryStore<T extends ValidStoreType> implements Store<T> {
-    listDir?= undefined;
+    listDir?: undefined;
+    rmDir?: undefined;
+    getSize?: undefined;
+    rename?: undefined;
+
     root: { [key: string]: any };
 
     constructor(root = {}) {
