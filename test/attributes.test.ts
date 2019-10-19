@@ -44,9 +44,9 @@ describe("Attributes", () => {
         });
 
         it("Can deal with already object metadata (instead of string)", () => {
-            const store = new ObjectStore<Object>();
+            const store = new ObjectStore<string>();
             const att = new Attributes(store, "attrs", false, config.cache);
-            store.setItem("attrs", { "a": "b" });
+            store.setItem("attrs", { "a": "b" } as any);
             expect(att.getItem("a")).toEqual("b");
         });
     }

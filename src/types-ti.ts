@@ -12,7 +12,7 @@ export const FillType = t.union("number", t.lit("NaN"), t.lit("Infinity"), t.lit
 
 export const Order = t.union(t.lit("C"), t.lit("F"));
 
-export const DtypeString = t.union(t.lit("<i4"), t.lit("<i8"), t.lit("<f4"));
+export const DtypeString = t.union(t.lit("<i4"), t.lit("<i8"), t.lit("<f4"), t.lit("<f8"));
 
 export const ChunksArgument = t.union("number", t.array(t.union("number", "null")), "boolean", "null");
 
