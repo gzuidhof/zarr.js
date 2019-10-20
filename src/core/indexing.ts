@@ -155,7 +155,7 @@ class IntDimIndexer {
         this.numItems = 1;
     }
 
-    * iter(): Generator<ChunkDimProjection> {
+    * iter() {
         const dimChunkIndex = Math.floor(this.dimSelection / this.dimChunkLength);
         const dimOffset = dimChunkIndex * this.dimChunkLength;
         const dimChunkSelection = this.dimSelection - dimOffset;
@@ -164,7 +164,7 @@ class IntDimIndexer {
             dimChunkIndex,
             dimChunkSelection,
             dimOutSelection,
-        };
+        } as ChunkDimProjection;
     }
 }
 
@@ -194,7 +194,7 @@ class SliceDimIndexer {
         this.numChunks = Math.ceil(this.dimLength / this.dimChunkLength);
     }
 
-    * iter(): Generator<ChunkDimProjection> {
+    * iter() {
         const dimChunkIndexFrom = Math.floor(this.start / this.dimChunkLength);
         const dimChunkIndexTo = Math.ceil(this.stop / this.dimChunkLength);
 
@@ -243,7 +243,7 @@ class SliceDimIndexer {
                 dimChunkIndex,
                 dimChunkSelection,
                 dimOutSelection,
-            };
+            } as ChunkDimProjection;
         }
 
     }
