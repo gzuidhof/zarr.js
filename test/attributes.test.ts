@@ -1,8 +1,6 @@
 
 import { Attributes } from "../src/attributes";
 import { ObjectStore } from '../src/storage/objectStore';
-import { ZarrMetadata } from '../dist/types/types';
-import { ZarrGroupMetadata } from "../src/types";
 
 describe("Attributes", () => {
 

@@ -1,5 +1,19 @@
 
-import { replaceEllipsis, slice } from '../../src/core/indexing';
+import { replaceEllipsis, normalizeIntegerSelection } from '../../src/core/indexing';
+import { slice } from "../../src/core/slice";
+
+describe("normalizeIntegerSelection", () => {
+    it("normalizes integer selections", () => {
+        expect(normalizeIntegerSelection(1, 100)).toEqual(1);
+        expect(normalizeIntegerSelection(-1, 100)).toEqual(99);
+    });
+
+    it("errors with invalid input", () => {
+        expect(() => normalizeIntegerSelection(100, 100)).toThrowError();
+        expect(() => normalizeIntegerSelection(1000, 100)).toThrowError();
+        expect(() => normalizeIntegerSelection(-1000, 100)).toThrowError();
+    });
+});
 
 describe("Ellipsis Selection", () => {
     const testCases =
@@ -59,7 +73,8 @@ describe("Slice creation", () => {
         expect(() => slice(undefined as any)).toThrowError();
         expect(() => slice(5, 0)).toThrowError();
 
-        // Non-step 1 size not implemented yet
-        expect(() => slice(0, 10, 2 as 1)).toThrowError();
+        // Non-step size 1
+        expect(() => slice(0, 10, 2)).not.toThrowError();
+        expect(() => slice(0, 10, -2)).not.toThrowError();
     });
 });

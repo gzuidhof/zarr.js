@@ -57,3 +57,9 @@ export class InvalidSliceError extends RangeError {
         super(`slice arguments slice(${from}, ${to}, ${stepSize}) invalid: ${reason}`);
     }
 }
+
+export class NegativeStepError extends Error {
+    constructor() {
+        super(`Negative step size is not supported when indexing.`);
+    }
+}

@@ -1,10 +1,9 @@
-import ZarrArray from "../src/zarr"
-
 /**
  * Dummy test
  */
 describe("Dummy test", () => {
-  it("ZarrArray is instantiable", () => {
+  it("Does nothing", () => {
+    expect(1).toEqual(1);
     // expect(new ZarrArray()).toBeInstanceOf(ZarrArray)
-  })
-})
+  });
+});
