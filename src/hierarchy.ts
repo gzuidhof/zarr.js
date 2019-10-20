@@ -1,7 +1,7 @@
 import { MutableMapping, MutableMappingProxy, createProxy } from './mutableMapping';
 import { Store, ValidStoreType, } from './storage/types';
 import { normalizeStoragePath } from './util';
-import { containsArray, pathToPrefix, containsGroup } from './storage/index';
+import { containsArray, pathToPrefix, containsGroup, initGroup } from './storage/index';
 import { ContainsArrayError, GroupNotFoundError, PermissionError, KeyError } from './errors';
 import { ZarrGroupMetadata, UserAttributes } from './types';
 import { GROUP_META_KEY, ATTRS_META_KEY } from './names';
@@ -88,13 +88,40 @@ export class Group implements MutableMapping<Group> {
         this.attrs = new Attributes<UserAttributes>(this.store, attrKey, this.readOnly, cacheAttrs);
     }
 
-    private itemPath(item: string) {
+    private itemPath(item: string | null) {
+        const absolute = typeof item === "string" && item.length > 0 && item[0] === '/';
         const path = normalizeStoragePath(item);
         // Absolute path
-        if (item.length > 0 && item[0] === "/") {
-            return path;
+        if (!absolute && this.path.length > 0) {
+            return this.keyPrefix + path;
         }
-        return pathToPrefix(item);
+        return path;
+    }
+
+    /**
+     * Create a sub-group.
+     */
+    public createGroup(name: string, overwrite = false): Group {
+        if (this.readOnly) {
+            throw new PermissionError("group is read only");
+        }
+        const path = this.itemPath(name);
+        initGroup(this.store, path, this._chunkStore, overwrite);
+        return new Group(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
+    }
+
+    /**
+     * Obtain a sub-group, creating one if it doesn't exist.
+     */
+    public requireGroup(name: string, overwrite = false): Group {
+        if (this.readOnly) {
+            throw new PermissionError("group is read only");
+        }
+        const path = this.itemPath(name);
+        if (!containsGroup(this.store, path)) {
+            initGroup(this.store, path, this._chunkStore, overwrite);
+        }
+        return new Group(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
     }
 
     /**
