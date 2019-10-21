@@ -1,6 +1,6 @@
 import { TooManyIndicesError, BoundsCheckError, NegativeStepError } from '../errors';
 import { ZarrArray } from './index';
-import { Slice, ArraySelection, ChunkDimProjection } from './types';
+import { Slice, ArraySelection, ChunkDimProjection, Indexer, DimIndexer, ChunkProjection } from './types';
 import { sliceIndices, slice } from "./slice";
 
 function ensureList(selection: number | ArraySelection): ArraySelection {
@@ -49,6 +49,7 @@ export function replaceEllipsis(selection: ArraySelection | number, shape: numbe
             selection = newItem;
         }
     }
+
     // Fill out selection if not completely specified
     if (selection.length < shape.length) {
         const numMissing = shape.length - selection.length;
@@ -56,7 +57,6 @@ export function replaceEllipsis(selection: ArraySelection | number, shape: numbe
     }
 
     checkSelectionLength(selection, shape);
-
     return selection;
 }
 
@@ -92,8 +92,8 @@ function isIntegerArray(s: any) {
     return true;
 }
 
-function isSlice(s: (Slice | number | number[] | "..." | ":" | null)): boolean {
-    if (s !== null && s as any["_slice"] === true) {
+export function isSlice(s: (Slice | number | number[] | "..." | ":" | null)): boolean {
+    if (s !== null && (s as any)["_slice"] === true) {
         return true;
     }
     return false;
@@ -107,7 +107,7 @@ function isPositiveSlice(s: (Slice | number | number[] | "..." | ":" | null)): b
     return isSlice(s) && ((s as Slice).step === null || ((s as Slice).step as number) >= 1);
 }
 
-function isContiguousSelection(selection: ArraySelection) {
+export function isContiguousSelection(selection: ArraySelection) {
     selection = ensureList(selection);
 
     for (let i = 0; i < selection.length; i++) {
@@ -131,17 +131,97 @@ function isBasicSelection(selection: ArraySelection): boolean {
     return true;
 }
 
+// From https://gist.github.com/cybercase/db7dde901d7070c98c48
+function* product<T extends Array<Iterable<any>>>(...iterables: T) {
+    if (iterables.length === 0) { return; }
+    // make a list of iterators from the iterables
+    const iterators = iterables.map(it => it[Symbol.iterator]());
+    const results = iterators.map(it => it.next());
+    if (results.some(r => r.done)) {
+        throw new Error("Input contains an empty iterator.");
+    }
 
-export class BasicIndexer {
+    for (let i = 0; ;) {
+        if (results[i].done) {
+            // reset the current iterator
+            iterators[i] = iterables[i][Symbol.iterator]();
+            results[i] = iterators[i].next();
+            // advance, and exit if we've reached the end
+            if (++i >= iterators.length) { return; }
+        } else {
+            yield results.map(({ value }) => value);
+            i = 0;
+        }
+        results[i] = iterators[i].next();
+    }
+}
+
+export class BasicIndexer implements Indexer {
+    dimIndexers: DimIndexer[];
+    shape: number[];
+    dropAxes: null;
 
     constructor(selection: ArraySelection, array: ZarrArray) {
         selection = replaceEllipsis(selection, array.shape);
 
-        // TODO
+        // Setup per-dimension indexers
+        this.dimIndexers = [];
+        const arrayShape = array.shape;
+        for (let i = 0; i < arrayShape.length; i++) {
+            let dimSelection = selection[i];
+            const dimLength = arrayShape[i];
+            const dimChunkLength = array.chunks[i];
+
+            if (dimSelection === null) {
+                dimSelection = slice(null);
+            }
+
+
+            if (isInteger(dimSelection)) {
+                this.dimIndexers.push(new IntDimIndexer(dimSelection as number, dimLength, dimChunkLength));
+            } else if (isSlice(dimSelection)) {
+                this.dimIndexers.push(new SliceDimIndexer(dimSelection as Slice, dimLength, dimChunkLength));
+            } else {
+                throw new RangeError(`Unspported selection item for basic indexing; expected integer or slice, got ${dimSelection}`);
+            }
+        }
+
+        this.shape = [];
+        for (const d of this.dimIndexers) {
+            if (d instanceof SliceDimIndexer) {
+                this.shape.push(d.numItems);
+            }
+        }
+        this.dropAxes = null;
+    }
+
+    * iter() {
+        const dimIndexerProduct = product(this.dimIndexers.map((x) => x.iter()));
+
+        for (let dimProjections of dimIndexerProduct) {
+            const chunkCoords = [];
+            const chunkSelection = [];
+            const outSelection = [];
+
+            for (let p of dimProjections[0]) {
+                chunkCoords.push((p as ChunkDimProjection).dimChunkIndex);
+                chunkSelection.push((p as ChunkDimProjection).dimChunkSelection);
+                if ((p as ChunkDimProjection).dimOutSelection !== null) {
+                    outSelection.push((p as ChunkDimProjection).dimOutSelection);
+                }
+            }
+
+            yield ({
+                chunkCoords,
+                chunkSelection,
+                outSelection,
+            } as ChunkProjection);
+        }
+
     }
 }
 
-class IntDimIndexer {
+class IntDimIndexer implements DimIndexer {
     dimSelection: number;
     dimLength: number;
     dimChunkLength: number;
@@ -168,7 +248,7 @@ class IntDimIndexer {
     }
 }
 
-class SliceDimIndexer {
+class SliceDimIndexer implements DimIndexer {
     dimLength: number;
     dimChunkLength: number;
     numItems: number;
@@ -247,8 +327,5 @@ class SliceDimIndexer {
         }
 
     }
-
-
-
 
 }

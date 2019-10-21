@@ -2,6 +2,8 @@ import { Order, FillType, ChunksArgument, DtypeString } from "./types";
 
 import { createCheckers } from "ts-interface-checker";
 import typesTI from "../src/types-ti";
+import { DimensionSelection, Slice } from "./core/types";
+import { isSlice } from "./core/indexing";
 
 const TypeCheckSuite = createCheckers(typesTI);
 
@@ -116,4 +118,39 @@ export function normalizeDtype(dtype: DtypeString): DtypeString {
 export function normalizeFillValue(fillValue: FillType): FillType {
     TypeCheckSuite.FillType.check(fillValue);
     return fillValue;
+}
+
+/**
+ * Determine whether `item` specifies a complete slice of array with the
+ *  given `shape`. Used to optimize __setitem__ operations on chunks
+ * @param item 
+ * @param shape 
+ */
+export function isTotalSlice(item: DimensionSelection | DimensionSelection[], shape: number[]): boolean {
+    if (item === null) {
+        return true;
+    }
+    if (!Array.isArray(item)) {
+        item = [item];
+    }
+
+    for (let i = 0; i < Math.min(item.length, shape.length); i++) {
+        const it = item[i];
+        if (it === null) continue;
+
+        if (isSlice(it)) {
+            const s = it as Slice;
+            const isStepOne = s.step === 1 || s.step === null;
+            if (s.start === null && s.stop === null && isStepOne) {
+                continue;
+            }
+            if (((s.start as number) - (s.stop as number)) === shape[i] && isStepOne) {
+                continue;
+            }
+            return false;
+        } else {
+            console.error("isTotalSlice unexpected non-slice");
+        }
+    }
+    return true;
 }

@@ -43,13 +43,20 @@ export interface ChunkProjection {
     /**
      * Selection of items from chunk array.
      */
-    chunkSelection: number[];
+    chunkSelection: DimensionSelection[];
     /**
      * Selection of items in target (output) array.
      */
-    outSelection: number[];
+    outSelection: DimensionSelection[];
 }
 
 export interface Indexer {
+    shape: number[];
+    dropAxes: null;
+    iter: () => Generator<ChunkProjection, void, unknown>;
+}
+
+export interface DimIndexer {
     numItems: number;
+    iter: () => Generator<ChunkDimProjection, void, unknown>;
 }

@@ -1,6 +1,6 @@
 import { MutableMapping } from "../mutableMapping";
 
-export type ValidStoreType = Buffer | string;
+export type ValidStoreType = Buffer | string | ArrayBuffer;
 
 /**
  * This module contains storage classes for use with Zarr arrays and groups.
