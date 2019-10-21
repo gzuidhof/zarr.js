@@ -53,10 +53,10 @@ export interface ChunkProjection {
 export interface Indexer {
     shape: number[];
     dropAxes: null;
-    iter: () => Generator<ChunkProjection, void, unknown>;
+    iter: () => IterableIterator<ChunkProjection>;
 }
 
 export interface DimIndexer {
     numItems: number;
-    iter: () => Generator<ChunkDimProjection, void, unknown>;
+    iter: () => IterableIterator<ChunkDimProjection>;
 }
