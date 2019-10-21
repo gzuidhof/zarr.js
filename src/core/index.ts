@@ -213,7 +213,7 @@ export class ZarrArray {
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
 
     // TODO
-    const out = new Uint8Array(outSize);
+    const out = new Uint32Array(outSize);
 
     for (let proj of indexer.iter()) {
       this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
@@ -230,7 +230,7 @@ export class ZarrArray {
    * @param outSelection Location of region within output array to store results in.
    * @param dropAxes Axes to squeeze out of the chunk.
    */
-  private chunkGetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], out: Uint8Array, outSelection: DimensionSelection[], dropAxes: null | number[]) {
+  private chunkGetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], out: Uint32Array, outSelection: DimensionSelection[], dropAxes: null | number[]) {
     if (chunkCoords.length !== this._cdataShape.length) {
       throw new AssertionError({ message: `Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.cdataShape.length}` });
     }
@@ -252,6 +252,7 @@ export class ZarrArray {
 
         // Chunk cast to type
         // Chunk reshape
+        console.log("optimized set", chunkSelection, this.chunks);
         return out.set(this.getTypedArray(cdata));
       }
 
@@ -260,7 +261,7 @@ export class ZarrArray {
 
       // TODO
       // const tmp = chunk[chunkSelection];
-      console.log(`Selecting ${chunkSelection}`);
+      console.log(`Selecting ${JSON.stringify(chunkSelection)} from ${chunk}`);
 
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
@@ -268,19 +269,19 @@ export class ZarrArray {
 
       // TODO
       // out[outSelection] = tmp
-      console.log(`Setting ${outSelection} to out`);
+      console.log(`Setting ${JSON.stringify(outSelection)} to out`);
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
-        console.log(`Setting fill value into ${out}, selection: ${outSelection}, value ${this.fillValue}`);
+        console.log(`Setting fill value into ${out}, selection: ${JSON.stringify(outSelection)}, value ${this.fillValue}`);
       }
     }
   }
 
-  private getTypedArray(buffer: Buffer | ArrayBuffer): Uint8Array {
+  private getTypedArray(buffer: Buffer | ArrayBuffer): Uint32Array {
     // TODO other types
     if (this.dtype === "<i4") {
-      return new Uint8Array(buffer);
+      return new Uint32Array(buffer);
     }
     throw new Error("not donezo");
   }

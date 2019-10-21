@@ -10,7 +10,7 @@ export function parseMetadata<Z extends ZarrMetadataType | UserAttributes>(s: Va
 
     if (typeof s !== 'string') {
         // Assuming it's already parsed
-        return s as Z;
+        return JSON.parse(s.toString());
     }
 
     return JSON.parse(s);

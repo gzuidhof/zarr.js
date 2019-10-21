@@ -105,10 +105,10 @@ describe("GetBasicSelection1D", () => {
         ],
         "zarr_format": 2
     })));
-    store.setItem("my_array/0.0", u8.buffer);
+    store.setItem("my_array/0", u8.buffer);
     const z = new ZarrArray(store, "my_array");
 
     it("can select single numbers", () => {
-        expect(z.getBasicSelection([2])).toEqual(1);
+        expect(z.getBasicSelection([slice(2)])).toEqual([0, 1]);
     });
 });
