@@ -88,6 +88,9 @@ describe("GetBasicSelection1D", () => {
     const u8 = new Uint32Array(5);
     u8.set([0, 1, 2, 3, 4]);
 
+
+
+    initArray(store, 8, 5, '<i4', "my_array");
     store.setItem("my_array/.zarray", Buffer.from(JSON.stringify({
         "chunks": [
             5
@@ -102,8 +105,6 @@ describe("GetBasicSelection1D", () => {
         ],
         "zarr_format": 2
     })));
-
-    initArray(store, 8, 5, '<i4', "my_array");
     store.setItem("my_array/0.0", u8.buffer);
     const z = new ZarrArray(store, "my_array");
 
