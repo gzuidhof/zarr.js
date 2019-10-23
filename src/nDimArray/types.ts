@@ -6,6 +6,7 @@ export type TypedArray = ArrayLike<any> & {
     BYTES_PER_ELEMENT: number;
     set(array: ArrayLike<number>, offset?: number): void;
     slice(start?: number, end?: number): TypedArray;
+    buffer: Buffer | ArrayBuffer;
 };
 export type TypedArrayConstructor<T> = {
     new(): T;
