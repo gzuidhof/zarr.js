@@ -1,5 +1,5 @@
-import { createNestedArray } from "../../src/nDimArray";
-import { ND, TypedArray, TypedArrayConstructor } from '../../src/nDimArray/types';
+import { createNestedArray } from "../../src/array";
+import { ND, TypedArray, TypedArrayConstructor } from '../../src/array/types';
 
 
 describe("NestedArray creation", () => {

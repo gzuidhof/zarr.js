@@ -1,13 +1,16 @@
 import { DtypeString } from '../types';
 import { ND, TypedArray, TypedArrayConstructor } from './types';
+import { replaceEllipsis } from '../core/indexing';
+import { Slice } from '../core/types';
+import { sliceIndices } from '../core/slice';
+import { NPN_ENABLED } from 'constants';
 
 
 const dtypeMapping = {
     "<i4": Int32Array
 };
 
-
-export class NDimArray<T extends TypedArray> {
+export class NestedArray<T extends TypedArray> {
     dtype: DtypeString;
     shape: number[];
     data: ND<T>;
@@ -18,16 +21,15 @@ export class NDimArray<T extends TypedArray> {
 
         const numShapeElements = shape.reduce((x, y) => x * y, 1);
         const numDataElements = data.byteLength / parseInt(dtype[dtype.length - 1], 10);
+
+        // Throw error if shape.length == 0? tbd
+
         if (numShapeElements !== numDataElements) {
             throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
         }
 
         const typeConstructor: TypedArrayConstructor<T> = (dtypeMapping as any)[dtype];
-        if (shape.length <= 1) {
-            this.data = new typeConstructor(data);
-        } else {
-            this.data = createNestedArray(data, typeConstructor, shape);
-        }
+        this.data = createNestedArray(data, typeConstructor, shape);
     }
 }
 
@@ -64,3 +66,41 @@ export function createNestedArray<T extends TypedArray>(data: Buffer | ArrayBuff
     }
     return arr;
 }
+
+export function sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], selection: Slice[]) {
+    const dimensionLength = shape[0];
+    const [from, to, step] = sliceIndices(selection[0], dimensionLength);
+
+    if (shape.length === 1) {
+        const arrData = (arr as TypedArray).slice((arr as TypedArray).BYTES_PER_ELEMENT * from, (arr as TypedArray).BYTES_PER_ELEMENT * to);
+        if (step === 1) {
+            return arrData;
+        }
+
+        const outputSize = Math.floor((to - from + 1) / Math.abs(step));
+        const newArrData = new (arrData.constructor as TypedArrayConstructor<T>)(outputSize);
+        if (step > 0) {
+            for (let i = 0; i < outputSize; i++) {
+                // Typecasting to make typescript happy, TODO
+                newArrData[i] = arrData[i * step];
+            }
+        } else {
+            for (let i = outputSize - 1; i >= 0; i--) {
+                newArrData[i] = arrData[i * step];
+            }
+        }
+    }
+
+    // TODO more than 1 index
+
+}
+
+
+// export function setNestedArray<T extends TypedArray>(array: NestedArray<T>, data: Buffer | ArrayBuffer, selection: Slice[]): ND<T> {
+//     replaceEllipsis(selection, array.shape);
+//     const indices = selection.map(DimensionSelection()
+
+//     // Check bounds and slice make sense
+
+//     return arr;
+// }
