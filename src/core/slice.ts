@@ -20,9 +20,9 @@ export function slice(start: SliceArgument, stop: SliceArgument | undefined = un
         start = null;
     }
 
-    if (start !== null && stop !== null && start > stop) {
-        throw new InvalidSliceError(start, stop, step, "to is higher than from");
-    }
+    // if (start !== null && stop !== null && start > stop) {
+    //     throw new InvalidSliceError(start, stop, step, "to is higher than from");
+    // }
 
     return {
         start: start === ":" ? null : start,
@@ -32,11 +32,52 @@ export function slice(start: SliceArgument, stop: SliceArgument | undefined = un
     };
 }
 
+
 /**
- * Port of slice.indices(n) in Python.
- * https://github.com/python/cpython/blob/master/Objects/sliceobject.c#L166
+ * Port of adjustIndices
+ * https://github.com/python/cpython/blob/master/Objects/sliceobject.c#L243
  */
-export function sliceIndices(slice: Slice, length: number): [number, number, number] {
+function adjustIndices(start: number, stop: number, step: number, length: number) {
+    if (start < 0) {
+        start += length;
+        if (start < 0) {
+            start = (step < 0) ? -1 : 0;
+        }
+    } else if (start >= length) {
+        start = (step < 0) ? length - 1 : length;
+    }
+
+    if (stop < 0) {
+        stop += length;
+        if (stop < 0) {
+            stop = (step < 0) ? -1 : 0;
+        }
+    } else if (stop >= length) {
+        stop = (step < 0) ? length - 1 : length;
+    }
+
+    if (step < 0) {
+        if (stop < start) {
+            const length = Math.floor((start - stop - 1) / (-step) + 1);
+            return [start, stop, step, length];
+        }
+    } else {
+        if (start < stop) {
+            const length = Math.floor((stop - start - 1) / step + 1);
+            return [start, stop, step, length];
+        }
+    }
+    return [start, stop, step, 0];
+}
+
+/**
+ * Port of slice.indices(n) and PySlice_Unpack
+ * https://github.com/python/cpython/blob/master/Objects/sliceobject.c#L166
+ *  https://github.com/python/cpython/blob/master/Objects/sliceobject.c#L198 
+ * 
+ * Behaviour might be slightly different as it's a weird hybrid implementation.
+ */
+export function sliceIndices(slice: Slice, length: number): [number, number, number, number] {
     let start: number;
     let stop: number;
     let step: number;
@@ -48,7 +89,7 @@ export function sliceIndices(slice: Slice, length: number): [number, number, num
     }
 
     if (slice.start === null) {
-        start = step < 0 ? length - 1 : 0;
+        start = step < 0 ? Number.MAX_SAFE_INTEGER : 0;
     } else {
         start = slice.start;
         if (start < 0) {
@@ -57,7 +98,7 @@ export function sliceIndices(slice: Slice, length: number): [number, number, num
     }
 
     if (slice.stop === null) {
-        stop = step < 0 ? -1 : length;
+        stop = step < 0 ? -Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
     } else {
         stop = slice.stop;
         if (stop < 0) {
@@ -65,9 +106,22 @@ export function sliceIndices(slice: Slice, length: number): [number, number, num
         }
     }
 
-    if (stop > length) throw new Error("Stop greater than length");
-    if (start >= length) throw new Error("Start greater than or equal to length");
+    // This clips out of bounds slices
+    let s = adjustIndices(start, stop, step, length);
+    // console.log(start, stop, step, length, s);
+    start = s[0];
+    stop = s[1];
+    step = s[2];
+    // The output length
+    length = s[3];
+
+
+
+    // With out of bounds slicing these two assertions are not useful.
+    // if (stop > length) throw new Error("Stop greater than length");
+    // if (start >= length) throw new Error("Start greater than or equal to length");
+
     if (step === 0) throw new Error("Step size 0 is invalid");
 
-    return [start, stop, step];
+    return [start, stop, step, length];
 }

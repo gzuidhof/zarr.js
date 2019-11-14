@@ -69,26 +69,19 @@ export function createNestedArray<T extends TypedArray>(data: Buffer | ArrayBuff
 
 export function sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], selection: Slice[]) {
     const dimensionLength = shape[0];
-    const [from, to, step] = sliceIndices(selection[0], dimensionLength);
+    const [from, to, step, outputSize] = sliceIndices(selection[0], dimensionLength);
 
     if (shape.length === 1) {
-        const arrData = (arr as TypedArray).slice((arr as TypedArray).BYTES_PER_ELEMENT * from, (arr as TypedArray).BYTES_PER_ELEMENT * to);
         if (step === 1) {
-            return arrData;
+            return (arr as TypedArray).slice(from, to);
         }
 
-        const outputSize = Math.floor((to - from + 1) / Math.abs(step));
-        const newArrData = new (arrData.constructor as TypedArrayConstructor<T>)(outputSize);
-        if (step > 0) {
-            for (let i = 0; i < outputSize; i++) {
-                // Typecasting to make typescript happy, TODO
-                newArrData[i] = arrData[i * step];
-            }
-        } else {
-            for (let i = outputSize - 1; i >= 0; i--) {
-                newArrData[i] = arrData[i * step];
-            }
+        // console.log(from, to, step, outputSize, selection);
+        const newArrData = new (arr.constructor as TypedArrayConstructor<T>)(outputSize);
+        for (let i = 0; i < outputSize; i++) {
+            newArrData[i] = (arr as TypedArray)[from + i * step];
         }
+        return newArrData;
     }
 
     // TODO more than 1 index

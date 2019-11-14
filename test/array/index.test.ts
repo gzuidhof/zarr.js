@@ -1,5 +1,7 @@
-import { createNestedArray } from "../../src/array";
+import { createNestedArray, sliceNestedArray } from "../../src/array";
 import { ND, TypedArray, TypedArrayConstructor } from '../../src/array/types';
+import { Slice } from '../../dist/types/core/types';
+import { slice } from "../../src/core/slice";
 
 
 describe("NestedArray creation", () => {
@@ -148,4 +150,111 @@ describe("NestedArray creation", () => {
         expect(nestedArray).toEqual(t.expected);
     });
 
+});
+
+describe("NestedArray slicing", () => {
+    interface TestCase {
+        name: string;
+        shape: number[];
+        constr: TypedArrayConstructor<TypedArray>;
+        selection: Slice[];
+        expected: ND<TypedArray>;
+    }
+
+    const testCases: TestCase[] = [
+        {
+            name: "1d_3",
+            shape: [3],
+            constr: Int32Array,
+            selection: [slice(null)],
+            expected: Int32Array.from([0, 1, 2]),
+        },
+        {
+            name: "1d_3",
+            shape: [3],
+            constr: Int32Array,
+            selection: [slice(null, null, 1)],
+            expected: Int32Array.from([0, 1, 2]),
+        },
+        {
+            name: "1d_3_subset",
+            shape: [3],
+            constr: Int32Array,
+            selection: [slice(1, 3)],
+            expected: Int32Array.from([1, 2]),
+        },
+        {
+            name: "1d_3_superset",
+            shape: [3],
+            constr: Int32Array,
+            selection: [slice(0, 100)],
+            expected: Int32Array.from([0, 1, 2]),
+        },
+        {
+            name: "1d_3_empty",
+            shape: [3],
+            constr: Int32Array,
+            selection: [slice(5, 100)],
+            expected: Int32Array.from([]),
+        },
+        {
+            name: "1d_5_step_2",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(1, null, 2)],
+            expected: Int32Array.from([1, 3]),
+        },
+        {
+            name: "1d_5_super_subset_step_-1",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(5, 2, -1)],
+            expected: Int32Array.from([4, 3]),
+        },
+        {
+            name: "1d_5_subset_step_-1",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(4, 0, -1)],
+            expected: Int32Array.from([4, 3, 2, 1]),
+        },
+        {
+            name: "1d_5_subset_step_-2",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(4, 0, -2)],
+            expected: Int32Array.from([4, 2]),
+        },
+        {
+            name: "1d_5_step_-1_A",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(null, null, -1)],
+            expected: Int32Array.from([4, 3, 2, 1, 0]),
+        },
+        {
+            name: "1d_5_step_-1_B",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(null, -3, -1)],
+            expected: Int32Array.from([4, 3]),
+        },
+        {
+            name: "1d_5_step_-2",
+            shape: [5],
+            constr: Int32Array,
+            selection: [slice(null, -3, -2)],
+            expected: Int32Array.from([4]),
+        },
+    ];
+
+    test.each(testCases)(`%p`, (t: TestCase) => {
+        const size = t.shape.reduce((x, y) => x * y, 1);
+        const data = new t.constr(size);
+        data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
+        const nestedArray = (createNestedArray(data.buffer, t.constr, t.shape));
+
+        const sliceResult = sliceNestedArray(nestedArray, t.shape, t.selection);
+        expect(sliceResult).toEqual(t.expected);
+    });
 });
