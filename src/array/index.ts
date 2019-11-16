@@ -12,7 +12,7 @@ const dtypeMapping: { [A in DtypeString]: TypedArrayConstructor<any> } = {
     "<u1": Uint8Array,
 
     "<i4": Int32Array,
-    "<i8": BigInt64Array,
+
     "<f4": Float32Array,
     "<f8": Float64Array,
 };

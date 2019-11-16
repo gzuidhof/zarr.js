@@ -2,7 +2,7 @@ export type ND<T extends TypedArray> = T | TypedArray | T[] | T[][] | T[][][] | 
 
 // export type TypedArray = Int32Array;
 
-export type TypedArray = Uint8Array | Int32Array | Float32Array;
+export type TypedArray = Uint8Array | Int8Array | Float32Array | Float64Array | Int32Array;
 
 // ArrayLike<any> & {
 //     BYTES_PER_ELEMENT: number;

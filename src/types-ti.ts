@@ -12,7 +12,7 @@ export const FillType = t.union("number", t.lit("NaN"), t.lit("Infinity"), t.lit
 
 export const Order = t.union(t.lit("C"), t.lit("F"));
 
-export const DtypeString = t.union(t.lit("<i4"), t.lit("<i8"), t.lit("<f4"), t.lit("<f8"));
+export const DtypeString = t.union(t.lit("<u1"), t.lit("<i1"), t.lit("<i4"), t.lit("<f4"), t.lit("<f8"), t.lit("<b"), t.lit("<B"));
 
 export const ChunksArgument = t.union("number", t.array(t.union("number", "null")), "boolean", "null");
 
@@ -28,7 +28,7 @@ export const ZarrArrayMetadata = t.iface([], {
   "zarr_format": t.union(t.lit(1), t.lit(2)),
   "shape": t.array("number"),
   "chunks": t.array("number"),
-  "dtype": t.union("DtypeString", t.array("DtypeString")),
+  "dtype": "DtypeString",
   "compressor": t.union("null", t.iface([], {
     "id": "string",
   })),
