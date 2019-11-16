@@ -1,7 +1,11 @@
 
 export type ArraySelection = (Slice | number | number[] | "..." | ":" | null)[];
+export type NormalizedArraySelection = (Slice | number)[];
+
 export type DimensionSelection = Slice | number | null;
 export type SliceArgument = number | ":" | null;
+
+export type SliceIndices = [number, number, number, number];
 
 export interface Slice {
     start: number | null;

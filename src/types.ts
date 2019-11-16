@@ -12,7 +12,7 @@ export type Order = "C" | "F";
 /**
  * Currently supported dtypes are listed here only.
  */
-export type DtypeString = "<i4" | "<i8" | "<f4" | "<f8";
+export type DtypeString = "<u1" | "<i1" | "<i4" | "<i8" | "<f4" | "<f8" | "<b" | "<B";
 /**
  * User interface for chunking.
  * - `null` or `true`: Automatic chunking (zarr will try to guess an appropriate) - not supported yet.
@@ -49,9 +49,10 @@ export interface ZarrArrayMetadata {
 
     /**
      * A string or list defining a valid data type for the array. See https://zarr.readthedocs.io/en/stable/spec/v2.html#data-type-encoding.
+     * Lists are not supported yet
      * Only a subset of types are supported in this library (for now), see the docs.
      */
-    dtype: DtypeString | DtypeString[];
+    dtype: DtypeString; // | DtypeString[];
 
     /**
      * A JSON object identifying the primary compression codec and providing configuration parameters, or null if no compressor is to be used. The object MUST contain an "id" key identifying the codec to be used.

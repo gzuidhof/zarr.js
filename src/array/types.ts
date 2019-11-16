@@ -1,4 +1,4 @@
-export type ND<T extends TypedArray> = T | T[] | T[][] | T[][][] | T[][][][] | T[][][][][] | T[][][][][][];
+export type ND<T extends TypedArray> = T | TypedArray | T[] | T[][] | T[][][] | T[][][][] | T[][][][][] | T[][][][][][];
 
 // export type TypedArray = Int32Array;
 
@@ -12,7 +12,7 @@ export type TypedArray = Uint8Array | Int32Array | Float32Array;
 //     buffer: Buffer | ArrayBuffer;
 //     constructor: TypedArrayConstructor<TypedArray>;
 // };
-export type TypedArrayConstructor<T> = {
+export type TypedArrayConstructor<T extends TypedArray> = {
     new(): T;
     // tslint:disable-next-line: unified-signatures
     new(size: number): T;

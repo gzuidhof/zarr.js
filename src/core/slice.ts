@@ -1,6 +1,6 @@
 
-import { TooManyIndicesError, InvalidSliceError, BoundsCheckError } from '../errors';
-import { Slice, SliceArgument } from "./types";
+import { InvalidSliceError } from '../errors';
+import { Slice, SliceArgument, SliceIndices } from "./types";
 
 export function slice(start: SliceArgument, stop: SliceArgument | undefined = undefined, step: number | null = null): Slice {
     start = start;
@@ -77,7 +77,7 @@ function adjustIndices(start: number, stop: number, step: number, length: number
  * 
  * Behaviour might be slightly different as it's a weird hybrid implementation.
  */
-export function sliceIndices(slice: Slice, length: number): [number, number, number, number] {
+export function sliceIndices(slice: Slice, length: number): SliceIndices {
     let start: number;
     let stop: number;
     let step: number;
@@ -108,13 +108,11 @@ export function sliceIndices(slice: Slice, length: number): [number, number, num
 
     // This clips out of bounds slices
     let s = adjustIndices(start, stop, step, length);
-    // console.log(start, stop, step, length, s);
     start = s[0];
     stop = s[1];
     step = s[2];
     // The output length
     length = s[3];
-
 
 
     // With out of bounds slicing these two assertions are not useful.

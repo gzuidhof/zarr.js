@@ -9,6 +9,8 @@ import { parseMetadata } from "../metadata";
 import { ArraySelection, DimensionSelection } from "./types";
 import { BasicIndexer, isContiguousSelection } from "./indexing";
 import { AssertionError } from "assert";
+import { NestedArray } from "../array";
+import { TypedArray } from "../array/types";
 
 export class ZarrArray {
 
@@ -212,8 +214,7 @@ export class ZarrArray {
     const outShape = indexer.shape;
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
 
-    // TODO
-    const out = new Uint32Array(outSize);
+    const out = new NestedArray(null, outShape, outDtype);
 
     for (let proj of indexer.iter()) {
       this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
@@ -230,7 +231,7 @@ export class ZarrArray {
    * @param outSelection Location of region within output array to store results in.
    * @param dropAxes Axes to squeeze out of the chunk.
    */
-  private chunkGetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], out: Uint32Array, outSelection: DimensionSelection[], dropAxes: null | number[]) {
+  private chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
     if (chunkCoords.length !== this._cdataShape.length) {
       throw new AssertionError({ message: `Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.cdataShape.length}` });
     }
@@ -250,18 +251,13 @@ export class ZarrArray {
 
         // TODO decompression
 
-        // Chunk cast to type
-        // Chunk reshape
         console.log("optimized set", chunkSelection, this.chunks);
         return out.set(this.getTypedArray(cdata));
       }
 
       // Decode chunk
       const chunk = this.decodeChunk(cdata);
-
-      // TODO
-      // const tmp = chunk[chunkSelection];
-      console.log(`Selecting ${JSON.stringify(chunkSelection)} from ${chunk}`);
+      const tmp = chunk.slice(chunkSelection);
 
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
@@ -269,7 +265,7 @@ export class ZarrArray {
 
       // TODO
       // out[outSelection] = tmp
-      console.log(`Setting ${JSON.stringify(outSelection)} to out`);
+      console.log(`Setting ${JSON.stringify(outSelection)} to out with ${JSON.stringify(tmp)}`);
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
@@ -278,12 +274,8 @@ export class ZarrArray {
     }
   }
 
-  private getTypedArray(buffer: Buffer | ArrayBuffer): Uint32Array {
-    // TODO other types
-    if (this.dtype === "<i4") {
-      return new Uint32Array(buffer);
-    }
-    throw new Error("not donezo");
+  private getTypedArray<T extends TypedArray>(buffer: Buffer | ArrayBuffer): NestedArray<T> {
+    return new NestedArray<T>(buffer, this.chunks, this.dtype);
   }
 
   private chunkKey(chunkCoords: number[]) {
@@ -291,7 +283,6 @@ export class ZarrArray {
   }
 
   private decodeChunk(cdata: Buffer | ArrayBuffer) {
-
     const chunk = cdata;
     // TODO decompression, filtering etc 
     return this.getTypedArray(chunk);

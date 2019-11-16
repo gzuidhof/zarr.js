@@ -1,9 +1,9 @@
 import { TooManyIndicesError, BoundsCheckError, NegativeStepError } from '../errors';
 import { ZarrArray } from './index';
-import { Slice, ArraySelection, ChunkDimProjection, Indexer, DimIndexer, ChunkProjection } from './types';
+import { Slice, ArraySelection, ChunkDimProjection, Indexer, DimIndexer, ChunkProjection, NormalizedArraySelection, SliceIndices } from './types';
 import { sliceIndices, slice } from "./slice";
 
-function ensureList(selection: number | ArraySelection): ArraySelection {
+function ensureArray(selection: number | ArraySelection): ArraySelection {
     if (!Array.isArray(selection)) {
         return [selection];
     }
@@ -16,8 +16,52 @@ function checkSelectionLength(selection: ArraySelection, shape: number[]) {
     }
 }
 
+/**
+ * Returns both the sliceIndices per dimension and the output shape after slicing.
+ */
+export function selectionToSliceIndices(selection: NormalizedArraySelection, shape: number[]): [(number | SliceIndices)[], number[]] {
+    const sliceIndicesResult = [];
+    const outShape = [];
+
+    for (let i = 0; i < selection.length; i++) {
+        const s = selection[i];
+        if (typeof s === "number") {
+            sliceIndicesResult.push(s);
+        } else {
+            const x = sliceIndices(s, shape[i]);
+            const dimLength = x[3];
+
+            outShape.push(dimLength);
+            sliceIndicesResult.push(x);
+        }
+    }
+
+    return [sliceIndicesResult, outShape];
+}
+
+/**
+ * This translates "...", ":", null into a list of slices or non-negative integer selections of length shape
+ */
+export function normalizeArraySelection(selection: ArraySelection | number, shape: number[]): NormalizedArraySelection {
+    selection = replaceEllipsis(selection, shape);
+
+    for (let i = 0; i < selection.length; i++) {
+        const dimSelection = selection[i];
+
+        if (typeof dimSelection === "number") {
+            selection[i] = normalizeIntegerSelection(dimSelection, shape[i]);
+        } else if (isIntegerArray(dimSelection)) {
+            throw new TypeError("Integer array selections are not supported (yet)");
+        } else if (dimSelection === ":" || dimSelection === null) {
+            selection[i] = slice(null, null, 1);
+        }
+    }
+
+    return selection as NormalizedArraySelection;
+}
+
 export function replaceEllipsis(selection: ArraySelection | number, shape: number[]) {
-    selection = ensureList(selection);
+    selection = ensureArray(selection);
 
     let ellipsisIndex = -1;
     let numEllipsis = 0;
@@ -80,7 +124,7 @@ function isInteger(s: any) {
     return typeof s === "number";
 }
 
-function isIntegerArray(s: any) {
+export function isIntegerArray(s: any) {
     if (!Array.isArray(s)) {
         return false;
     }
@@ -108,7 +152,7 @@ function isPositiveSlice(s: (Slice | number | number[] | "..." | ":" | null)): b
 }
 
 export function isContiguousSelection(selection: ArraySelection) {
-    selection = ensureList(selection);
+    selection = ensureArray(selection);
 
     for (let i = 0; i < selection.length; i++) {
         const s = selection[i];
@@ -120,7 +164,7 @@ export function isContiguousSelection(selection: ArraySelection) {
 }
 
 function isBasicSelection(selection: ArraySelection): boolean {
-    selection = ensureList(selection);
+    selection = ensureArray(selection);
 
     for (let i = 0; i < selection.length; i++) {
         const s = selection[i];
