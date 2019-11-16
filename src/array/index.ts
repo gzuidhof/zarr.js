@@ -115,11 +115,12 @@ export function sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number
 function _sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], indicesSelection: (SliceIndices | number)[]): ND<T> | number {
     let currentSlice = indicesSelection[0];
 
-    // This is possible when a slice list is passed shorter than the amount of dimensions
-    // tslint:disable-next-line: strict-type-predicates
-    if (currentSlice === undefined) {
-        return arr.slice();
-    }
+    // Is this necessary?
+    // // This is possible when a slice list is passed shorter than the amount of dimensions
+    // // tslint:disable-next-line: strict-type-predicates
+    // if (currentSlice === undefined) {
+    //     return arr.slice();
+    // }
 
     // When a number is passed that dimension is squeezed
     if (typeof currentSlice === "number") {
