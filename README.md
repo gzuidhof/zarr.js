@@ -4,7 +4,7 @@ Typescript implementation of [Zarr](https://zarr.readthedocs.io/en/stable/)
 Zarr is a library for chunked, compressed, N-dimensional arrays.
 
 ## Why a Typescript implementation for Zarr?
-For better or for worse the browser environment is slowly becoming the world's operating system. Numerical computing with a lot of data is a poor fit for browsers, but for data visualization and result-sharing the browser is unparalleled.
+For better or for worse the browser environment is slowly becoming the world's operating system. Numerical computing with a lot of data is a poor fit for browsers, but for data visualization, exploration and result-sharing the browser is unparalleled.
 
 With this library a workflow as such becomes possible:
 * You run an experiment/workflow in Python or Julia. 
@@ -28,3 +28,4 @@ Zarr abstracts over different backend stores where the data lives.
 ## Thoughts
 * Currently no compression settings are supported. Some compression schemes (e.g. LZMA) will be easy to port, whereas others like the Blosc family will likely require compilation to WASM.
 * No great substitute for NumPy exists in the browser, we should not be under the illusion that any serious data manipulation workflows will move to the browser any time soon.
+* This library represents multidimensional arrays as nested arrays of TypedArrays, similar as Pyodide. Operataions such as slicing and setting all had to be implemented from scratch to mimic NumPy as closely as possible

@@ -85,7 +85,7 @@ describe("Slice creation", () => {
 describe("GetBasicSelection1D", () => {
     const store = new ObjectStore<ArrayBuffer>();
 
-    const u8 = new Uint32Array(5);
+    const u8 = new Int32Array(5);
     u8.set([0, 1, 2, 3, 4]);
 
     initArray(store, 8, 5, '<i4', "my_array");
@@ -107,6 +107,6 @@ describe("GetBasicSelection1D", () => {
     const z = new ZarrArray(store, "my_array");
 
     it("can select single numbers", () => {
-        expect(z.getBasicSelection([slice(1, 3)]).data).toEqual(Uint32Array.from([1, 2]));
+        expect(z.getBasicSelection([slice(1, 3)]).data).toEqual(Int32Array.from([1, 2]));
     });
 });

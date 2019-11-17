@@ -1,8 +1,10 @@
 import { DtypeString } from '../types';
-import { ND, TypedArray, TypedArrayConstructor } from './types';
+import { NestedArrayData, TypedArray, TypedArrayConstructor } from './types';
 import { normalizeArraySelection, isIntegerArray, selectionToSliceIndices } from '../core/indexing';
 import { Slice, ArraySelection, SliceIndices } from '../core/types';
 import { sliceIndices, slice } from '../core/slice';
+import { BoundsCheckError, ValueError } from '../errors';
+import { AssertionError } from 'assert';
 
 
 const dtypeMapping: { [A in DtypeString]: TypedArrayConstructor<any> } = {
@@ -20,9 +22,9 @@ const dtypeMapping: { [A in DtypeString]: TypedArrayConstructor<any> } = {
 export class NestedArray<T extends TypedArray> {
     dtype: DtypeString;
     shape: number[];
-    data: ND<T>;
+    data: NestedArrayData<T>;
 
-    constructor(data: Buffer | ArrayBuffer | ND<T> | null, shape: number[], dtype: DtypeString) {
+    constructor(data: Buffer | ArrayBuffer | NestedArrayData<T> | null, shape: number[], dtype: DtypeString) {
         this.shape = shape;
         this.dtype = dtype;
 
@@ -54,12 +56,15 @@ export class NestedArray<T extends TypedArray> {
         if (outShape === []) {
             return sliceResult as number;
         } else {
-            return new NestedArray(sliceResult as ND<T>, outShape, this.dtype);
+            return new NestedArray(sliceResult as NestedArrayData<T>, outShape, this.dtype);
         }
     }
 
-    public set(data: NestedArray<T>, selection?: number | ArraySelection) {
-        // TODO implement
+    public set(array: NestedArray<T>, selection?: number | ArraySelection) {
+        if (selection === undefined) {
+            selection = [slice(null)];
+        }
+        setNestedArray(this.data, array.data, this.shape, array.shape, selection);
     }
 }
 
@@ -72,7 +77,7 @@ export class NestedArray<T extends TypedArray> {
  * @param shape list of numbers describing the size in each dimension
  * @param offset in bytes for this dimension
  */
-export function createNestedArray<T extends TypedArray>(data: Buffer | ArrayBuffer, t: TypedArrayConstructor<T>, shape: number[], offset = 0): ND<T> {
+export function createNestedArray<T extends TypedArray>(data: Buffer | ArrayBuffer, t: TypedArrayConstructor<T>, shape: number[], offset = 0): NestedArrayData<T> {
     if (shape.length === 1) {
         // This is only ever reached if called with rank 1 shape, never reached through recursion.
         // We just slice set the array directly from one level above to save some function calls.
@@ -103,7 +108,7 @@ export function createNestedArray<T extends TypedArray>(data: Buffer | ArrayBuff
  * @param shape The shape of the NestedArray
  * @param selection 
  */
-export function sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], selection: number | ArraySelection): [ND<T> | number, number[]] {
+export function sliceNestedArray<T extends TypedArray>(arr: NestedArrayData<T>, shape: number[], selection: number | ArraySelection): [NestedArrayData<T> | number, number[]] {
     // This translates "...", ":", null into a list of slices or integer selections
     const normalizedSelection = normalizeArraySelection(selection, shape);
     const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, shape);
@@ -112,8 +117,8 @@ export function sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number
     return [outArray, outShape];
 }
 
-function _sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], indicesSelection: (SliceIndices | number)[]): ND<T> | number {
-    let currentSlice = indicesSelection[0];
+function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData<T>, shape: number[], selection: (SliceIndices | number)[]): NestedArrayData<T> | number {
+    const currentSlice = selection[0];
 
     // Is this necessary?
     // // This is possible when a slice list is passed shorter than the amount of dimensions
@@ -128,7 +133,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], in
         if (shape.length === 1) {
             return arr[currentSlice];
         } else {
-            return _sliceNestedArray(arr[currentSlice] as ND<T>, shape.splice(1), indicesSelection.splice(1));
+            return _sliceNestedArray(arr[currentSlice] as NestedArrayData<T>, shape.splice(1), selection.splice(1));
         }
     }
     const [from, to, step, outputSize] = currentSlice;
@@ -152,7 +157,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], in
     let newArr = new Array(outputSize);
 
     for (let i = 0; i < outputSize; i++) {
-        newArr[i] = _sliceNestedArray(arr[from + i * step] as ND<T>, shape.slice(1), indicesSelection.slice(1));
+        newArr[i] = _sliceNestedArray(arr[from + i * step] as NestedArrayData<T>, shape.slice(1), selection.slice(1));
     }
 
     // This is necessary to ensure that the return value is a NestedArray if the last dimension is squeezed
@@ -166,7 +171,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: ND<T>, shape: number[], in
 }
 
 /**
- * Very ugly - digs down into the dimensions of given array to find the TypedArray and returns its constructor.
+ * Better to use sparingly - digs down into the dimensions of given array to find the TypedArray and returns its constructor.
  */
 function getNestedArrayConstructor<T extends TypedArray>(arr: any): TypedArrayConstructor<T> {
     // TODO fix typing
@@ -178,11 +183,41 @@ function getNestedArrayConstructor<T extends TypedArray>(arr: any): TypedArrayCo
 }
 
 
-// export function setNestedArray<T extends TypedArray>(array: NestedArray<T>, data: Buffer | ArrayBuffer, selection: Slice[]): ND<T> {
-//     replaceEllipsis(selection, array.shape);
-//     const indices = selection.map(DimensionSelection()
+export function setNestedArray<T extends TypedArray>(dstArr: NestedArrayData<T>, sourceArr: NestedArrayData<T>, destShape: number[], sourceShape: number[], selection: number | ArraySelection) {
+    // This translates "...", ":", null, etc into a list of slices.
+    const normalizedSelection = normalizeArraySelection(selection, destShape, true);
 
-//     // Check bounds and slice make sense
+    // Above we force the results to be SliceIndicesIndices only, without integer selections making this cast is safe.
+    const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, destShape) as [SliceIndices[], number[]];
 
-//     return arr;
-// }
+    // TODO: replace with non stringify equality check
+    if (JSON.stringify(outShape) !== JSON.stringify(sourceShape)) {
+        throw new ValueError(`Shape mismatch in source and target NestedArray: ${sourceShape} and ${outShape}`);
+    }
+
+    _setNestedArray(dstArr, sourceArr, destShape, sliceIndices);
+}
+
+
+function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData<T>, sourceArr: NestedArrayData<T>, shape: number[], selection: SliceIndices[]) {
+    let currentSlice = selection[0];
+
+    const [from, to, step, outputSize] = currentSlice;
+
+    if (shape.length === 1) {
+        if (step === 1) {
+            (dstArr as TypedArray).set(sourceArr as TypedArray, from);
+            return;
+        }
+
+        for (let i = 0; i < outputSize; i++) {
+            dstArr[from + i * step] = (sourceArr as TypedArray)[i];
+        }
+        return;
+    }
+
+    for (let i = 0; i < outputSize; i++) {
+        _setNestedArray(dstArr[from + i * step] as NestedArrayData<T>, sourceArr[i] as NestedArrayData<T>, shape.slice(1), selection.slice(1));
+    }
+
+}

@@ -42,14 +42,18 @@ export function selectionToSliceIndices(selection: NormalizedArraySelection, sha
 /**
  * This translates "...", ":", null into a list of slices or non-negative integer selections of length shape
  */
-export function normalizeArraySelection(selection: ArraySelection | number, shape: number[]): NormalizedArraySelection {
+export function normalizeArraySelection(selection: ArraySelection | number, shape: number[], convertIntegerSelectionToSlices = false): NormalizedArraySelection {
     selection = replaceEllipsis(selection, shape);
 
     for (let i = 0; i < selection.length; i++) {
         const dimSelection = selection[i];
 
         if (typeof dimSelection === "number") {
-            selection[i] = normalizeIntegerSelection(dimSelection, shape[i]);
+            if (convertIntegerSelectionToSlices) {
+                selection[i] = slice(dimSelection, dimSelection + 1, 1);
+            } else {
+                selection[i] = normalizeIntegerSelection(dimSelection, shape[i]);
+            }
         } else if (isIntegerArray(dimSelection)) {
             throw new TypeError("Integer array selections are not supported (yet)");
         } else if (dimSelection === ":" || dimSelection === null) {
@@ -105,7 +109,7 @@ export function replaceEllipsis(selection: ArraySelection | number, shape: numbe
 }
 
 export function normalizeIntegerSelection(dimSelection: number, dimLength: number): number {
-    // Maybe we should convert to integer
+    // Note: Maybe we should convert to integer or warn if dimSelection is not an integer
 
     // handle wraparound
     if (dimSelection < 0) {

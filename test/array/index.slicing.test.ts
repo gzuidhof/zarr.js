@@ -1,7 +1,8 @@
-import { TypedArrayConstructor, TypedArray, ND } from "../../src/array/types";
+import { TypedArrayConstructor, TypedArray, NestedArrayData } from "../../src/array/types";
 import { Slice } from "../../src/core/types";
 import { slice } from "../../src/core/slice";
 import { createNestedArray, sliceNestedArray } from "../../src/array";
+import { rangeTypedArray } from "./index.test";
 
 describe("NestedArray slicing", () => {
     interface TestCase {
@@ -9,7 +10,7 @@ describe("NestedArray slicing", () => {
         shape: number[];
         constr: TypedArrayConstructor<TypedArray>;
         selection: (Slice | number)[];
-        expected: ND<TypedArray> | number;
+        expected: NestedArrayData<TypedArray> | number;
         expectedShape?: number[];
     }
 
@@ -273,9 +274,7 @@ describe("NestedArray slicing", () => {
     ];
 
     test.each(testCases)(`%p`, (t: TestCase) => {
-        const size = t.shape.reduce((x, y) => x * y, 1);
-        const data = new t.constr(size);
-        data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
+        const data = rangeTypedArray(t.shape, t.constr);
         const nestedArray = (createNestedArray(data.buffer, t.constr, t.shape));
 
         const [sliceResult, sliceShape] = sliceNestedArray(nestedArray, t.shape, t.selection);

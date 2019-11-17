@@ -11,6 +11,7 @@ import { BasicIndexer, isContiguousSelection } from "./indexing";
 import { AssertionError } from "assert";
 import { NestedArray } from "../array";
 import { TypedArray } from "../array/types";
+import { ValueError } from "../errors";
 
 export class ZarrArray {
 
@@ -263,13 +264,16 @@ export class ZarrArray {
         throw new Error("Drop axes is not supported yet");
       }
 
-      // TODO
-      // out[outSelection] = tmp
-      console.log(`Setting ${JSON.stringify(outSelection)} to out with ${JSON.stringify(tmp)}`);
+      if (typeof tmp === "number") {
+        throw new ValueError("Scalar setting of NestedArrays not supported yet");
+      }
+
+      out.set(tmp as NestedArray<T>, outSelection);
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
         console.log(`Setting fill value into ${out}, selection: ${JSON.stringify(outSelection)}, value ${this.fillValue}`);
+        throw new Error("Not implemented yet");
       }
     }
   }
@@ -287,6 +291,4 @@ export class ZarrArray {
     // TODO decompression, filtering etc 
     return this.getTypedArray(chunk);
   }
-
-
 }

@@ -63,3 +63,9 @@ export class NegativeStepError extends Error {
         super(`Negative step size is not supported when indexing.`);
     }
 }
+
+export class ValueError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}

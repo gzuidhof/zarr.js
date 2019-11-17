@@ -1,5 +1,5 @@
 import { createNestedArray, sliceNestedArray } from "../../src/array";
-import { ND, TypedArray, TypedArrayConstructor } from '../../src/array/types';
+import { NestedArrayData, TypedArray, TypedArrayConstructor } from '../../src/array/types';
 
 
 describe("NestedArray creation", () => {
@@ -8,7 +8,7 @@ describe("NestedArray creation", () => {
         name: string;
         shape: number[];
         constr: TypedArrayConstructor<TypedArray>;
-        expected: ND<TypedArray>;
+        expected: NestedArrayData<TypedArray>;
     }
 
     const testCases: TestCase[] = [
@@ -140,12 +140,21 @@ describe("NestedArray creation", () => {
     ];
 
     test.each(testCases)(`%p`, (t: TestCase) => {
-        const size = t.shape.reduce((x, y) => x * y, 1);
-        const data = new t.constr(size);
-        data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
-        const nestedArray = (createNestedArray(data.buffer, t.constr, t.shape));
+        const data = rangeTypedArray(t.shape, t.constr);
+        const nestedArray = createNestedArray(data.buffer, t.constr, t.shape);
 
         expect(nestedArray).toEqual(t.expected);
     });
 
 });
+
+/**
+ * Creates a TypedArray with values 0 through N where N is the product of the shape.
+ */
+export function rangeTypedArray<T extends TypedArray>(shape: number[], tContructor: TypedArrayConstructor<T>) {
+    const size = shape.reduce((x, y) => x * y, 1);
+    const data = new tContructor(size);
+    data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
+    return data;
+}
+

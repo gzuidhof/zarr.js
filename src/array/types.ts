@@ -1,4 +1,4 @@
-export type ND<T extends TypedArray> = T | TypedArray | T[] | T[][] | T[][][] | T[][][][] | T[][][][][] | T[][][][][][];
+export type NestedArrayData<T extends TypedArray> = T | TypedArray | T[] | T[][] | T[][][] | T[][][][] | T[][][][][] | T[][][][][][];
 
 // export type TypedArray = Int32Array;
 
