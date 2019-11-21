@@ -1,5 +1,5 @@
-import { createNestedArray, sliceNestedArray } from "../../src/array";
-import { NestedArrayData, TypedArray, TypedArrayConstructor } from '../../src/array/types';
+import { createNestedArray, sliceNestedArray, rangeTypedArray } from "../../src/nestedArray";
+import { NestedArrayData, TypedArray, TypedArrayConstructor } from '../../src/nestedArray/types';
 
 
 describe("NestedArray creation", () => {
@@ -147,14 +147,4 @@ describe("NestedArray creation", () => {
     });
 
 });
-
-/**
- * Creates a TypedArray with values 0 through N where N is the product of the shape.
- */
-export function rangeTypedArray<T extends TypedArray>(shape: number[], tContructor: TypedArrayConstructor<T>) {
-    const size = shape.reduce((x, y) => x * y, 1);
-    const data = new tContructor(size);
-    data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
-    return data;
-}
 

@@ -2,6 +2,25 @@
 import { ZarrArray } from '../../src/core';
 import { ObjectStore } from '../../src/storage/objectStore';
 import { initArray, initGroup } from '../../src/storage';
+import { CreateArrayOptions, normalizeStoreArgument } from '../../src/creation';
+
+function createArray(shape: number | number[], opts?: CreateArrayOptions) {
+    if (opts === undefined) {
+        opts = {};
+    }
+
+    opts.store = normalizeStoreArgument(opts.store);
+    opts.chunks = opts.chunks === undefined ? null : opts.chunks;
+    opts.dtype = opts.dtype === undefined ? "<u1" : opts.dtype;
+
+    initArray(
+        opts.store, shape, opts.chunks, opts.dtype,
+        opts.path, opts.compressor, opts.fillValue,
+        opts.order, opts.overwrite, opts.chunkStore, opts.filters
+    );
+
+    return new ZarrArray(opts.store, undefined, opts.readOnly, opts.chunkStore, opts.cacheMetadata, opts.cacheAttrs);
+}
 
 describe("ZarrArray Creation", () => {
     it("does basic initialization", () => {

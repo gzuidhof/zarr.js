@@ -7,21 +7,22 @@ import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
 import { ArraySelection, DimensionSelection } from "./types";
-import { BasicIndexer, isContiguousSelection } from "./indexing";
+import { BasicIndexer, isContiguousSelection } from './indexing';
 import { AssertionError } from "assert";
-import { NestedArray } from "../array";
-import { TypedArray } from "../array/types";
-import { ValueError } from "../errors";
+import { NestedArray, dtypeMapping } from "../nestedArray";
+import { TypedArray } from "../nestedArray/types";
+import { ValueError, PermissionError } from "../errors";
+import { Indexer } from '../../dist/types/core/types';
 
 export class ZarrArray {
 
-  public store: Store<ArrayBuffer | Buffer>;
+  public store: Store<ValidStoreType>;
 
-  private _chunkStore: Store<ArrayBuffer | Buffer> | null;
+  private _chunkStore: Store<ValidStoreType> | null;
   /**
    * A `Store` providing the underlying storage for array chunks.
    */
-  public get chunkStore(): Store<ArrayBuffer | Buffer> {
+  public get chunkStore(): Store<ValidStoreType> {
     if (this._chunkStore) {
       return this._chunkStore;
     }
@@ -73,6 +74,13 @@ export class ZarrArray {
    */
   public get chunks(): number[] {
     return this.meta.chunks;
+  }
+
+  /**
+   * Integer describing how many element a chunk contains
+   */
+  private get chunkSize(): number {
+    return this.chunks.reduce((x, y) => x * y, 1);
   }
 
   /**
@@ -148,7 +156,7 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  constructor(store: Store<ArrayBuffer | Buffer>, path: null | string = null, readOnly: boolean = false, chunkStore: Store<ArrayBuffer | Buffer> | null = null, cacheMetadata = true, cacheAttrs = true) {
+  constructor(store: Store<ValidStoreType>, path: null | string = null, readOnly: boolean = false, chunkStore: Store<ArrayBuffer | Buffer> | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 
@@ -181,6 +189,10 @@ export class ZarrArray {
     }
   }
 
+  public getItem(selection: ArraySelection) {
+    return this.getBasicSelection(selection);
+  }
+
   public getBasicSelection(selection: ArraySelection) {
     // Refresh metadata
     if (!this.cacheMetadata) {
@@ -194,8 +206,8 @@ export class ZarrArray {
     } else {
       return this.getBasicSelectionND(selection);
     }
-
   }
+
   getBasicSelectionND(selection: ArraySelection) {
     const indexer = new BasicIndexer(selection, this);
     return this.getSelection(indexer);
@@ -278,7 +290,10 @@ export class ZarrArray {
     }
   }
 
-  private getTypedArray<T extends TypedArray>(buffer: Buffer | ArrayBuffer): NestedArray<T> {
+  private getTypedArray<T extends TypedArray>(buffer: ValidStoreType): NestedArray<T> {
+    if (typeof buffer === "string") {
+      buffer = Buffer.from(buffer);
+    }
     return new NestedArray<T>(buffer, this.chunks, this.dtype);
   }
 
@@ -286,9 +301,116 @@ export class ZarrArray {
     return this.keyPrefix + chunkCoords.join(".");
   }
 
-  private decodeChunk(cdata: Buffer | ArrayBuffer) {
+  private decodeChunk(cdata: ValidStoreType) {
     const chunk = cdata;
     // TODO decompression, filtering etc 
     return this.getTypedArray(chunk);
   }
+
+  public setItem(selection: ArraySelection, value: any) {
+    this.setBasicSelection(selection, value);
+  }
+
+  public setBasicSelection(selection: ArraySelection, value: any) {
+    if (this.readOnly) {
+      throw new PermissionError("Object is read only");
+    }
+
+    if (!this.cacheMetadata) {
+      this.loadMetadata();
+    }
+
+    if (this.shape === []) {
+      throw new Error("Shape [] indexing is not supported yet");
+    } else {
+      this.setBasicSelectionND(selection, value);
+    }
+  }
+
+  private setBasicSelectionND(selection: ArraySelection, value: any) {
+    const indexer = new BasicIndexer(selection, this);
+    this.setSelection(indexer, value);
+  }
+
+  private setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>) {
+    // We iterate over all chunks which overlap the selection and thus contain data
+    // that needs to be replaced. Each chunk is processed in turn, extracting the
+    // necessary data from the value array and storing into the chunk array.
+
+    // N.B., it is an important optimisation that we only visit chunks which overlap
+    // the selection. This minimises the number of iterations in the main for loop.
+
+    // TODO? check fields are sensible
+
+    // Determine indices of chunks overlapping the selection
+    const selectionShape = indexer.shape;
+
+    // Check value shape
+    if (selectionShape === []) {
+      // Setting a single value
+    } else if (typeof value === "number") {
+      // Setting a scalar value
+    } else if (value instanceof NestedArray) {
+      // TODO: non stringify equality check
+      if (JSON.stringify(value.shape) !== JSON.stringify(selectionShape)) {
+        throw new ValueError(`Shape mismatch in source NestedArray and set selection: ${value.shape} and ${selectionShape}`);
+      }
+    } else {
+      // TODO support TypedArrays, buffers, etc
+      throw new Error("Unknown data type for setting :(");
+    }
+
+    // Iterate over chunks in range
+    for (let proj of indexer.iter()) {
+      let chunkValue = null;
+
+      if (selectionShape === []) {
+        chunkValue = value;
+      } else if (typeof value === "number") {
+        chunkValue = value;
+      } else {
+        chunkValue = value.slice(proj.outSelection);
+
+        // tslint:disable-next-line: strict-type-predicates
+        if (indexer.dropAxes !== null) {
+          throw new Error("Handling drop axes not supported yet");
+        }
+      }
+
+      this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue);
+    }
+  }
+
+  private chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+    // Obtain key for chunk storage
+    const cKey = this.chunkKey(chunkCoords);
+
+    let chunk: null | TypedArray = null;
+
+    const dtypeConstr = dtypeMapping[this.dtype];
+    const chunkSize = this.chunkSize;
+
+    if (isTotalSlice(chunkSelection, this.chunks)) {
+      // Totally replace chunk
+
+      // Optimization: we are completely replacing the chunk, so no need
+      // to access the existing chunk data
+
+      if (typeof value === "number") {
+        // TODO get the right type here
+        chunk = new dtypeConstr(chunkSize);
+        chunk.fill(value);
+      } else {
+        chunk = value.flatten();
+      }
+    } else {
+      // partially replace the contents of this chunk
+
+      // TODO TODO TODO
+    }
+
+  }
+
+
+
 }

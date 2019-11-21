@@ -7,7 +7,7 @@ import { BoundsCheckError, ValueError } from '../errors';
 import { AssertionError } from 'assert';
 
 
-const dtypeMapping: { [A in DtypeString]: TypedArrayConstructor<any> } = {
+export const dtypeMapping: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
     "<b": Int8Array,
     "<B": Uint8Array,
     "<i1": Int8Array,
@@ -66,6 +66,22 @@ export class NestedArray<T extends TypedArray> {
         }
         setNestedArray(this.data, array.data, this.shape, array.shape, selection);
     }
+
+    public flatten(): T {
+        throw new Error("Method not implemented.");
+    }
+}
+
+
+
+/**
+ * Creates a TypedArray with values 0 through N where N is the product of the shape.
+ */
+export function rangeTypedArray<T extends TypedArray>(shape: number[], tContructor: TypedArrayConstructor<T>) {
+    const size = shape.reduce((x, y) => x * y, 1);
+    const data = new tContructor(size);
+    data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
+    return data;
 }
 
 /**
