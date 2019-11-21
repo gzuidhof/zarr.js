@@ -6,13 +6,12 @@ import { ZarrArrayMetadata, UserAttributes } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
-import { ArraySelection, DimensionSelection } from "./types";
+import { ArraySelection, DimensionSelection, Indexer } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
 import { AssertionError } from "assert";
 import { NestedArray, dtypeMapping } from "../nestedArray";
 import { TypedArray } from "../nestedArray/types";
 import { ValueError, PermissionError } from "../errors";
-import { Indexer } from '../../dist/types/core/types';
 
 export class ZarrArray {
 
