@@ -8,7 +8,7 @@ describe("NestedArray creation", () => {
         name: string;
         shape: number[];
         constr: TypedArrayConstructor<TypedArray>;
-        expected: NestedArrayData<TypedArray>;
+        expected: NestedArrayData;
     }
 
     const testCases: TestCase[] = [

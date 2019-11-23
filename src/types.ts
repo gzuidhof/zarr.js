@@ -4,7 +4,11 @@ export type UserAttributes = object;
 /**
  * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
  */
-export type FillType = number | "NaN" | "Infinity" | "-Infinity" | null;
+export type FillType = number | null;
+
+export type FillTypeSerialized = number | "NaN" | "Infinity" | "-Infinity" | null;
+
+
 /**
  * Either `"C"` or `"F"`, defining the layout of bytes within each chunk of the array. `“C”` means row-major order, i.e., the last dimension varies fastest; `“F”` means column-major order, i.e., the first dimension varies fastest.
  */
@@ -64,7 +68,7 @@ export interface ZarrArrayMetadata {
     /**
      * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
      */
-    fill_value: FillType;
+    fill_value: FillTypeSerialized;
 
     /**
      * Either `"C"` or `"F"`, defining the layout of bytes within each chunk of the array. `“C”` means row-major order, i.e., the last dimension varies fastest; `“F”` means column-major order, i.e., the first dimension varies fastest.

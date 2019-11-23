@@ -9,7 +9,7 @@ describe("NestedArray slicing", () => {
         shape: number[];
         constr: TypedArrayConstructor<TypedArray>;
         selection: (Slice | number)[];
-        expected: NestedArrayData<TypedArray> | number;
+        expected: NestedArrayData | number;
         expectedShape?: number[];
     }
 

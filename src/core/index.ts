@@ -2,16 +2,16 @@ import { Store, ValidStoreType } from "../storage/types";
 
 import { pathToPrefix } from '../storage/index';
 import { normalizeStoragePath, isTotalSlice } from "../util";
-import { ZarrArrayMetadata, UserAttributes } from '../types';
+import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
 import { ArraySelection, DimensionSelection, Indexer } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
 import { AssertionError } from "assert";
-import { NestedArray, dtypeMapping } from "../nestedArray";
-import { TypedArray } from "../nestedArray/types";
-import { ValueError, PermissionError } from "../errors";
+import { NestedArray, createNestedArray } from "../nestedArray";
+import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
+import { ValueError, PermissionError, KeyError } from '../errors';
 
 export class ZarrArray {
 
@@ -92,8 +92,20 @@ export class ZarrArray {
   /**
    *  A value used for uninitialized portions of the array.
    */
-  public get fillValue() {
-    return this.meta.fill_value;
+  public get fillValue(): FillType {
+
+    const fillTypeValue = this.meta.fill_value;
+
+    // TODO extract into function
+    if (fillTypeValue === "NaN") {
+      return NaN;
+    } else if (fillTypeValue === "Infinity") {
+      return Infinity;
+    } else if (fillTypeValue === "-Infinity") {
+      return -Infinity;
+    }
+
+    return this.meta.fill_value as FillType;
   }
 
   /**
@@ -254,7 +266,7 @@ export class ZarrArray {
     if (this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
 
-      if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks)) { // AND no filters
+      if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
         // Optimization: we want the whole chunk, and the destination is
         // contiguous, so we can decompress directly from the chunk
         // into the destination array
@@ -264,11 +276,11 @@ export class ZarrArray {
         // TODO decompression
 
         console.log("optimized set", chunkSelection, this.chunks);
-        return out.set(this.getTypedArray(cdata));
+        return out.set(this.toNestedArray(cdata));
       }
 
       // Decode chunk
-      const chunk = this.decodeChunk(cdata);
+      const chunk = this.toNestedArray(this.decodeChunk(cdata));
       const tmp = chunk.slice(chunkSelection);
 
       if (dropAxes !== null) {
@@ -289,21 +301,31 @@ export class ZarrArray {
     }
   }
 
-  private getTypedArray<T extends TypedArray>(buffer: ValidStoreType): NestedArray<T> {
-    if (typeof buffer === "string") {
-      buffer = Buffer.from(buffer);
-    }
-    return new NestedArray<T>(buffer, this.chunks, this.dtype);
-  }
-
   private chunkKey(chunkCoords: number[]) {
     return this.keyPrefix + chunkCoords.join(".");
   }
 
-  private decodeChunk(cdata: ValidStoreType) {
-    const chunk = cdata;
+  private ensureBuffer(chunkData: ValidStoreType) {
+    if (typeof chunkData === "string") {
+      chunkData = Buffer.from(chunkData);
+    }
+    return chunkData;
+  }
+
+  private toTypedArray(buffer: Buffer | ArrayBuffer) {
+    return new DTYPE_TYPEDARRAY_MAPPING[this.dtype](buffer);
+  }
+
+  private toNestedArray<T extends TypedArray>(buffer: ValidStoreType) {
+    buffer = this.ensureBuffer(buffer);
+
+    return new NestedArray<T>(buffer, this.chunks, this.dtype);
+  }
+
+  private decodeChunk(chunkData: ValidStoreType) {
+    chunkData = this.ensureBuffer(chunkData);
     // TODO decompression, filtering etc 
-    return this.getTypedArray(chunk);
+    return chunkData;
   }
 
   public setItem(selection: ArraySelection, value: any) {
@@ -380,13 +402,13 @@ export class ZarrArray {
     }
   }
 
-  private chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+  private chunkSetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
     // Obtain key for chunk storage
-    const cKey = this.chunkKey(chunkCoords);
+    const chunkKey = this.chunkKey(chunkCoords);
 
     let chunk: null | TypedArray = null;
 
-    const dtypeConstr = dtypeMapping[this.dtype];
+    const dtypeConstr = DTYPE_TYPEDARRAY_MAPPING[this.dtype];
     const chunkSize = this.chunkSize;
 
     if (isTotalSlice(chunkSelection, this.chunks)) {
@@ -403,13 +425,43 @@ export class ZarrArray {
         chunk = value.flatten();
       }
     } else {
+
       // partially replace the contents of this chunk
 
-      // TODO TODO TODO
+      // Existing chunk data
+      let chunkData: TypedArray;
+
+      try {
+        // Chunk is initialized if this does not error
+        const chunkStoreData = this.chunkStore.getItem(chunkKey);
+        chunkData = this.toTypedArray(this.decodeChunk(chunkStoreData));
+      } catch (error) {
+        if (error instanceof KeyError) {
+          // Chunk is not initialized
+          chunkData = new dtypeConstr(chunkSize);
+          if (this.fillValue !== null) {
+            chunkData.fill(this.fillValue);
+          }
+        }
+        // Different type of error - rethrow
+        throw error;
+      }
+
+      const chunkNestedArray = new NestedArray(
+        chunkData,
+        this.chunks,
+        this.dtype,
+      );
+      chunkNestedArray.set(value, chunkSelection);
+      chunk = chunkNestedArray.flatten();
     }
 
+    const chunkData = this.encodeChunk(chunk);
+    this.chunkStore.setItem(chunkKey, chunkData);
   }
 
-
-
+  private encodeChunk(chunk: TypedArray) {
+    // TODO: compression, filters, etc
+    return chunk.buffer;
+  }
 }
