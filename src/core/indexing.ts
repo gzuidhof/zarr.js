@@ -179,15 +179,18 @@ function isBasicSelection(selection: ArraySelection): boolean {
     return true;
 }
 
-// From https://gist.github.com/cybercase/db7dde901d7070c98c48
+// Adapted from https://gist.github.com/cybercase/db7dde901d7070c98c48
+// Changed to allow empty iterator inputs
 function* product<T extends Array<Iterable<any>>>(...iterables: T) {
     if (iterables.length === 0) { return; }
     // make a list of iterators from the iterables
     const iterators = iterables.map(it => it[Symbol.iterator]());
     const results = iterators.map(it => it.next());
-    if (results.some(r => r.done)) {
-        throw new Error("Input contains an empty iterator.");
-    }
+
+    // Disabled to allow empty inputs
+    // if (results.some(r => r.done)) {
+    //     throw new Error("Input contains an empty iterator.");
+    // }
 
     for (let i = 0; ;) {
         if (results[i].done) {
@@ -210,7 +213,7 @@ export class BasicIndexer implements Indexer {
     dropAxes: null;
 
     constructor(selection: ArraySelection, array: ZarrArray) {
-        selection = replaceEllipsis(selection, array.shape);
+        selection = normalizeArraySelection(selection, array.shape);
 
         // Setup per-dimension indexers
         this.dimIndexers = [];
@@ -244,14 +247,16 @@ export class BasicIndexer implements Indexer {
     }
 
     * iter() {
-        const dimIndexerProduct = product(this.dimIndexers.map((x) => x.iter()));
+        const dimIndexerIterables = this.dimIndexers.map(x => x.iter());
+        const dimIndexerProduct = product(...dimIndexerIterables);
 
         for (let dimProjections of dimIndexerProduct) {
+            console.log("PROJ", dimProjections);
             const chunkCoords = [];
             const chunkSelection = [];
             const outSelection = [];
 
-            for (let p of dimProjections[0]) {
+            for (let p of dimProjections) {
                 chunkCoords.push((p as ChunkDimProjection).dimChunkIndex);
                 chunkSelection.push((p as ChunkDimProjection).dimChunkSelection);
                 if ((p as ChunkDimProjection).dimOutSelection !== null) {
@@ -322,7 +327,7 @@ class SliceDimIndexer implements DimIndexer {
         this.numChunks = Math.ceil(this.dimLength / this.dimChunkLength);
     }
 
-    * iter() {
+    *iter() {
         const dimChunkIndexFrom = Math.floor(this.start / this.dimChunkLength);
         const dimChunkIndexTo = Math.ceil(this.stop / this.dimChunkLength);
 

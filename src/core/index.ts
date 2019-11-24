@@ -1,7 +1,7 @@
 import { Store, ValidStoreType } from "../storage/types";
 
 import { pathToPrefix } from '../storage/index';
-import { normalizeStoragePath, isTotalSlice } from "../util";
+import { normalizeStoragePath, isTotalSlice, arrayEquals1D } from '../util';
 import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
@@ -200,11 +200,11 @@ export class ZarrArray {
     }
   }
 
-  public getItem(selection: ArraySelection) {
+  public slice(selection: ArraySelection) {
     return this.getBasicSelection(selection);
   }
 
-  public getBasicSelection(selection: ArraySelection) {
+  public getBasicSelection(selection: ArraySelection): Number | NestedArray<TypedArray> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       this.loadMetadata();
@@ -239,9 +239,13 @@ export class ZarrArray {
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
 
     const out = new NestedArray(null, outShape, outDtype);
-
     for (let proj of indexer.iter()) {
       this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
+    }
+
+    // Return scalar instead of zero-dimensional array.
+    if (out.shape.length === 0) {
+      return out.data[0] as number;
     }
 
     return out;
@@ -275,7 +279,7 @@ export class ZarrArray {
 
         // TODO decompression
 
-        console.log("optimized set", chunkSelection, this.chunks);
+        console.log("optimized get", chunkSelection, this.chunks);
         return out.set(this.toNestedArray(cdata));
       }
 
@@ -286,11 +290,6 @@ export class ZarrArray {
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
       }
-
-      if (typeof tmp === "number") {
-        throw new ValueError("Scalar setting of NestedArrays not supported yet");
-      }
-
       out.set(tmp as NestedArray<T>, outSelection);
 
     } else { // Chunk isn't there, use fill value
@@ -328,7 +327,7 @@ export class ZarrArray {
     return chunkData;
   }
 
-  public setItem(selection: ArraySelection, value: any) {
+  public set(selection: ArraySelection, value: any) {
     this.setBasicSelection(selection, value);
   }
 
@@ -373,7 +372,7 @@ export class ZarrArray {
       // Setting a scalar value
     } else if (value instanceof NestedArray) {
       // TODO: non stringify equality check
-      if (JSON.stringify(value.shape) !== JSON.stringify(selectionShape)) {
+      if (!arrayEquals1D(value.shape, selectionShape)) {
         throw new ValueError(`Shape mismatch in source NestedArray and set selection: ${value.shape} and ${selectionShape}`);
       }
     } else {
@@ -391,7 +390,6 @@ export class ZarrArray {
         chunkValue = value;
       } else {
         chunkValue = value.slice(proj.outSelection);
-
         // tslint:disable-next-line: strict-type-predicates
         if (indexer.dropAxes !== null) {
           throw new Error("Handling drop axes not supported yet");
@@ -443,8 +441,11 @@ export class ZarrArray {
             chunkData.fill(this.fillValue);
           }
         }
-        // Different type of error - rethrow
-        throw error;
+        else {
+          // Different type of error - rethrow
+          console.log(error, error instanceof KeyError);
+          throw error;
+        }
       }
 
       const chunkNestedArray = new NestedArray(

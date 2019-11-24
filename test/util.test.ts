@@ -13,7 +13,7 @@ describe("Human Readable Size", () => {
         expect(util.humanReadableSize(1234)).toEqual("1.2K");
         expect(util.humanReadableSize(1299)).toEqual("1.3K");
     });
-})
+});
 
 describe("NormalizePath", () => {
     test.each([
@@ -34,7 +34,7 @@ describe("NormalizePath", () => {
         [new String("a/b"), "a/b"],
     ])("normalizes path as expected: output %s, expected %p", (input: string | String, expected: string) => {
         expect(util.normalizeStoragePath(input)).toEqual(expected);
-    })
+    });
 
     test.each([
         ".",
@@ -44,5 +44,26 @@ describe("NormalizePath", () => {
         undefined,
     ])("doesn't allow relative paths, rejects invalid input: output %s, expected %p", (input) => {
         expect(() => util.normalizeStoragePath(input)).toThrow();
-    })
-})
+    });
+});
+
+describe("ArrayEquals1D works", () => {
+    test.each([
+        [1, 2, 3],
+        ["a", 1, "b"],
+        [3, 0, undefined, true],
+        [],
+    ])("1D Array should have been equal", (...arr: any) => {
+        expect(util.arrayEquals1D(arr, arr.slice(0))).toBeTruthy();
+    });
+
+    expect(util.arrayEquals1D([], [])).toBeTruthy();
+
+    test.each([
+        [[1, 2, 3], [1, "2", 3]],
+        [["a"], []],
+        [[undefined], []],
+    ])("1D Array should not be equal", (arrA, arrB) => {
+        expect(util.arrayEquals1D(arrA, arrB)).toBeFalsy();
+    });
+});

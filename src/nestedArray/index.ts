@@ -21,7 +21,11 @@ export class NestedArray<T extends TypedArray> {
             data = (data as TypedArray).buffer;
         }
 
-        if (
+        // Zero dimension array.. they are a bit weirdly represented now, they will only ever occur internally
+        if (this.shape.length === 0) {
+            this.data = new DTYPE_TYPEDARRAY_MAPPING[dtype](1);
+        }
+        else if (
             Buffer.isBuffer(data)
             || data instanceof ArrayBuffer
             || data === null
@@ -62,7 +66,12 @@ export class NestedArray<T extends TypedArray> {
             selection = [slice(null)];
         }
         if (typeof array === "number") {
-            setNestedArrayToScalar(this.data, array, this.shape, selection);
+            if (this.shape.length === 0) {
+                // Zero dimension array..
+                this.data[0] = array;
+            } else {
+                setNestedArrayToScalar(this.data, array, this.shape, selection);
+            }
         } else {
             setNestedArray(this.data, array.data, this.shape, array.shape, selection);
         }
