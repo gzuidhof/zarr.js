@@ -148,8 +148,28 @@ export function isTotalSlice(item: DimensionSelection | DimensionSelection[], sh
                 continue;
             }
             return false;
-        } else {
-            console.error("isTotalSlice unexpected non-slice");
+        }
+        return false;
+
+
+        // } else {
+        //     console.error(`isTotalSlice unexpected non-slice, got ${it}`);
+        //     return false;
+        // }
+    }
+    return true;
+}
+
+/**
+ * Checks for === equality of all elements.
+ */
+export function arrayEquals1D(a: ArrayLike<any>, b: ArrayLike<any>) {
+    if (a.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+            return false;
         }
     }
     return true;
