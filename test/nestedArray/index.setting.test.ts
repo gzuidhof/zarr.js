@@ -1,5 +1,5 @@
 import { TypedArrayConstructor, TypedArray, NestedArrayData } from "../../src/nestedArray/types";
-import { createNestedArray, sliceNestedArray, setNestedArray, rangeTypedArray } from "../../src/nestedArray";
+import { createNestedArray, sliceNestedArray, setNestedArray, rangeTypedArray, setNestedArrayToScalar } from "../../src/nestedArray";
 import { Slice } from "../../src/core/types";
 import { slice } from "../../src/core/slice";
 
@@ -125,5 +125,46 @@ describe("NestedArray setting", () => {
         expect(destNestedArray).toEqual(t.expected);
     });
 
+
+});
+
+describe("NestedArray scalar setting", () => {
+    interface TestCase {
+        name: string;
+        destShape: number[];
+        value: number;
+        constr: TypedArrayConstructor<TypedArray>;
+        selection: (Slice | number)[];
+        expected: NestedArrayData;
+    }
+
+
+    const testCases: TestCase[] = [
+        {
+            name: "1d_3",
+            destShape: [3],
+            value: 2,
+            constr: Int32Array,
+            selection: [slice(null)],
+            expected: Int32Array.from([2, 2, 2]),
+        },
+        {
+            name: "4d_1x2x2x4",
+            destShape: [1, 2, 2, 4],
+            value: 3,
+            constr: Int32Array,
+            selection: [slice(null), slice(0, 1), slice(null), slice(null)],
+            expected: [[[Int32Array.from([3, 3, 3, 3]), Int32Array.from([3, 3, 3, 3])], [Int32Array.from([8, 9, 10, 11]), Int32Array.from([12, 13, 14, 15])]]]
+        },
+    ];
+
+
+    test.each(testCases)(`%p`, (t: TestCase) => {
+        const destData = rangeTypedArray(t.destShape, t.constr);
+        const destNestedArray = (createNestedArray(destData.buffer, t.constr, t.destShape));
+
+        setNestedArrayToScalar(destNestedArray, t.value, t.destShape, t.selection);
+        expect(destNestedArray).toEqual(t.expected);
+    });
 
 });
