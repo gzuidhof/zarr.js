@@ -161,7 +161,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: nu
         if (shape.length === 1) {
             return arr[currentSlice];
         } else {
-            return _sliceNestedArray(arr[currentSlice] as NestedArrayData, shape.splice(1), selection.splice(1));
+            return _sliceNestedArray(arr[currentSlice] as NestedArrayData, shape.slice(1), selection.slice(1));
         }
     }
     const [from, to, step, outputSize] = currentSlice;

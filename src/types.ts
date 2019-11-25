@@ -8,7 +8,6 @@ export type FillType = number | null;
 
 export type FillTypeSerialized = number | "NaN" | "Infinity" | "-Infinity" | null;
 
-
 /**
  * Either `"C"` or `"F"`, defining the layout of bytes within each chunk of the array. `“C”` means row-major order, i.e., the last dimension varies fastest; `“F”` means column-major order, i.e., the first dimension varies fastest.
  */
@@ -17,6 +16,7 @@ export type Order = "C" | "F";
  * Currently supported dtypes are listed here only.
  */
 export type DtypeString = "<u1" | "<i1" | "<i4" | "<f4" | "<f8" | "<b" | "<B";
+
 /**
  * User interface for chunking.
  * - `null` or `true`: Automatic chunking (zarr will try to guess an appropriate) - not supported yet.
