@@ -275,7 +275,7 @@ describe("NestedArray slicing", () => {
     test.each(testCases)(`%p`, (t: TestCase) => {
         const data = rangeTypedArray(t.shape, t.constr);
         const nestedArray = (createNestedArray(data.buffer, t.constr, t.shape));
-
+        const initialShape = t.shape.map(x => x); // Copy to check if it got mutated
         const [sliceResult, sliceShape] = sliceNestedArray(nestedArray, t.shape, t.selection);
 
 
@@ -292,5 +292,6 @@ describe("NestedArray slicing", () => {
 
         expect(sliceResult).toEqual(t.expected);
         expect(sliceShape).toEqual(expectedOutputShape);
+        expect(initialShape).toEqual(t.shape);
     });
 });
