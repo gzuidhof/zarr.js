@@ -97,7 +97,6 @@ export function replaceEllipsis(selection: ArraySelection | number, shape: numbe
             selection = newItem;
         }
     }
-
     // Fill out selection if not completely specified
     if (selection.length < shape.length) {
         const numMissing = shape.length - selection.length;
@@ -105,6 +104,7 @@ export function replaceEllipsis(selection: ArraySelection | number, shape: numbe
     }
 
     checkSelectionLength(selection, shape);
+
     return selection;
 }
 
@@ -178,13 +178,10 @@ function isBasicSelection(selection: ArraySelection): boolean {
     }
     return true;
 }
-
-// Adapted from https://gist.github.com/cybercase/db7dde901d7070c98c48
-// Changed to allow empty iterator inputs
-function* product<T extends Array<Iterable<any>>>(...iterables: T) {
+function* product<T extends Array<Iterable<any>>>(...iterables: (() => IterableIterator<any>)[]) {
     if (iterables.length === 0) { return; }
     // make a list of iterators from the iterables
-    const iterators = iterables.map(it => it[Symbol.iterator]());
+    const iterators = iterables.map(it => it());
     const results = iterators.map(it => it.next());
 
     // Disabled to allow empty inputs
@@ -195,7 +192,7 @@ function* product<T extends Array<Iterable<any>>>(...iterables: T) {
     for (let i = 0; ;) {
         if (results[i].done) {
             // reset the current iterator
-            iterators[i] = iterables[i][Symbol.iterator]();
+            iterators[i] = iterables[i]();
             results[i] = iterators[i].next();
             // advance, and exit if we've reached the end
             if (++i >= iterators.length) { return; }
@@ -247,11 +244,10 @@ export class BasicIndexer implements Indexer {
     }
 
     * iter() {
-        const dimIndexerIterables = this.dimIndexers.map(x => x.iter());
+        const dimIndexerIterables = this.dimIndexers.map(x => (() => x.iter()));
         const dimIndexerProduct = product(...dimIndexerIterables);
 
         for (let dimProjections of dimIndexerProduct) {
-            console.log("PROJ", dimProjections);
             const chunkCoords = [];
             const chunkSelection = [];
             const outSelection = [];
