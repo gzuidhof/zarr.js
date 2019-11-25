@@ -178,7 +178,7 @@ function isBasicSelection(selection: ArraySelection): boolean {
     }
     return true;
 }
-function* product<T extends Array<Iterable<any>>>(...iterables: (() => IterableIterator<any>)[]) {
+function* product<T>(...iterables: (() => IterableIterator<T>)[]): IterableIterator<T[]> {
     if (iterables.length === 0) { return; }
     // make a list of iterators from the iterables
     const iterators = iterables.map(it => it());
@@ -248,15 +248,16 @@ export class BasicIndexer implements Indexer {
         const dimIndexerProduct = product(...dimIndexerIterables);
 
         for (let dimProjections of dimIndexerProduct) {
+            // console.log(dimProjections.map(x => x.dimChunkIndex));
             const chunkCoords = [];
             const chunkSelection = [];
             const outSelection = [];
 
             for (let p of dimProjections) {
-                chunkCoords.push((p as ChunkDimProjection).dimChunkIndex);
-                chunkSelection.push((p as ChunkDimProjection).dimChunkSelection);
-                if ((p as ChunkDimProjection).dimOutSelection !== null) {
-                    outSelection.push((p as ChunkDimProjection).dimOutSelection);
+                chunkCoords.push((p).dimChunkIndex);
+                chunkSelection.push((p).dimChunkSelection);
+                if ((p).dimOutSelection !== null) {
+                    outSelection.push((p).dimOutSelection);
                 }
             }
 

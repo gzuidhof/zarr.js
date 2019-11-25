@@ -61,19 +61,19 @@ export class NestedArray<T extends TypedArray> {
         }
     }
 
-    public set(array: NestedArray<T> | number, selection?: number | ArraySelection) {
-        if (selection === undefined) {
+    public set(selection: null | number | ArraySelection = null, value: NestedArray<T> | number) {
+        if (selection === null) {
             selection = [slice(null)];
         }
-        if (typeof array === "number") {
+        if (typeof value === "number") {
             if (this.shape.length === 0) {
                 // Zero dimension array..
-                this.data[0] = array;
+                this.data[0] = value;
             } else {
-                setNestedArrayToScalar(this.data, array, this.shape, selection);
+                setNestedArrayToScalar(this.data, value, this.shape, selection);
             }
         } else {
-            setNestedArray(this.data, array.data, this.shape, array.shape, selection);
+            setNestedArray(this.data, value.data, this.shape, value.shape, selection);
         }
     }
 

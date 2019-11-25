@@ -200,7 +200,7 @@ export class ZarrArray {
     }
   }
 
-  public slice(selection: ArraySelection) {
+  public slice(selection: ArraySelection = null) {
     return this.getBasicSelection(selection);
   }
 
@@ -237,8 +237,12 @@ export class ZarrArray {
     const outDtype = this.dtype;
     const outShape = indexer.shape;
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
-
     const out = new NestedArray(null, outShape, outDtype);
+
+    if (outSize === 0) {
+      return out;
+    }
+
     for (let proj of indexer.iter()) {
       this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
     }
@@ -280,7 +284,7 @@ export class ZarrArray {
         // TODO decompression
 
         console.log("optimized get", chunkSelection, this.chunks);
-        return out.set(this.toNestedArray(cdata));
+        return out.set(null, this.toNestedArray(cdata));
       }
 
       // Decode chunk
@@ -290,12 +294,12 @@ export class ZarrArray {
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
       }
-      out.set(tmp as NestedArray<T>, outSelection);
+      out.set(outSelection, tmp as NestedArray<T>);
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
         console.log(`Setting fill value into ${out}, selection: ${JSON.stringify(outSelection)}, value ${this.fillValue}`);
-        throw new Error("Not implemented yet");
+        throw new Error("Setting fill value not implemented yet");
       }
     }
   }
@@ -327,7 +331,7 @@ export class ZarrArray {
     return chunkData;
   }
 
-  public set(selection: ArraySelection, value: any) {
+  public set(selection: ArraySelection = null, value: any) {
     this.setBasicSelection(selection, value);
   }
 
@@ -453,7 +457,7 @@ export class ZarrArray {
         this.chunks,
         this.dtype,
       );
-      chunkNestedArray.set(value, chunkSelection);
+      chunkNestedArray.set(chunkSelection, value);
       chunk = chunkNestedArray.flatten();
     }
 
