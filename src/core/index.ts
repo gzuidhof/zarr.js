@@ -128,7 +128,7 @@ export class ZarrArray {
   }
 
 
-  private get _cdataShape() {
+  private get _chunkDataShape() {
     if (this.shape === []) {
       return [1];
     } else {
@@ -143,9 +143,9 @@ export class ZarrArray {
    * A tuple of integers describing the number of chunks along each
    * dimension of the array.
    */
-  public get cdataShape() {
+  public get chunkDataShape() {
     this.refreshMetadata();
-    return this._cdataShape;
+    return this._chunkDataShape;
   }
 
   /**
@@ -264,8 +264,8 @@ export class ZarrArray {
    * @param dropAxes Axes to squeeze out of the chunk.
    */
   private chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
-    if (chunkCoords.length !== this._cdataShape.length) {
-      throw new AssertionError({ message: `Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.cdataShape.length}` });
+    if (chunkCoords.length !== this._chunkDataShape.length) {
+      throw new AssertionError({ message: `Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}` });
     }
 
     const cKey = this.chunkKey(chunkCoords);
@@ -283,8 +283,7 @@ export class ZarrArray {
 
         // TODO decompression
 
-        console.log("optimized get", chunkSelection, this.chunks);
-        return out.set(null, this.toNestedArray(cdata));
+        return out.set(outSelection, this.toNestedArray(cdata));
       }
 
       // Decode chunk

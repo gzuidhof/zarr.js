@@ -140,10 +140,11 @@ export function isTotalSlice(item: DimensionSelection | DimensionSelection[], sh
         if (isSlice(it)) {
             const s = it as Slice;
             const isStepOne = s.step === 1 || s.step === null;
+
             if (s.start === null && s.stop === null && isStepOne) {
                 continue;
             }
-            if (((s.start as number) - (s.stop as number)) === shape[i] && isStepOne) {
+            if (((s.stop as number) - (s.start as number)) === shape[i] && isStepOne) {
                 continue;
             }
             return false;

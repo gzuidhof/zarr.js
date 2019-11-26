@@ -83,6 +83,8 @@ describe("ZarrArray 1D Setting", () => {
         a.set(null, value);
         z.set(null, value);
         expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+        // Slicing exactly a chunk
+        expect(nestedArrayEquals(a.slice([slice(10, 20)]), z.slice([slice(10, 20)]))).toBeTruthy();
     }
 
     const rangeTA = rangeTypedArray([35 - 15], Int32Array);
