@@ -1,7 +1,8 @@
 import { TypedArrayConstructor, TypedArray, NestedArrayData } from "../../src/nestedArray/types";
-import { createNestedArray, sliceNestedArray, setNestedArray, rangeTypedArray, setNestedArrayToScalar } from "../../src/nestedArray";
+import { setNestedArray, setNestedArrayToScalar } from "../../src/nestedArray/ops";
 import { Slice } from "../../src/core/types";
 import { slice } from "../../src/core/slice";
+import { rangeTypedArray, createNestedArray } from "../../src/nestedArray";
 
 describe("NestedArray setting", () => {
     interface TestCase {
@@ -155,6 +156,14 @@ describe("NestedArray scalar setting", () => {
             constr: Int32Array,
             selection: [slice(null), slice(0, 1), slice(null), slice(null)],
             expected: [[[Int32Array.from([3, 3, 3, 3]), Int32Array.from([3, 3, 3, 3])], [Int32Array.from([8, 9, 10, 11]), Int32Array.from([12, 13, 14, 15])]]]
+        },
+        {
+            name: "4d_1x2x2x4_step_2",
+            destShape: [1, 2, 2, 4],
+            value: 3,
+            constr: Int32Array,
+            selection: [slice(null), slice(0, 1), slice(null), slice(null, null, 2)],
+            expected: [[[Int32Array.from([3, 1, 3, 3]), Int32Array.from([3, 5, 3, 7])], [Int32Array.from([8, 9, 10, 11]), Int32Array.from([12, 13, 14, 15])]]]
         },
     ];
 

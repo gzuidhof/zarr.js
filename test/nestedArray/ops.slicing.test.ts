@@ -1,7 +1,8 @@
 import { TypedArrayConstructor, TypedArray, NestedArrayData } from "../../src/nestedArray/types";
-import { createNestedArray, sliceNestedArray, rangeTypedArray } from "../../src/nestedArray";
+import { createNestedArray, rangeTypedArray } from "../../src/nestedArray";
 import { Slice } from "../../src/core/types";
 import { slice } from "../../src/core/slice";
+import { sliceNestedArray } from "../../src/nestedArray/ops";
 
 describe("NestedArray slicing", () => {
     interface TestCase {

@@ -230,7 +230,7 @@ describe("GetBasicSelections2D", () => {
 
 function testGetBasicSelection(z: ZarrArray, selection: any, data: NestedArray<TypedArray>) {
     const selectedFromZarrArray = z.getBasicSelection(selection);
-    const selectedFromSource = data.slice(selection);
+    const selectedFromSource = data.get(selection);
     if (typeof selectedFromZarrArray === "number") {
         expect(selectedFromZarrArray).toEqual(selectedFromSource);
     }

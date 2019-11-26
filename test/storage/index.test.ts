@@ -1,4 +1,3 @@
-import { Store } from "../../src/storage/types";
 import { pathToPrefix } from "../../src/storage";
 
 describe("Store core functionality", () => {
@@ -7,4 +6,4 @@ describe("Store core functionality", () => {
         expect(pathToPrefix("a")).toEqual("a/");
         expect(pathToPrefix("a/b")).toEqual("a/b/");
     });
-})
+});

@@ -148,7 +148,7 @@ export function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts
     opts.readOnly = false;
 
     const z = create(shape, opts);
-    // z.set
+    z.set(null, data);
 
     opts.readOnly = wasReadOnly;
     z.readOnly = false;

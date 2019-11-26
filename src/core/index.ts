@@ -153,7 +153,7 @@ export class ZarrArray {
    */
   public get numChunks() {
     this.refreshMetadata();
-    return this.cdataShape.reduce((x, y) => x * y, 1);
+    return this.chunkDataShape.reduce((x, y) => x * y, 1);
   }
 
   /**
@@ -200,7 +200,7 @@ export class ZarrArray {
     }
   }
 
-  public slice(selection: ArraySelection = null) {
+  public get(selection: ArraySelection = null) {
     return this.getBasicSelection(selection);
   }
 
@@ -219,7 +219,7 @@ export class ZarrArray {
     }
   }
 
-  getBasicSelectionND(selection: ArraySelection) {
+  private getBasicSelectionND(selection: ArraySelection) {
     const indexer = new BasicIndexer(selection, this);
     return this.getSelection(indexer);
   }
@@ -288,7 +288,7 @@ export class ZarrArray {
 
       // Decode chunk
       const chunk = this.toNestedArray(this.decodeChunk(cdata));
-      const tmp = chunk.slice(chunkSelection);
+      const tmp = chunk.get(chunkSelection);
 
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
@@ -391,7 +391,7 @@ export class ZarrArray {
       } else if (typeof value === "number") {
         chunkValue = value;
       } else {
-        chunkValue = value.slice(proj.outSelection);
+        chunkValue = value.get(proj.outSelection);
         // tslint:disable-next-line: strict-type-predicates
         if (indexer.dropAxes !== null) {
           throw new Error("Handling drop axes not supported yet");

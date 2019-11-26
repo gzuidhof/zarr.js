@@ -150,16 +150,19 @@ export class Group implements MutableMapping<Group> {
         this.array(item, value);
         return true;
     }
+
     deleteItem(item: string): boolean {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
         throw new Error("Method not implemented.");
     }
+
     containsItem(item: string): boolean {
         const path = this.itemPath(item);
         return containsArray(this.store, path) || containsGroup(this.store, path);
     }
+
     proxy(): MutableMappingProxy<any> {
         return createProxy(this);
     }

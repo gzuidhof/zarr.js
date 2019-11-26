@@ -74,17 +74,17 @@ describe("ZarrArray 1D Setting", () => {
     const a = new NestedArray(null, 100, "<i4");
     const z = createArray(a.shape, { chunks: 10, dtype: a.dtype });
     z.set(null, a);
-    expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+    expect(nestedArrayEquals(a, z.get())).toBeTruthy();
 
     for (const value of [-1, 0, 1, 10]) {
         a.set(slice(15, 35), value);
         z.set(slice(15, 35), value);
-        expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+        expect(nestedArrayEquals(a, z.get())).toBeTruthy();
         a.set(null, value);
         z.set(null, value);
-        expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+        expect(nestedArrayEquals(a, z.get())).toBeTruthy();
         // Slicing exactly a chunk
-        expect(nestedArrayEquals(a.slice([slice(10, 20)]), z.slice([slice(10, 20)]))).toBeTruthy();
+        expect(nestedArrayEquals(a.get([slice(10, 20)]), z.get([slice(10, 20)]))).toBeTruthy();
     }
 
     const rangeTA = rangeTypedArray([35 - 15], Int32Array);
@@ -92,7 +92,7 @@ describe("ZarrArray 1D Setting", () => {
 
     a.set(slice(15, 35), rangeNA);
     z.set(slice(15, 35), rangeNA);
-    expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+    expect(nestedArrayEquals(a, z.get())).toBeTruthy();
 
 });
 
