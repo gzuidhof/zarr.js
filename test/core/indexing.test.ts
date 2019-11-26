@@ -7,6 +7,7 @@ import { normalizeIntegerSelection, replaceEllipsis } from "../../src/core/index
 import { NestedArray, rangeTypedArray } from '../../src/nestedArray/index';
 import { create } from '../../src/creation';
 import { TypedArray } from "../../src/nestedArray/types";
+import { MemoryStore } from "../../src/storage/memoryStore";
 
 describe("normalizeIntegerSelection", () => {
     it("normalizes integer selections", () => {
@@ -86,7 +87,7 @@ describe("Slice creation", () => {
 });
 
 describe("GetBasicSelection1DSimple", () => {
-    const store = new ObjectStore<ArrayBuffer>();
+    const store = new MemoryStore<ArrayBuffer>();
 
     const u8 = new Int32Array(5);
     u8.set([0, 1, 2, 3, 4]);
@@ -111,6 +112,13 @@ describe("GetBasicSelection1DSimple", () => {
 
     it("can select slices", () => {
         expect((z.getBasicSelection([slice(1, 3)]) as NestedArray<TypedArray>).data).toEqual(Int32Array.from([1, 2]));
+    });
+    it("can select single values", () => {
+        expect(z.getBasicSelection(0)).toEqual(0);
+        expect(z.getBasicSelection(3)).toEqual(3);
+    });
+    it("uses the fill value for missing chunks", () => {
+        expect(z.getBasicSelection(6)).toEqual(0);
     });
 });
 
@@ -160,7 +168,7 @@ describe("GetBasicSelections1D", () => {
     const data = rangeTypedArray([1050], Int32Array);
     const nestedArr = new NestedArray(data, [1050], "<i4");
     const z = create(nestedArr.shape, { chunks: [100], dtype: nestedArr.dtype });
-    z.set([":"], nestedArr);
+    z.set(null, nestedArr);
 
     test.each(basicSelections1D)(`%p`, (selection) => {
         testGetBasicSelection(z, selection, nestedArr);
@@ -204,13 +212,16 @@ describe("GetBasicSelections2D", () => {
         "...",
         [],
         ["...", slice(null)],
-        ["...", slice(null), slice(null)]
+        ["...", slice(null), slice(null)],
+        [null],
+        [null, null],
+        [null, 0],
     ];
 
     const data = rangeTypedArray([1000, 10], Int32Array);
     const nestedArr = new NestedArray(data, [1000, 10], "<i4");
     const z = create(nestedArr.shape, { chunks: [400, 3], dtype: nestedArr.dtype });
-    z.set([":"], nestedArr);
+    z.set(null, nestedArr);
 
     test.each(basicSelections2D)(`%p`, (selection) => {
         testGetBasicSelection(z, selection, nestedArr);

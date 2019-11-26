@@ -63,7 +63,6 @@ export function normalizeStoragePath(path: string | String | null): string {
 }
 
 export function normalizeShape(shape: number | number[]): number[] {
-
     if (typeof shape === "number") {
         shape = [shape];
     }

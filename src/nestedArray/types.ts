@@ -1,4 +1,5 @@
 import { DtypeString } from "../types";
+import { ValueError } from '../errors';
 
 export type NestedArrayData = TypedArray | NDNestedArrayData;
 export type NDNestedArrayData = TypedArray[] | TypedArray[][] | TypedArray[][][] | TypedArray[][][][] | TypedArray[][][][][] | TypedArray[][][][][][];
@@ -33,3 +34,18 @@ export const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstruct
     "<f4": Float32Array,
     "<f8": Float64Array,
 };
+
+
+export function getTypedArrayDtypeString(t: TypedArray): DtypeString {
+    // Favour the types below instead of small and big B
+    if (t instanceof Int8Array) return "<i1";
+    if (t instanceof Uint8Array) return "<u1";
+
+    if (t instanceof Int32Array) return "<i4";
+
+    if (t instanceof Float32Array) return "<f4";
+    if (t instanceof Float64Array) return "<f8";
+
+    throw new ValueError("Mapping for TypedArray to Dtypestring not known");
+}
+

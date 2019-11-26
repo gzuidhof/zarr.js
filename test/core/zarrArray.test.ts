@@ -2,7 +2,10 @@
 import { ZarrArray } from '../../src/core';
 import { ObjectStore } from '../../src/storage/objectStore';
 import { initArray, initGroup } from '../../src/storage';
-import { CreateArrayOptions, normalizeStoreArgument } from '../../src/creation';
+import { CreateArrayOptions, normalizeStoreArgument, array } from '../../src/creation';
+import { NestedArray, rangeTypedArray } from '../../src/nestedArray';
+import { slice } from '../../src/core/slice';
+import { arrayEquals1D } from '../../src/util';
 
 function createArray(shape: number | number[], opts?: CreateArrayOptions) {
     if (opts === undefined) {
@@ -64,5 +67,60 @@ describe("ZarrArray Creation", () => {
         expect(() => new ZarrArray(occupiedStore)).toThrowError();
     });
 
+});
+
+
+describe("ZarrArray 1D Setting", () => {
+    const a = new NestedArray(null, 100, "<i4");
+    const z = createArray(a.shape, { chunks: 10, dtype: a.dtype });
+    z.set(null, a);
+    expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+
+    for (const value of [-1, 0, 1, 10]) {
+        a.set(slice(15, 35), value);
+        z.set(slice(15, 35), value);
+        expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+        a.set(null, value);
+        z.set(null, value);
+        expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
+    }
+
+    const rangeTA = rangeTypedArray([35 - 15], Int32Array);
+    const rangeNA = new NestedArray(rangeTA);
+
+    a.set(slice(15, 35), rangeNA);
+    z.set(slice(15, 35), rangeNA);
+    expect(nestedArrayEquals(a, z.slice())).toBeTruthy();
 
 });
+
+function nestedArrayEquals(a: NestedArray<any> | number, b: NestedArray<any> | number) {
+    if (typeof b !== typeof a) {
+        console.log("Types are different");
+        return false;
+    }
+
+    // Second check is actually not necessary, but TS doesn't understand that
+    if (typeof a === "number" || typeof b === "number") {
+        if (a !== b) {
+            console.log("Values are different", a, b);
+            return false;
+        }
+        return false;
+    }
+
+    if (a.dtype !== b.dtype) {
+        console.log("Dtypes are different", a, b);
+        return false;
+    }
+
+    if (!arrayEquals1D(a.shape, b.shape)) {
+        console.log("Shapes are different", a.shape, b.shape);
+        return false;
+    }
+    if (!arrayEquals1D(a.flatten(), b.flatten())) {
+        console.log("Values are different", a.flatten(), b.flatten());
+        return false;
+    }
+    return true;
+}

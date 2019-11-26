@@ -204,7 +204,7 @@ export class ZarrArray {
     return this.getBasicSelection(selection);
   }
 
-  public getBasicSelection(selection: ArraySelection): Number | NestedArray<TypedArray> {
+  public getBasicSelection(selection: ArraySelection): number | NestedArray<TypedArray> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       this.loadMetadata();
@@ -298,8 +298,7 @@ export class ZarrArray {
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
-        console.log(`Setting fill value into ${out}, selection: ${JSON.stringify(outSelection)}, value ${this.fillValue}`);
-        throw new Error("Setting fill value not implemented yet");
+        out.set(outSelection, this.fillValue);
       }
     }
   }
@@ -447,7 +446,6 @@ export class ZarrArray {
         }
         else {
           // Different type of error - rethrow
-          console.log(error, error instanceof KeyError);
           throw error;
         }
       }

@@ -1,5 +1,5 @@
 
-export type ArraySelection = DimensionArraySelection[] | number | null;
+export type ArraySelection = DimensionArraySelection[] | DimensionArraySelection;
 export type DimensionArraySelection = Slice | number | number[] | "..." | ":" | null;
 
 export type NormalizedArraySelection = (Slice | number)[];

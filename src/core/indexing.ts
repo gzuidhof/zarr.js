@@ -1,16 +1,16 @@
 import { TooManyIndicesError, BoundsCheckError, NegativeStepError } from '../errors';
 import { ZarrArray } from './index';
-import { Slice, ArraySelection, ChunkDimProjection, Indexer, DimIndexer, ChunkProjection, NormalizedArraySelection, SliceIndices } from './types';
+import { Slice, ArraySelection, ChunkDimProjection, Indexer, DimIndexer, ChunkProjection, NormalizedArraySelection, SliceIndices, DimensionArraySelection } from './types';
 import { sliceIndices, slice } from "./slice";
 
-function ensureArray(selection: number | ArraySelection): ArraySelection {
+function ensureArray(selection: ArraySelection): DimensionArraySelection[] {
     if (!Array.isArray(selection)) {
         return [selection];
     }
     return selection;
 }
 
-function checkSelectionLength(selection: ArraySelection, shape: number[]) {
+function checkSelectionLength(selection: DimensionArraySelection[], shape: number[]) {
     if (selection.length > shape.length) {
         throw new TooManyIndicesError(selection, shape);
     }
@@ -248,7 +248,7 @@ export class BasicIndexer implements Indexer {
         const dimIndexerProduct = product(...dimIndexerIterables);
 
         for (let dimProjections of dimIndexerProduct) {
-            // console.log(dimProjections.map(x => x.dimChunkIndex));
+            // TODO fix this, I think the product outputs too many combinations
             const chunkCoords = [];
             const chunkSelection = [];
             const outSelection = [];

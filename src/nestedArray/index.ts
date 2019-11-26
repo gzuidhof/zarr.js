@@ -1,5 +1,5 @@
 import { DtypeString } from '../types';
-import { NestedArrayData, TypedArray, TypedArrayConstructor, DTYPE_TYPEDARRAY_MAPPING, NDNestedArrayData } from './types';
+import { NestedArrayData, TypedArray, TypedArrayConstructor, DTYPE_TYPEDARRAY_MAPPING, NDNestedArrayData, getTypedArrayDtypeString } from './types';
 import { normalizeArraySelection, isIntegerArray, selectionToSliceIndices } from '../core/indexing';
 import { Slice, ArraySelection, SliceIndices } from '../core/types';
 import { sliceIndices, slice } from '../core/slice';
@@ -12,12 +12,31 @@ export class NestedArray<T extends TypedArray> {
     shape: number[];
     data: NestedArrayData;
 
-    constructor(data: Buffer | ArrayBuffer | NestedArrayData | TypedArray | null, shape: number | number[], dtype: DtypeString) {
+    constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString)
+    constructor(data: Buffer | ArrayBuffer | NestedArrayData | null, shape: number | number[], dtype: DtypeString)
+    constructor(data: Buffer | ArrayBuffer | NestedArrayData | TypedArray | null, shape?: number | number[], dtype?: DtypeString) {
+
+        const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
+
+        if (shape === undefined) {
+            if (!dataIsTypedArray) {
+                throw new ValueError("Shape argument is required unless you pass in a TypedArray");
+            }
+            shape = [(data as TypedArray).length];
+        }
+
+        if (dtype === undefined) {
+            if (!dataIsTypedArray) {
+                throw new ValueError("Dtype argument is required unless you pass in a TypedArray");
+            }
+            dtype = getTypedArrayDtypeString(data as TypedArray);
+        }
+
         shape = normalizeShape(shape);
         this.shape = shape;
         this.dtype = dtype;
 
-        if (data !== null && shape.length !== 1 && (data as TypedArray).BYTES_PER_ELEMENT) {
+        if (dataIsTypedArray && shape.length !== 1) {
             data = (data as TypedArray).buffer;
         }
 
@@ -38,9 +57,6 @@ export class NestedArray<T extends TypedArray> {
             }
 
             const numDataElements = data.byteLength / parseInt(dtype[dtype.length - 1], 10);
-
-            // Throw error if shape.length == 0? tbd
-
             if (numShapeElements !== numDataElements) {
                 throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
             }
