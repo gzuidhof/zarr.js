@@ -1,13 +1,12 @@
 import { ChunksArgument, DtypeString, Compressor, Order, Filter, FillType, PersistenceMode } from './types';
-import { ValidStoreType, Store } from './storage/types';
+import { Store } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
 import { initArray, containsArray, containsGroup, initGroup } from './storage/index';
 import { TypedArray } from './nestedArray/types';
 import { NestedArray } from './nestedArray/index';
 import { normalizeStoragePath } from './util';
-import { ContainsArrayError, GroupNotFoundError, ValueError, ArrayNotFoundError, ContainsGroupError } from './errors';
-import { Group } from './hierarchy';
+import { ContainsArrayError, ValueError, ArrayNotFoundError, ContainsGroupError } from './errors';
 
 /**
  * See `create` function for type signature of these values
