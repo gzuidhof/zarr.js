@@ -92,7 +92,7 @@ export interface ZarrGroupMetadata {
  * Persistence mode:
  * * 'r' means read only (must exist);
  * * 'r+' meansread/write (must exist);
- * *'a' means read/write (create if doesn't exist);
+ * * 'a' means read/write (create if doesn't exist);
  * * 'w' means create (overwrite if exists);
  * * 'w-' means create (fail if exists).
  */

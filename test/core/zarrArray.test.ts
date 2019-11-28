@@ -2,12 +2,12 @@
 import { ZarrArray } from '../../src/core';
 import { ObjectStore } from '../../src/storage/objectStore';
 import { initArray, initGroup } from '../../src/storage';
-import { CreateArrayOptions, normalizeStoreArgument, array } from '../../src/creation';
+import { CreateArrayOptions, normalizeStoreArgument, array, CreateArrayOptionsWithoutShape } from '../../src/creation';
 import { NestedArray, rangeTypedArray } from '../../src/nestedArray';
 import { slice } from '../../src/core/slice';
 import { arrayEquals1D } from '../../src/util';
 
-async function createArray(shape: number | number[], opts?: CreateArrayOptions) {
+async function createArray(shape: number | number[], opts?: CreateArrayOptionsWithoutShape) {
     if (opts === undefined) {
         opts = {};
     }

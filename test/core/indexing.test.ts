@@ -173,7 +173,7 @@ describe("GetBasicSelections1D", async () => {
     const nestedArr = new NestedArray(data, [1050], "<i4");
 
     test.each(basicSelections1D)(`%p`, async (selection) => {
-        const z = await create(nestedArr.shape, { chunks: [100], dtype: nestedArr.dtype });
+        const z = await create({ shape: nestedArr.shape, chunks: [100], dtype: nestedArr.dtype });
         await z.set(null, nestedArr);
         await testGetBasicSelection(z, selection, nestedArr);
     });
@@ -225,7 +225,7 @@ describe("GetBasicSelections2D", async () => {
     const nestedArr = new NestedArray(data, [1000, 10], "<i4");
 
     test.each(basicSelections2D)(`%p`, async (selection) => {
-        const z = await create(nestedArr.shape, { chunks: [400, 3], dtype: nestedArr.dtype });
+        const z = await create({ shape: nestedArr.shape, chunks: [400, 3], dtype: nestedArr.dtype });
         await z.set(null, nestedArr);
         await testGetBasicSelection(z, selection, nestedArr);
     });

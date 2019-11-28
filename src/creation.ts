@@ -1,15 +1,18 @@
-import { ChunksArgument, DtypeString, Compressor, Order, Filter, FillType } from './types';
+import { ChunksArgument, DtypeString, Compressor, Order, Filter, FillType, PersistenceMode } from './types';
 import { ValidStoreType, Store } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
-import { initArray } from './storage/index';
+import { initArray, containsArray, containsGroup, initGroup } from './storage/index';
 import { TypedArray } from './nestedArray/types';
 import { NestedArray } from './nestedArray/index';
+import { normalizeStoragePath } from './util';
+import { ContainsArrayError, GroupNotFoundError, ValueError, ArrayNotFoundError, ContainsGroupError } from './errors';
+import { Group } from './hierarchy';
 
 /**
  * See `create` function for type signature of these values
  */
-export interface CreateArrayOptions {
+export interface CreateArrayOptionsWithoutShape {
     chunks?: ChunksArgument;
     dtype?: DtypeString;
     compressor?: Compressor | null;
@@ -25,25 +28,22 @@ export interface CreateArrayOptions {
     readOnly?: boolean;
 }
 
-
-export async function create(shape: number | number[], opts: CreateArrayOptions = {}) {
-    return createWithArguments(
-        shape,
-        opts.chunks,
-        opts.dtype,
-        opts.compressor,
-        opts.fillValue,
-        opts.order,
-        opts.store,
-        opts.overwrite,
-        opts.path,
-        opts.chunkStore,
-        opts.filters,
-        opts.cacheMetadata,
-        opts.cacheAttrs,
-        opts.readOnly,
-    );
-}
+export type CreateArrayOptions = {
+    shape: number | number[];
+    chunks?: ChunksArgument;
+    dtype?: DtypeString;
+    compressor?: Compressor | null;
+    fillValue?: FillType;
+    order?: Order;
+    store?: Store;
+    overwrite?: boolean;
+    path?: string;
+    chunkStore?: Store;
+    filters?: Filter[];
+    cacheMetadata?: boolean;
+    cacheAttrs?: boolean;
+    readOnly?: boolean;
+};
 
 /**
  * 
@@ -70,21 +70,8 @@ export async function create(shape: number | number[], opts: CreateArrayOptions 
  *      to all attribute read operations.
  * @param readOnly `true` if array should be protected against modification, defaults to `false`.
  */
-export async function createWithArguments(
-    shape: number | number[],
-    chunks: ChunksArgument = true,
-    dtype: DtypeString = "<u1",
-    compressor: Compressor | null = null,
-    fillValue: FillType = 0,
-    order: Order = "C",
-    store?: Store,
-    overwrite: boolean = false,
-    path?: string,
-    chunkStore?: Store,
-    filters?: Filter[],
-    cacheMetadata: boolean = true,
-    cacheAttrs: boolean = true,
-    readOnly: boolean = false,
+export async function create(
+    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = 0, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false }: CreateArrayOptions,
 ): Promise<ZarrArray> {
 
     store = normalizeStoreArgument(store);
@@ -99,68 +86,117 @@ export async function createWithArguments(
 /**
  * Create an empty array.
  */
-export async function empty(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function empty(shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
     opts.fillValue = null;
-    return create(shape, opts);
+    return create({ shape, ...opts });
 }
 
 /**
  * Create an array, with zero being used as the default value for
  * uninitialized portions of the array.
  */
-export async function zeros(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function zeros(shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
     opts.fillValue = 0;
-    return create(shape, opts);
+    return create({ shape, ...opts });
 }
 
 /**
  * Create an array, with one being used as the default value for
  * uninitialized portions of the array.
  */
-export async function ones(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function ones(shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
     opts.fillValue = 1;
-    return create(shape, opts);
+    return create({ shape, ...opts });
 }
 
 /**
  * Create an array, with `fill_value` being used as the default value for
  * uninitialized portions of the array
  */
-export async function full(shape: number | number[], fillValue: FillType, opts: CreateArrayOptions = {}) {
+export async function full(shape: number | number[], fillValue: FillType, opts: CreateArrayOptionsWithoutShape = {}) {
     opts.fillValue = fillValue;
-    return create(shape, opts);
+    return create({ shape, ...opts });
 }
 
-export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: CreateArrayOptions = {}) {
+export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: CreateArrayOptionsWithoutShape = {}) {
     // TODO: infer chunks?
-
 
     let shape = null;
     if (data instanceof NestedArray) {
         shape = data.shape;
-        opts.dtype = data.dtype;
+        opts.dtype = opts.dtype === undefined ? data.dtype : opts.dtype;
     } else {
         shape = data.byteLength;
         // TODO: infer datatype
     }
+    // TODO: support TypedArray
 
-    const wasReadOnly = opts.readOnly;
+    const wasReadOnly = opts.readOnly === undefined ? false : opts.readOnly;
     opts.readOnly = false;
 
-    const z = await create(shape, opts);
+    const z = await create({ shape, ...opts });
     await z.set(null, data);
-
-    opts.readOnly = wasReadOnly;
-    z.readOnly = false;
+    z.readOnly = wasReadOnly;
 
     return z;
+}
 
+export async function openArray(
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = 0, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: Compressor | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; } = {},
+) {
+    store = normalizeStoreArgument(store);
+    if (chunkStore === undefined) {
+        chunkStore = normalizeStoreArgument(store);
+    }
+    path = normalizeStoragePath(path);
+
+    if (mode === "r" || mode === "r+") {
+        if (await containsGroup(store, path)) {
+            throw new ContainsGroupError(path);
+        } else if (!await containsArray(store, path)) {
+            throw new ArrayNotFoundError(path);
+        }
+    } else if (mode === "w") {
+
+        if (shape === undefined) {
+            throw new ValueError("Shape can not be undefined when creating a new array");
+        }
+        await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+
+    } else if (mode === "a") {
+        if (await containsGroup(store, path)) {
+            throw new ContainsGroupError(path);
+        } else if (!await containsArray(store, path)) {
+            if (shape === undefined) {
+                throw new ValueError("Shape can not be undefined when creating a new array");
+            }
+            await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+        }
+    } else if (mode === "w-" || (mode as any) === "x") {
+        if (await containsArray(store, path)) {
+            throw new ContainsArrayError(path);
+        } else if (await containsGroup(store, path)) {
+            throw new ContainsGroupError(path);
+        } else {
+            if (shape === undefined) {
+                throw new ValueError("Shape can not be undefined when creating a new array");
+            }
+            await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+        }
+    } else {
+        throw new ValueError(`Invalid mode argument: ${mode}`);
+    }
+
+    const readOnly = mode === "r";
+    return ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
 }
 
 
-export function normalizeStoreArgument(store?: Store): Store {
+export function normalizeStoreArgument(store?: Store | string): Store {
     if (store === undefined) {
         return new MemoryStore();
+    } else if (typeof store === "string") {
+        throw new Error("String store arguments are not suppported yet");
     }
     return store;
 }

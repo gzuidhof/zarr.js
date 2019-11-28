@@ -1,6 +1,6 @@
 import { DtypeString } from '../types';
 import { NestedArrayData, TypedArray, TypedArrayConstructor, DTYPE_TYPEDARRAY_MAPPING, NDNestedArrayData, getTypedArrayDtypeString } from './types';
-import { ArraySelection } from '../core/types';
+import { ArraySelection, Slice } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape } from '../util';
@@ -67,6 +67,8 @@ export class NestedArray<T extends TypedArray> {
         }
     }
 
+    public get(selection: Slice | Slice[] | ":" | "..." | null): NestedArray<T>;
+    public get(selection: ArraySelection): NestedArray<T> | number;
     public get(selection: ArraySelection): NestedArray<T> | number {
         const [sliceResult, outShape] = sliceNestedArray(this.data, this.shape, selection);
         if (outShape.length === 0) {

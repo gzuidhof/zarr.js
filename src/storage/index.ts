@@ -1,7 +1,7 @@
 import { normalizeStoragePath, normalizeChunks, normalizeDtype, normalizeShape, normalizeOrder, normalizeFillValue } from '../util';
 import { Store } from './types';
 import { ARRAY_META_KEY, GROUP_META_KEY } from '../names';
-import { FillType, Order, Filter, Compressor, ZarrGroupMetadata, ChunksArgument, DtypeString, ZarrArrayMetadata } from '../types';
+import { FillType, Order, Filter, Compressor, ZarrGroupMetadata, ChunksArgument, DtypeString, ZarrArrayMetadata, FillTypeSerialized } from '../types';
 import { ContainsArrayError, ContainsGroupError } from '../errors';
 
 
@@ -145,6 +145,15 @@ async function initArrayMetadata(
     if (filters !== null && filters.length > 0) {
         throw Error("Filters are not supported yet");
     }
+
+    let serializedFillValue: FillTypeSerialized = fillValue;
+
+    if (typeof fillValue === "number") {
+        if (Number.isNaN(fillValue)) serializedFillValue = "NaN";
+        if (Number.POSITIVE_INFINITY === fillValue) serializedFillValue = "Infinity";
+        if (Number.NEGATIVE_INFINITY === fillValue) serializedFillValue = "-Infinity";
+    }
+
     filters = null;
 
     const metadata: ZarrArrayMetadata = {
@@ -154,7 +163,7 @@ async function initArrayMetadata(
         chunks: chunks as number[],
 
         dtype: dtype,
-        fill_value: fillValue,
+        fill_value: serializedFillValue,
         order: order,
         compressor: compressor,
         filters: filters,

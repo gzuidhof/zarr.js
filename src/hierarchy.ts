@@ -2,12 +2,12 @@ import { MutableMappingProxy, createProxy, AsyncMutableMapping, AsyncMutableMapp
 import { ValidStoreType, Store, } from './storage/types';
 import { normalizeStoragePath } from './util';
 import { containsArray, pathToPrefix, containsGroup, initGroup } from './storage/index';
-import { ContainsArrayError, GroupNotFoundError, PermissionError, KeyError, ValueError } from './errors';
-import { ZarrGroupMetadata, UserAttributes } from './types';
+import { ContainsArrayError, GroupNotFoundError, PermissionError, KeyError, ValueError, ContainsGroupError } from './errors';
+import { ZarrGroupMetadata, UserAttributes, PersistenceMode } from './types';
 import { GROUP_META_KEY, ATTRS_META_KEY } from './names';
 import { parseMetadata } from './metadata';
 import { Attributes } from './attributes';
-import { CreateArrayOptions, array, empty, zeros, ones, full, create } from './creation';
+import { CreateArrayOptions, array, empty, zeros, ones, full, create, normalizeStoreArgument, CreateArrayOptionsWithoutShape } from './creation';
 import { NestedArray } from './nestedArray';
 import { TypedArray } from './nestedArray/types';
 import { ZarrArray } from './core';
@@ -138,7 +138,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return Group.create(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
     }
 
-    private getOptsForArrayCreation(name: string, opts: CreateArrayOptions = {}) {
+    private getOptsForArrayCreation(name: string, opts: CreateArrayOptionsWithoutShape = {}) {
         const path = this.itemPath(name);
         opts.path = path;
 
@@ -153,7 +153,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     /**
      * Creates an array
      */
-    public array(name: string, data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptions, overwrite?: boolean) {
+    public array(name: string, data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptionsWithoutShape, overwrite?: boolean) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -163,7 +163,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return array(data, opts);
     }
 
-    public empty(name: string, shape: number[], opts: CreateArrayOptions = {}) {
+    public empty(name: string, shape: number[], opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -172,7 +172,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return empty(shape, opts);
     }
 
-    public zeros(name: string, shape: number[], opts: CreateArrayOptions = {}) {
+    public zeros(name: string, shape: number[], opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -181,7 +181,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return zeros(shape, opts);
     }
 
-    public ones(name: string, shape: number[], opts: CreateArrayOptions = {}) {
+    public ones(name: string, shape: number[], opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -190,7 +190,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return ones(shape, opts);
     }
 
-    public full(name: string, shape: number[], fillValue: number | null, opts: CreateArrayOptions = {}) {
+    public full(name: string, shape: number[], fillValue: number | null, opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -199,7 +199,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return full(shape, fillValue, opts);
     }
 
-    public createDataset(name: string, shape?: number[], data?: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptions) {
+    public createDataset(name: string, shape?: number[], data?: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptionsWithoutShape) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -210,7 +210,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
             if (shape === undefined) {
                 throw new ValueError("Shape must be set if no data is passed to CreateDataset");
             }
-            z = create(shape, opts);
+            z = create({ shape, ...opts });
         } else {
             z = array(data, opts);
         }
@@ -248,4 +248,73 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     proxy(): AsyncMutableMappingProxy<Group> {
         return createProxy(this);
     }
+}
+
+/**
+ * Create a group.
+ * @param store Store or path to directory in file system.
+ * @param path Group path within store.
+ * @param chunkStore Separate storage for chunks. If not provided, `store` will be used for storage of both chunks and metadata.
+ * @param overwrite If `true`, delete any pre-existing data in `store` at `path` before creating the group.
+ * @param cacheAttrs If `true` (default), user attributes will be cached for attribute read operations.
+ *   If `false`, user attributes are reloaded from the store prior to all attribute read operations.
+ */
+export async function group(store?: Store | string, path: string | null = null, chunkStore?: Store, overwrite: boolean = false, cacheAttrs: boolean = true) {
+    store = normalizeStoreArgument(store);
+    path = normalizeStoragePath(path);
+
+    if (overwrite || await containsGroup(store)) {
+        await initGroup(store, path, chunkStore, overwrite);
+    }
+
+    return Group.create(store, path, false, chunkStore, cacheAttrs);
+}
+
+/**
+ * Open a group using file-mode-like semantics.
+ * @param store Store or path to directory in file system or name of zip file.
+ * @param path Group path within store.
+ * @param mode Persistence mode, see `PersistenceMode` type.
+ * @param chunkStore Store or path to directory in file system or name of zip file.
+ * @param cacheAttrs If `true` (default), user attributes will be cached for attribute read operations
+ *   If False, user attributes are reloaded from the store prior to all attribute read operations.
+ * 
+ */
+export async function openGroup(store?: Store | string, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: Store, cacheAttrs: boolean = true) {
+    store = normalizeStoreArgument(store);
+    if (chunkStore !== undefined) {
+        chunkStore = normalizeStoreArgument(store);
+    }
+    path = normalizeStoragePath(path);
+
+    if (mode === "r" || mode === "r+") {
+        if (await containsArray(store, path)) {
+            throw new ContainsArrayError(path);
+        } else if (!await containsGroup(store, path)) {
+            throw new GroupNotFoundError(path);
+        }
+    } else if (mode === "w") {
+        await initGroup(store, path, chunkStore, true);
+    } else if (mode === "a") {
+
+        if (await containsArray(store, path)) {
+            throw new ContainsArrayError(path);
+        } else if (!await containsGroup(store, path)) {
+            await initGroup(store, path, chunkStore);
+        }
+
+    } else if (mode === "w-" || (mode as any) === "x") {
+        if (await containsArray(store, path)) {
+            throw new ContainsArrayError(path);
+        } else if (await containsGroup(store, path)) {
+            throw new ContainsGroupError(path);
+        } else {
+            await initGroup(store, path, chunkStore);
+        }
+    } else {
+        throw new ValueError(`Invalid mode argument: ${mode}`);
+    }
+
+    const readOnly = mode === "r";
+    return Group.create(store, path, readOnly, chunkStore, cacheAttrs);
 }
