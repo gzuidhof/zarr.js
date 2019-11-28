@@ -67,7 +67,7 @@ export class NestedArray<T extends TypedArray> {
         }
     }
 
-    public get(selection: Slice | Slice[] | ":" | "..." | null): NestedArray<T>;
+    public get(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): NestedArray<T>;
     public get(selection: ArraySelection): NestedArray<T> | number;
     public get(selection: ArraySelection): NestedArray<T> | number {
         const [sliceResult, outShape] = sliceNestedArray(this.data, this.shape, selection);
