@@ -219,7 +219,7 @@ export class ZarrArray {
   public async reloadMetadata() {
     const metaKey = this.keyPrefix + ARRAY_META_KEY;
     const metaStoreValue = this.store.getItem(metaKey);
-    this.meta = parseMetadata(await metaStoreValue);
+    this.meta = parseMetadata(await metaStoreValue) as ZarrArrayMetadata;
     return this.meta;
   }
 

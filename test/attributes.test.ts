@@ -9,32 +9,32 @@ describe("Attributes", () => {
     ];
 
     for (const config of configs) {
-        // it("Shows basic behavior", async () => {
-        //     const store = new ObjectStore<string>();
-        //     const a = new Attributes(store, "attrs", false, config.cache);
-        //     expect(await a.asObject()).toEqual({});
+        it("Shows basic behavior", async () => {
+            const store = new ObjectStore<string>();
+            const a = new Attributes(store, "attrs", false, config.cache);
+            expect(await a.asObject()).toEqual({});
 
-        //     await a.setItem('foo', 'bar');
-        //     await a.setItem('baz', 42);
-        //     expect(store.containsItem("attrs")).toBeTruthy();
-        //     expect(await a.getItem("foo")).toEqual("bar");
-        //     expect(JSON.parse(store.getItem("attrs"))).toEqual({ 'foo': 'bar', 'baz': 42 });
-        //     await a.deleteItem("foo");
-        //     expect(JSON.parse(store.getItem("attrs"))).toEqual({ 'baz': 42 });
+            await a.setItem('foo', 'bar');
+            await a.setItem('baz', 42);
+            expect(store.containsItem("attrs")).toBeTruthy();
+            expect(await a.getItem("foo")).toEqual("bar");
+            expect(JSON.parse(store.getItem("attrs"))).toEqual({ 'foo': 'bar', 'baz': 42 });
+            await a.deleteItem("foo");
+            expect(JSON.parse(store.getItem("attrs"))).toEqual({ 'baz': 42 });
 
-        //     await a.put({ "hello": "ok" });
-        //     expect(JSON.parse(store.getItem("attrs"))).toEqual({ 'hello': 'ok' });
-        // });
+            await a.put({ "hello": "ok" });
+            expect(JSON.parse(store.getItem("attrs"))).toEqual({ 'hello': 'ok' });
+        });
 
-        // it("Respects read only", async () => {
-        //     const store = new ObjectStore<string>();
-        //     const a = new Attributes(store, "attrs", true, config.cache);
-        //     const aProxy = a.proxy();
-        //     await expect(a.put({})).rejects.toBeTruthy();
-        //     await expect(a.setItem("key", "value")).rejects.toBeTruthy();
-        //     expect(await a.getItem("key")).toBeUndefined();
-        //     await expect(a.deleteItem("key")).rejects.toBeTruthy();
-        // });
+        it("Respects read only", async () => {
+            const store = new ObjectStore<string>();
+            const a = new Attributes(store, "attrs", true, config.cache);
+            const aProxy = a.proxy();
+            await expect(a.put({})).rejects.toBeTruthy();
+            await expect(a.setItem("key", "value")).rejects.toBeTruthy();
+            expect(await a.getItem("key")).toBeUndefined();
+            await expect(a.deleteItem("key")).rejects.toBeTruthy();
+        });
 
         it("Can deal with already object metadata (instead of string)", async () => {
             const store = new ObjectStore<string>();

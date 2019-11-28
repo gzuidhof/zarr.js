@@ -42,7 +42,7 @@ export class Attributes<M extends UserAttributes> implements AsyncMutableMapping
         try {
             const data = await this.store.getItem(this.key);
             // TODO fix typing?
-            return parseMetadata<M>(JSON.stringify(data));
+            return parseMetadata(data) as M;
         } catch (error) {
             return {} as M;
         }
