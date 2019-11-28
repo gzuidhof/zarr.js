@@ -1,8 +1,8 @@
-import { Store, ValidStoreType } from "./types";
+import { SyncStore, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
 import { KeyError } from "../errors";
 
-export class ObjectStore<T extends ValidStoreType> implements Store<T> {
+export class ObjectStore<T extends ValidStoreType> implements SyncStore<T> {
     listDir?: undefined;
     rmDir?: undefined;
     getSize?: undefined;

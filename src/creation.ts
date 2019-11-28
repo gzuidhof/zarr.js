@@ -1,5 +1,5 @@
 import { ChunksArgument, DtypeString, Compressor, Order, Filter, FillType } from './types';
-import { Store, ValidStoreType } from './storage/types';
+import { ValidStoreType, Store } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
 import { initArray } from './storage/index';
@@ -15,10 +15,10 @@ export interface CreateArrayOptions {
     compressor?: Compressor | null;
     fillValue?: FillType;
     order?: Order;
-    store?: Store<ValidStoreType>;
+    store?: Store;
     overwrite?: boolean;
     path?: string;
-    chunkStore?: Store<Buffer>;
+    chunkStore?: Store;
     filters?: Filter[];
     cacheMetadata?: boolean;
     cacheAttrs?: boolean;
@@ -70,27 +70,27 @@ export function create(shape: number | number[], opts: CreateArrayOptions = {}) 
  *      to all attribute read operations.
  * @param readOnly `true` if array should be protected against modification, defaults to `false`.
  */
-export function createWithArguments(
+export async function createWithArguments(
     shape: number | number[],
     chunks: ChunksArgument = true,
     dtype: DtypeString = "<u1",
     compressor: Compressor | null = null,
     fillValue: FillType = 0,
     order: Order = "C",
-    store?: Store<ValidStoreType>,
+    store?: Store,
     overwrite: boolean = false,
     path?: string,
-    chunkStore?: Store<Buffer>,
+    chunkStore?: Store,
     filters?: Filter[],
     cacheMetadata: boolean = true,
     cacheAttrs: boolean = true,
     readOnly: boolean = false,
-): ZarrArray {
+): Promise<ZarrArray> {
 
     store = normalizeStoreArgument(store);
 
     initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
-    const z = new ZarrArray(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
+    const z = await ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
 
     return z;
 }
@@ -99,7 +99,7 @@ export function createWithArguments(
 /**
  * Create an empty array.
  */
-export function empty(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function empty(shape: number | number[], opts: CreateArrayOptions = {}) {
     opts.fillValue = null;
     return create(shape, opts);
 }
@@ -108,7 +108,7 @@ export function empty(shape: number | number[], opts: CreateArrayOptions = {}) {
  * Create an array, with zero being used as the default value for
  * uninitialized portions of the array.
  */
-export function zeros(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function zeros(shape: number | number[], opts: CreateArrayOptions = {}) {
     opts.fillValue = 0;
     return create(shape, opts);
 }
@@ -117,7 +117,7 @@ export function zeros(shape: number | number[], opts: CreateArrayOptions = {}) {
  * Create an array, with one being used as the default value for
  * uninitialized portions of the array.
  */
-export function ones(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function ones(shape: number | number[], opts: CreateArrayOptions = {}) {
     opts.fillValue = 1;
     return create(shape, opts);
 }
@@ -126,12 +126,12 @@ export function ones(shape: number | number[], opts: CreateArrayOptions = {}) {
  * Create an array, with `fill_value` being used as the default value for
  * uninitialized portions of the array
  */
-export function full(shape: number | number[], fillValue: FillType, opts: CreateArrayOptions = {}) {
+export async function full(shape: number | number[], fillValue: FillType, opts: CreateArrayOptions = {}) {
     opts.fillValue = fillValue;
     return create(shape, opts);
 }
 
-export function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: CreateArrayOptions = {}) {
+export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: CreateArrayOptions = {}) {
     // TODO: infer chunks?
 
 
@@ -147,8 +147,8 @@ export function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts
     const wasReadOnly = opts.readOnly;
     opts.readOnly = false;
 
-    const z = create(shape, opts);
-    z.set(null, data);
+    const z = await create(shape, opts);
+    await z.set(null, data);
 
     opts.readOnly = wasReadOnly;
     z.readOnly = false;
@@ -158,7 +158,7 @@ export function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts
 }
 
 
-export function normalizeStoreArgument<T extends ValidStoreType>(store?: Store<T>): Store<T> {
+export function normalizeStoreArgument(store?: Store): Store {
     if (store === undefined) {
         return new MemoryStore();
     }

@@ -1,6 +1,9 @@
-import { MutableMapping } from "../mutableMapping";
+import { MutableMapping, AsyncMutableMapping } from "../mutableMapping";
 
 export type ValidStoreType = Buffer | string | ArrayBuffer;
+
+
+export type Store = SyncStore<ValidStoreType> | AsyncStore<ValidStoreType>;
 
 /**
  * This module contains storage classes for use with Zarr arrays and groups.
@@ -17,11 +20,21 @@ export type ValidStoreType = Buffer | string | ArrayBuffer;
  * Store classes may also optionally implement a `rename` method (rename all members under a given
  * path) and a `getSize` method (return the size in bytes of a given value).
  */
-
-export interface Store<T extends ValidStoreType> extends MutableMapping<T> {
+export interface SyncStore<T extends ValidStoreType> extends MutableMapping<T> {
     listDir?: (path?: string) => string[];
     rmDir?: (path?: string) => boolean;
     getSize?: (path?: string) => number;
     rename?: (path?: string) => void;
     keys(): string[];
+}
+
+/**
+ * Async version of Store
+ */
+export interface AsyncStore<T extends ValidStoreType> extends AsyncMutableMapping<T> {
+    listDir?: (path?: string) => Promise<string[]>;
+    rmDir?: (path?: string) => Promise<boolean>;
+    getSize?: (path?: string) => Promise<number>;
+    rename?: (path?: string) => Promise<void>;
+    keys(): Promise<string[]>;
 }

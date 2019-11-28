@@ -1,5 +1,5 @@
 import { normalizeStoragePath, normalizeChunks, normalizeDtype, normalizeShape, normalizeOrder, normalizeFillValue } from '../util';
-import { Store, ValidStoreType } from "./types";
+import { SyncStore, ValidStoreType, AsyncStore, Store } from './types';
 import { ARRAY_META_KEY, GROUP_META_KEY } from '../names';
 import { FillType, Order, Filter, Compressor, ZarrGroupMetadata, ChunksArgument, DtypeString, ZarrArrayMetadata } from '../types';
 import { ContainsArrayError, ContainsGroupError } from '../errors';
@@ -8,7 +8,7 @@ import { ContainsArrayError, ContainsGroupError } from '../errors';
 /**
  * Return true if the store contains an array at the given logical path.
  */
-export function containsArray<T>(store: Store<ValidStoreType>, path: string | null = null) {
+export function containsArray(store: Store, path: string | null = null) {
     path = normalizeStoragePath(path);
     const prefix = pathToPrefix(path);
     const key = prefix + ARRAY_META_KEY;
@@ -18,7 +18,7 @@ export function containsArray<T>(store: Store<ValidStoreType>, path: string | nu
 /**
  * Return true if the store contains a group at the given logical path.
  */
-export function containsGroup<T>(store: Store<ValidStoreType>, path: string | null = null) {
+export function containsGroup<T>(store: Store, path: string | null = null) {
     path = normalizeStoragePath(path);
     const prefix = pathToPrefix(path);
     const key = prefix + GROUP_META_KEY;
@@ -34,7 +34,7 @@ export function pathToPrefix(path: string): string {
     return '';
 }
 
-function listDirFromKeys(store: Store<any>, path: string): string[] {
+function listDirFromKeys(store: Store, path: string): string[] {
     // assume path already normalized
     const prefix = pathToPrefix(path);
     const children = new Set<string>();
@@ -49,7 +49,7 @@ function listDirFromKeys(store: Store<any>, path: string): string[] {
     return Array.from(children).sort();
 }
 
-function requireParentGroup(store: Store<any>, path: string, chunkStore: Store<any> | null, overwrite: boolean) {
+function requireParentGroup(store: Store, path: string, chunkStore: Store | null, overwrite: boolean) {
     // Assume path is normalized
     if (path.length === 0) {
         return;
@@ -75,7 +75,7 @@ function requireParentGroup(store: Store<any>, path: string, chunkStore: Store<a
  *  `MutableMapping` interface.
  * @param store 
  */
-export function listDir(store: Store<any>, path: string | null = null): string[] {
+export async function listDir(store: Store, path: string | null = null) {
     path = normalizeStoragePath(path);
     if (store.listDir) {
         return store.listDir(path);
@@ -84,7 +84,7 @@ export function listDir(store: Store<any>, path: string | null = null): string[]
     }
 }
 
-function initGroupMetadata(store: Store<ValidStoreType>, path: string | null = null, chunkStore: null | Store<ValidStoreType> = null, overwrite = false) {
+function initGroupMetadata(store: Store, path: string | null = null, chunkStore: null | Store = null, overwrite = false) {
     path = normalizeStoragePath(path);
 
     // Guard conditions
@@ -104,14 +104,14 @@ function initGroupMetadata(store: Store<ValidStoreType>, path: string | null = n
  *  Initialize a group store. Note that this is a low-level function and there should be no
  *  need to call this directly from user code.
  */
-export function initGroup(store: Store<ValidStoreType>, path: string | null = null, chunkStore: null | Store<ValidStoreType> = null, overwrite = false) {
+export function initGroup(store: Store, path: string | null = null, chunkStore: null | Store = null, overwrite = false) {
     path = normalizeStoragePath(path);
     requireParentGroup(store, path, chunkStore, overwrite);
     initGroupMetadata(store, path, chunkStore, overwrite);
 }
 
 function initArrayMetadata(
-    store: Store<ValidStoreType>,
+    store: Store,
     shape: number | number[],
     chunks: ChunksArgument,
     dtype: DtypeString,
@@ -120,7 +120,7 @@ function initArrayMetadata(
     fillValue: FillType,
     order: Order,
     overwrite: boolean,
-    chunkStore: null | Store<ValidStoreType>,
+    chunkStore: null | Store,
     filters: null | Filter[]
 ) {
     // Guard conditions
@@ -171,7 +171,7 @@ function initArrayMetadata(
  * function and there should be no need to call this directly from user code
  */
 export function initArray(
-    store: Store<ValidStoreType>,
+    store: Store,
     shape: number | number[],
     chunks: ChunksArgument,
     dtype: DtypeString,
@@ -180,7 +180,7 @@ export function initArray(
     fillValue: FillType = null,
     order: Order = "C",
     overwrite: boolean = false,
-    chunkStore: null | Store<ValidStoreType> = null,
+    chunkStore: null | Store = null,
     filters: null | Filter[] = null
 ) {
 

@@ -1,5 +1,5 @@
-import { MutableMapping, MutableMappingProxy, createProxy } from './mutableMapping';
-import { Store, ValidStoreType, } from './storage/types';
+import { MutableMappingProxy, createProxy, AsyncMutableMapping, AsyncMutableMappingProxy } from './mutableMapping';
+import { ValidStoreType, Store, } from './storage/types';
 import { normalizeStoragePath } from './util';
 import { containsArray, pathToPrefix, containsGroup, initGroup } from './storage/index';
 import { ContainsArrayError, GroupNotFoundError, PermissionError, KeyError } from './errors';
@@ -9,11 +9,11 @@ import { parseMetadata } from './metadata';
 import { Attributes } from './attributes';
 
 
-export class Group implements MutableMapping<Group> {
+export class Group implements AsyncMutableMapping<Group> {
     /**
      * A `Store` providing the underlying storage for the group.
      */
-    public store: Store<ValidStoreType>;
+    public store: Store;
 
     /**
      * Storage path.
@@ -48,11 +48,11 @@ export class Group implements MutableMapping<Group> {
     public attrs: Attributes<UserAttributes>;
 
 
-    private _chunkStore: Store<ValidStoreType> | null;
+    private _chunkStore: Store | null;
     /**
      * A `Store` providing the underlying storage for array chunks.
      */
-    public get chunkStore(): Store<ValidStoreType> {
+    public get chunkStore(): Store {
         if (this._chunkStore) {
             return this._chunkStore;
         }
@@ -61,9 +61,9 @@ export class Group implements MutableMapping<Group> {
 
     private keyPrefix: string;
     public readOnly: boolean;
-    private meta: ZarrGroupMetadata;
+    // private meta: ZarrGroupMetadata;
 
-    constructor(store: Store<ValidStoreType>, path: string | null = null, readOnly = false, chunkStore: Store<ValidStoreType> | null = null, cacheAttrs = true) {
+    constructor(store: Store, path: string | null = null, readOnly = false, chunkStore: Store | null = null, cacheAttrs = true) {
         this.store = store;
         this._chunkStore = chunkStore;
         this.path = normalizeStoragePath(path);
@@ -74,14 +74,14 @@ export class Group implements MutableMapping<Group> {
             throw new ContainsArrayError(this.path);
         }
 
-        // Initialize group metadata
-        try {
-            const metaKey = this.keyPrefix + GROUP_META_KEY;
-            const metaStoreValue = this.store.getItem(metaKey);
-            this.meta = parseMetadata(metaStoreValue);
-        } catch {
-            throw new GroupNotFoundError(this.path);
-        }
+        // // Initialize group metadata
+        // try {
+        //     const metaKey = this.keyPrefix + GROUP_META_KEY;
+        //     const metaStoreValue = this.store.getItem(metaKey);
+        //     this.meta = parseMetadata(metaStoreValue);
+        // } catch {
+        //     throw new GroupNotFoundError(this.path);
+        // }
 
         // Initialize attributes
         const attrKey = this.keyPrefix + ATTRS_META_KEY;
@@ -135,9 +135,9 @@ export class Group implements MutableMapping<Group> {
         // TODO create and return array
     }
 
-    getItem(item: string): Group {
+    async getItem(item: string) {
         const path = this.itemPath(item);
-        if (containsArray(this.store, path)) {
+        if (await containsArray(this.store, path)) {
             // TODO: CREATE AND RETURN ARRAY
             throw new Error("Method not implemented.");
         } else if (containsGroup(this.store, path)) {
@@ -146,24 +146,24 @@ export class Group implements MutableMapping<Group> {
         throw new KeyError(item);
     }
 
-    setItem(item: string, value: any): boolean {
+    async setItem(item: string, value: any) {
         this.array(item, value);
         return true;
     }
 
-    deleteItem(item: string): boolean {
+    async deleteItem(item: string): Promise<boolean> {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
         throw new Error("Method not implemented.");
     }
 
-    containsItem(item: string): boolean {
+    async containsItem(item: string) {
         const path = this.itemPath(item);
         return containsArray(this.store, path) || containsGroup(this.store, path);
     }
 
-    proxy(): MutableMappingProxy<any> {
+    proxy(): AsyncMutableMappingProxy<Group> {
         return createProxy(this);
     }
 }

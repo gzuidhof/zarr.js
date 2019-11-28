@@ -22,14 +22,14 @@ function createArray(shape: number | number[], opts?: CreateArrayOptions) {
         opts.order, opts.overwrite, opts.chunkStore, opts.filters
     );
 
-    return new ZarrArray(opts.store, undefined, opts.readOnly, opts.chunkStore, opts.cacheMetadata, opts.cacheAttrs);
+    return ZarrArray.create(opts.store, undefined, opts.readOnly, opts.chunkStore, opts.cacheMetadata, opts.cacheAttrs);
 }
 
 describe("ZarrArray Creation", () => {
-    it("does basic initialization", () => {
+    it("does basic initialization", async () => {
         const store = new ObjectStore<Buffer>();
         initArray(store, 100, 5, '<f8');
-        const z = new ZarrArray(store);
+        const z = await ZarrArray.create(store);
 
         expect(z).toBeInstanceOf(ZarrArray);
         expect(z.shape).toEqual([100]);
@@ -42,10 +42,10 @@ describe("ZarrArray Creation", () => {
         expect(z.dtype).toEqual('<f8');
     });
 
-    it("initializes at path", () => {
+    it("initializes at path", async () => {
         const store = new ObjectStore<Buffer>();
         initArray(store, 100, 5, '<f8', "foo/bar");
-        const z = new ZarrArray(store, "foo/bar");
+        const z = await ZarrArray.create(store, "foo/bar");
 
         expect(z).toBeInstanceOf(ZarrArray);
         expect(z.shape).toEqual([100]);
@@ -58,41 +58,41 @@ describe("ZarrArray Creation", () => {
         expect(z.dtype).toEqual('<f8');
     });
 
-    it("errors when store is in incorrect state", () => {
+    it("errors when store is in incorrect state", async () => {
         const uninitializedStore = new ObjectStore<Buffer>();
-        expect(() => new ZarrArray(uninitializedStore)).toThrowError();
+        await expect(ZarrArray.create(uninitializedStore)).rejects.toBeTruthy();
 
         const occupiedStore = new ObjectStore<Buffer>();
         initGroup(occupiedStore, "baz");
-        expect(() => new ZarrArray(occupiedStore)).toThrowError();
+        await expect(ZarrArray.create(occupiedStore)).rejects.toBeTruthy();
     });
 
 });
 
 
-describe("ZarrArray 1D Setting", () => {
+describe("ZarrArray 1D Setting", async () => {
     const a = new NestedArray(null, 100, "<i4");
-    const z = createArray(a.shape, { chunks: 10, dtype: a.dtype });
-    z.set(null, a);
-    expect(nestedArrayEquals(a, z.get())).toBeTruthy();
+    const z = await createArray(a.shape, { chunks: 10, dtype: a.dtype });
+    await z.set(null, a);
+    expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
 
     for (const value of [-1, 0, 1, 10]) {
         a.set(slice(15, 35), value);
-        z.set(slice(15, 35), value);
-        expect(nestedArrayEquals(a, z.get())).toBeTruthy();
+        await z.set(slice(15, 35), value);
+        expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
         a.set(null, value);
-        z.set(null, value);
-        expect(nestedArrayEquals(a, z.get())).toBeTruthy();
+        await z.set(null, value);
+        expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
         // Slicing exactly a chunk
-        expect(nestedArrayEquals(a.get([slice(10, 20)]), z.get([slice(10, 20)]))).toBeTruthy();
+        expect(nestedArrayEquals(a.get([slice(10, 20)]), await z.get([slice(10, 20)]))).toBeTruthy();
     }
 
     const rangeTA = rangeTypedArray([35 - 15], Int32Array);
     const rangeNA = new NestedArray(rangeTA);
 
     a.set(slice(15, 35), rangeNA);
-    z.set(slice(15, 35), rangeNA);
-    expect(nestedArrayEquals(a, z.get())).toBeTruthy();
+    await z.set(slice(15, 35), rangeNA);
+    expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
 
 });
 

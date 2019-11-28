@@ -1,4 +1,4 @@
-import { Store, ValidStoreType } from "../storage/types";
+import { Store, ValidStoreType, AsyncStore, SyncStore } from "../storage/types";
 
 import { pathToPrefix } from '../storage/index';
 import { normalizeStoragePath, isTotalSlice, arrayEquals1D } from '../util';
@@ -15,13 +15,13 @@ import { ValueError, PermissionError, KeyError } from '../errors';
 
 export class ZarrArray {
 
-  public store: Store<ValidStoreType>;
+  public store: Store;
 
-  private _chunkStore: Store<ValidStoreType> | null;
+  private _chunkStore: Store | null;
   /**
    * A `Store` providing the underlying storage for array chunks.
    */
-  public get chunkStore(): Store<ValidStoreType> {
+  public get chunkStore(): Store {
     if (this._chunkStore) {
       return this._chunkStore;
     }
@@ -64,7 +64,7 @@ export class ZarrArray {
    * "A list of integers describing the length of each dimension of the array.
    */
   public get shape(): number[] {
-    this.refreshMetadata();
+    // this.refreshMetadata();
     return this.meta.shape;
   }
 
@@ -119,7 +119,7 @@ export class ZarrArray {
    *  The total number of elements in the array.
    */
   public get size() {
-    this.refreshMetadata();
+    // this.refreshMetadata()
     return this.meta.shape.reduce((x, y) => x * y, 1);
   }
 
@@ -144,7 +144,7 @@ export class ZarrArray {
    * dimension of the array.
    */
   public get chunkDataShape() {
-    this.refreshMetadata();
+    // this.refreshMetadata();
     return this._chunkDataShape;
   }
 
@@ -152,7 +152,7 @@ export class ZarrArray {
    * Total number of chunks.
    */
   public get numChunks() {
-    this.refreshMetadata();
+    // this.refreshMetadata();
     return this.chunkDataShape.reduce((x, y) => x * y, 1);
   }
 
@@ -167,7 +167,36 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  constructor(store: Store<ValidStoreType>, path: null | string = null, readOnly: boolean = false, chunkStore: Store<ArrayBuffer | Buffer> | null = null, cacheMetadata = true, cacheAttrs = true) {
+  public static async create(store: Store, path: null | string = null, readOnly: boolean = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+    const metadata = await this.loadMetadataForConstructor(store, path);
+    return new ZarrArray(store, path, metadata as ZarrArrayMetadata, readOnly, chunkStore, cacheMetadata, cacheAttrs);
+  }
+
+  private static async loadMetadataForConstructor(store: Store, path: null | string) {
+    try {
+      path = normalizeStoragePath(path);
+      const keyPrefix = pathToPrefix(path);
+      const metaStoreValue = await store.getItem(keyPrefix + ARRAY_META_KEY);
+      return parseMetadata(metaStoreValue);
+    }
+    catch (error) {
+      throw new Error("Failed to load metadata for ZarrArray:" + error.toString());
+    }
+  }
+
+  /**
+   * Instantiate an array from an initialized store.
+   * @param store Array store, already initialized.
+   * @param path Storage path.
+   * @param metadata The initial value for the metadata
+   * @param readOnly True if array should be protected against modification.
+   * @param chunkStore Separate storage for chunks. If not provided, `store` will be used for storage of both chunks and metadata.
+   * @param cacheMetadata If true (default), array configuration metadata will be cached for the lifetime of the object.
+   * If false, array metadata will be reloaded prior to all data access and modification operations (may incur overhead depending on storage and data access pattern).
+   * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
+   * If false, user attributes are reloaded from the store prior to all attribute read operations.
+   */
+  private constructor(store: Store, path: null | string = null, metadata: ZarrArrayMetadata, readOnly: boolean = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 
@@ -178,7 +207,7 @@ export class ZarrArray {
     this.readOnly = readOnly;
     this.cacheMetadata = cacheMetadata;
     this.cacheAttrs = cacheAttrs;
-    this.meta = this.loadMetadata();
+    this.meta = metadata;
 
     const attrKey = this.keyPrefix + ATTRS_META_KEY;
     this.attrs = new Attributes<UserAttributes>(this.store, attrKey, this.readOnly, cacheAttrs);
@@ -187,16 +216,16 @@ export class ZarrArray {
   /**
    * (Re)load metadata from store
    */
-  private loadMetadata() {
+  public async reloadMetadata() {
     const metaKey = this.keyPrefix + ARRAY_META_KEY;
     const metaStoreValue = this.store.getItem(metaKey);
-    this.meta = parseMetadata(metaStoreValue);
+    this.meta = parseMetadata(await metaStoreValue);
     return this.meta;
   }
 
-  private refreshMetadata() {
+  private async refreshMetadata() {
     if (!this.cacheMetadata) {
-      this.loadMetadata();
+      await this.reloadMetadata();
     }
   }
 
@@ -204,10 +233,10 @@ export class ZarrArray {
     return this.getBasicSelection(selection);
   }
 
-  public getBasicSelection(selection: ArraySelection): number | NestedArray<TypedArray> {
+  public async getBasicSelection(selection: ArraySelection): Promise<number | NestedArray<TypedArray>> {
     // Refresh metadata
     if (!this.cacheMetadata) {
-      this.loadMetadata();
+      await this.reloadMetadata();
     }
 
     // Check fields (TODO?)
@@ -224,7 +253,7 @@ export class ZarrArray {
     return this.getSelection(indexer);
   }
 
-  private getSelection(indexer: BasicIndexer) {
+  private async getSelection(indexer: BasicIndexer) {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be extracted. Each chunk is processed in turn, extracting the
     // necessary data and storing into the correct location in the output array.
@@ -244,7 +273,7 @@ export class ZarrArray {
     }
 
     for (let proj of indexer.iter()) {
-      this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
+      await this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
     }
 
     // Return scalar instead of zero-dimensional array.
@@ -263,7 +292,7 @@ export class ZarrArray {
    * @param outSelection Location of region within output array to store results in.
    * @param dropAxes Axes to squeeze out of the chunk.
    */
-  private chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
+  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
     if (chunkCoords.length !== this._chunkDataShape.length) {
       throw new AssertionError({ message: `Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}` });
     }
@@ -283,11 +312,11 @@ export class ZarrArray {
 
         // TODO decompression
 
-        return out.set(outSelection, this.toNestedArray(cdata));
+        return out.set(outSelection, this.toNestedArray(await cdata));
       }
 
       // Decode chunk
-      const chunk = this.toNestedArray(this.decodeChunk(cdata));
+      const chunk = this.toNestedArray(this.decodeChunk(await cdata));
       const tmp = chunk.get(chunkSelection);
 
       if (dropAxes !== null) {
@@ -329,32 +358,32 @@ export class ZarrArray {
     return chunkData;
   }
 
-  public set(selection: ArraySelection = null, value: any) {
-    this.setBasicSelection(selection, value);
+  public async set(selection: ArraySelection = null, value: any) {
+    await this.setBasicSelection(selection, value);
   }
 
-  public setBasicSelection(selection: ArraySelection, value: any) {
+  public async setBasicSelection(selection: ArraySelection, value: any) {
     if (this.readOnly) {
       throw new PermissionError("Object is read only");
     }
 
     if (!this.cacheMetadata) {
-      this.loadMetadata();
+      await this.reloadMetadata();
     }
 
     if (this.shape === []) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
-      this.setBasicSelectionND(selection, value);
+      await this.setBasicSelectionND(selection, value);
     }
   }
 
-  private setBasicSelectionND(selection: ArraySelection, value: any) {
+  private async setBasicSelectionND(selection: ArraySelection, value: any) {
     const indexer = new BasicIndexer(selection, this);
-    this.setSelection(indexer, value);
+    await this.setSelection(indexer, value);
   }
 
-  private setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>) {
+  private async setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>) {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be replaced. Each chunk is processed in turn, extracting the
     // necessary data from the value array and storing into the chunk array.
@@ -398,11 +427,11 @@ export class ZarrArray {
         }
       }
 
-      this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue);
+      await this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue);
     }
   }
 
-  private chunkSetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+  private async chunkSetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
     // Obtain key for chunk storage
     const chunkKey = this.chunkKey(chunkCoords);
 
@@ -434,7 +463,7 @@ export class ZarrArray {
       try {
         // Chunk is initialized if this does not error
         const chunkStoreData = this.chunkStore.getItem(chunkKey);
-        chunkData = this.toTypedArray(this.decodeChunk(chunkStoreData));
+        chunkData = this.toTypedArray(this.decodeChunk(await chunkStoreData));
       } catch (error) {
         if (error instanceof KeyError) {
           // Chunk is not initialized
