@@ -65,27 +65,37 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
 
     private keyPrefix: string;
     public readOnly: boolean;
-    // private meta: ZarrGroupMetadata;
+    private meta: ZarrGroupMetadata;
 
-    constructor(store: Store, path: string | null = null, readOnly = false, chunkStore: Store | null = null, cacheAttrs = true) {
+    public static async create(store: Store, path: string | null = null, readOnly = false, chunkStore: Store | null = null, cacheAttrs = true) {
+        const metadata = await this.loadMetadataForConstructor(store, path);
+        return new Group(store, path, metadata as ZarrGroupMetadata, readOnly, chunkStore, cacheAttrs);
+    }
+
+    private static async loadMetadataForConstructor(store: Store, path: null | string) {
+        path = normalizeStoragePath(path);
+
+        if (await containsArray(store, path)) {
+            throw new ContainsArrayError(path);
+        }
+
+        const keyPrefix = pathToPrefix(path);
+        try {
+            const metaStoreValue = await store.getItem(keyPrefix + GROUP_META_KEY);
+            return parseMetadata(metaStoreValue);
+        }
+        catch (error) {
+            throw new GroupNotFoundError(path);
+        }
+    }
+
+    private constructor(store: Store, path: string | null = null, metadata: ZarrGroupMetadata, readOnly = false, chunkStore: Store | null = null, cacheAttrs = true) {
         this.store = store;
         this._chunkStore = chunkStore;
         this.path = normalizeStoragePath(path);
         this.keyPrefix = pathToPrefix(this.path);
         this.readOnly = readOnly;
-
-        if (containsArray(store, this.path)) {
-            throw new ContainsArrayError(this.path);
-        }
-
-        // // Initialize group metadata
-        // try {
-        //     const metaKey = this.keyPrefix + GROUP_META_KEY;
-        //     const metaStoreValue = this.store.getItem(metaKey);
-        //     this.meta = parseMetadata(metaStoreValue);
-        // } catch {
-        //     throw new GroupNotFoundError(this.path);
-        // }
+        this.meta = metadata;
 
         // Initialize attributes
         const attrKey = this.keyPrefix + ATTRS_META_KEY;
@@ -105,27 +115,27 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     /**
      * Create a sub-group.
      */
-    public createGroup(name: string, overwrite = false): Group {
+    public async createGroup(name: string, overwrite = false) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
         const path = this.itemPath(name);
-        initGroup(this.store, path, this._chunkStore, overwrite);
-        return new Group(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
+        await initGroup(this.store, path, this._chunkStore, overwrite);
+        return Group.create(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
     }
 
     /**
      * Obtain a sub-group, creating one if it doesn't exist.
      */
-    public requireGroup(name: string, overwrite = false): Group {
+    public async requireGroup(name: string, overwrite = false) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
         const path = this.itemPath(name);
-        if (!containsGroup(this.store, path)) {
-            initGroup(this.store, path, this._chunkStore, overwrite);
+        if (!await containsGroup(this.store, path)) {
+            await initGroup(this.store, path, this._chunkStore, overwrite);
         }
-        return new Group(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
+        return Group.create(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
     }
 
     private getOptsForArrayCreation(name: string, opts: CreateArrayOptions = {}) {
@@ -212,8 +222,8 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         const path = this.itemPath(item);
         if (await containsArray(this.store, path)) {
             return ZarrArray.create(this.store, this.path, this.readOnly, this.chunkStore, undefined, this.attrs.cache);
-        } else if (containsGroup(this.store, path)) {
-            return new Group(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
+        } else if (await containsGroup(this.store, path)) {
+            return Group.create(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
         }
         throw new KeyError(item);
     }
@@ -232,7 +242,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
 
     async containsItem(item: string) {
         const path = this.itemPath(item);
-        return containsArray(this.store, path) || containsGroup(this.store, path);
+        return await containsArray(this.store, path) || containsGroup(this.store, path);
     }
 
     proxy(): AsyncMutableMappingProxy<Group> {

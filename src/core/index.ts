@@ -300,7 +300,7 @@ export class ZarrArray {
     const cKey = this.chunkKey(chunkCoords);
 
     // TODO may be better to ask for forgiveness instead
-    if (this.chunkStore.containsItem(cKey)) {
+    if (await this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
 
       if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {

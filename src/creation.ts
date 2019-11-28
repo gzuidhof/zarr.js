@@ -26,7 +26,7 @@ export interface CreateArrayOptions {
 }
 
 
-export function create(shape: number | number[], opts: CreateArrayOptions = {}) {
+export async function create(shape: number | number[], opts: CreateArrayOptions = {}) {
     return createWithArguments(
         shape,
         opts.chunks,
@@ -89,7 +89,7 @@ export async function createWithArguments(
 
     store = normalizeStoreArgument(store);
 
-    initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+    await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
     const z = await ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
 
     return z;

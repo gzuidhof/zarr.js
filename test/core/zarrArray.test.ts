@@ -7,7 +7,7 @@ import { NestedArray, rangeTypedArray } from '../../src/nestedArray';
 import { slice } from '../../src/core/slice';
 import { arrayEquals1D } from '../../src/util';
 
-function createArray(shape: number | number[], opts?: CreateArrayOptions) {
+async function createArray(shape: number | number[], opts?: CreateArrayOptions) {
     if (opts === undefined) {
         opts = {};
     }
@@ -16,7 +16,7 @@ function createArray(shape: number | number[], opts?: CreateArrayOptions) {
     opts.chunks = opts.chunks === undefined ? null : opts.chunks;
     opts.dtype = opts.dtype === undefined ? "<u1" : opts.dtype;
 
-    initArray(
+    await initArray(
         opts.store, shape, opts.chunks, opts.dtype,
         opts.path, opts.compressor, opts.fillValue,
         opts.order, opts.overwrite, opts.chunkStore, opts.filters
@@ -28,7 +28,7 @@ function createArray(shape: number | number[], opts?: CreateArrayOptions) {
 describe("ZarrArray Creation", () => {
     it("does basic initialization", async () => {
         const store = new ObjectStore<Buffer>();
-        initArray(store, 100, 5, '<f8');
+        await initArray(store, 100, 5, '<f8');
         const z = await ZarrArray.create(store);
 
         expect(z).toBeInstanceOf(ZarrArray);
@@ -44,7 +44,7 @@ describe("ZarrArray Creation", () => {
 
     it("initializes at path", async () => {
         const store = new ObjectStore<Buffer>();
-        initArray(store, 100, 5, '<f8', "foo/bar");
+        await initArray(store, 100, 5, '<f8', "foo/bar");
         const z = await ZarrArray.create(store, "foo/bar");
 
         expect(z).toBeInstanceOf(ZarrArray);
@@ -63,7 +63,7 @@ describe("ZarrArray Creation", () => {
         await expect(ZarrArray.create(uninitializedStore)).rejects.toBeTruthy();
 
         const occupiedStore = new ObjectStore<Buffer>();
-        initGroup(occupiedStore, "baz");
+        await initGroup(occupiedStore, "baz");
         await expect(ZarrArray.create(occupiedStore)).rejects.toBeTruthy();
     });
 
