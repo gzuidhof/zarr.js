@@ -298,7 +298,6 @@ export class ZarrArray {
     }
 
     const cKey = this.chunkKey(chunkCoords);
-
     // TODO may be better to ask for forgiveness instead
     if (await this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
@@ -311,10 +310,9 @@ export class ZarrArray {
         // TODO check order
 
         // TODO decompression
-
-        return out.set(outSelection, this.toNestedArray(await cdata));
+        out.set(outSelection, this.toNestedArray<T>(await cdata));
+        return;
       }
-
       // Decode chunk
       const chunk = this.toNestedArray(this.decodeChunk(await cdata));
       const tmp = chunk.get(chunkSelection);

@@ -47,6 +47,7 @@ export class NestedArray<T extends TypedArray> {
             Buffer.isBuffer(data)
             || data instanceof ArrayBuffer
             || data === null
+            || data.toString().startsWith("[object ArrayBuffer]") // Necessary for Node.js for some reason..
         ) {
             // Create from ArrayBuffer or Buffer
             const numShapeElements = shape.reduce((x, y) => x * y, 1);
@@ -55,13 +56,12 @@ export class NestedArray<T extends TypedArray> {
                 data = new ArrayBuffer(numShapeElements * parseInt(dtype[dtype.length - 1], 10));
             }
 
-            const numDataElements = data.byteLength / parseInt(dtype[dtype.length - 1], 10);
+            const numDataElements = (data as ArrayBuffer).byteLength / parseInt(dtype[dtype.length - 1], 10);
             if (numShapeElements !== numDataElements) {
                 throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
             }
-
             const typeConstructor: TypedArrayConstructor<TypedArray> = DTYPE_TYPEDARRAY_MAPPING[dtype];
-            this.data = createNestedArray(data, typeConstructor, shape);
+            this.data = createNestedArray((data as ArrayBuffer), typeConstructor, shape);
         } else {
             this.data = data;
         }

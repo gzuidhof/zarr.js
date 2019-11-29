@@ -1,5 +1,6 @@
 import { ZarrMetadataType, UserAttributes } from './types';
 import { ValidStoreType } from './storage/types';
+import { StringDecoder } from 'string_decoder';
 
 export function parseMetadata(s: ValidStoreType | ZarrMetadataType): ZarrMetadataType | UserAttributes {
 
@@ -7,16 +8,14 @@ export function parseMetadata(s: ValidStoreType | ZarrMetadataType): ZarrMetadat
     // or a string of JSON that we will parse here. We allow for an already-parsed
     // object to accommodate a consolidated metadata store, where all the metadata for
     // all groups and arrays will already have been parsed from JSON.
-
     if (typeof s !== 'string') {
         // Assuming it's already parsed
         if (s instanceof Buffer || s instanceof ArrayBuffer) {
-            JSON.parse(s.toString());
+            return JSON.parse(s.toString());
         } else {
             return s;
         }
 
     }
-
-    return JSON.parse(s as string);
+    return JSON.parse(s);
 }

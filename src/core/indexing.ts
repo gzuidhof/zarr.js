@@ -104,7 +104,6 @@ export function replaceEllipsis(selection: ArraySelection | number, shape: numbe
     }
 
     checkSelectionLength(selection, shape);
-
     return selection;
 }
 
