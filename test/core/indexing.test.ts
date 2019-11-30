@@ -85,7 +85,7 @@ describe("Slice creation", () => {
     });
 });
 
-describe("GetBasicSelection1DSimple", async () => {
+describe("GetBasicSelection1DSimple", () => {
     const store = new MemoryStore<ArrayBuffer>();
 
     const u8 = new Int32Array(5);
@@ -124,7 +124,7 @@ describe("GetBasicSelection1DSimple", async () => {
 });
 
 
-describe("GetBasicSelections1D", async () => {
+describe("GetBasicSelections1D", () => {
     const basicSelections1D = [
         // single value
         42,
@@ -180,7 +180,7 @@ describe("GetBasicSelections1D", async () => {
     });
 });
 
-describe("GetBasicSelections2D", async () => {
+describe("GetBasicSelections2D", () => {
     const basicSelections2D: any[] = [
         42,
         -1,

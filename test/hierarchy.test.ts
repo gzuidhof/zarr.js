@@ -5,6 +5,7 @@ import { initArray, initGroup } from '../src/storage';
 import { Group } from "../src/hierarchy";
 import { Attributes } from '../src/attributes';
 import { rangeTypedArray, NestedArray } from '../src/nestedArray';
+import { TypedArray } from '../src/nestedArray/types';
 
 
 async function createGroup(store: any = null, path: string | null = null, readOnly = false, chunkStore = null) {
@@ -184,7 +185,7 @@ describe("Groups", () => {
         expect(d3.dtype).toEqual("<i4");
         expect(d3.fillValue).toEqual(null);
         expect(d3.store).toStrictEqual(g.store);
-        expect((await d3.get(null)).flatten()).toEqual(data);
+        expect((await d3.get(null) as NestedArray<TypedArray>).flatten()).toEqual(data);
     });
     // To be implemented
     // it("can require datasets", async() => {

@@ -229,9 +229,9 @@ export class ZarrArray {
     }
   }
 
-  public get(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
-  public get(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
-  public get(selection: ArraySelection = null) {
+  // public get(selection: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
+  // public get(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
+  public get(selection: ArraySelection = null): Promise<NestedArray<TypedArray> | number> {
     return this.getBasicSelection(selection);
   }
 
