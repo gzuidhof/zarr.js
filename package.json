@@ -1,6 +1,6 @@
 {
   "name": "zarr",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "keywords": [],
   "main": "dist/zarr.umd.js",
@@ -14,7 +14,7 @@
     "type": "git",
     "url": "github.com/gzuidhof/zarr.js"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=6.0.0"
   },
