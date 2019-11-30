@@ -17,8 +17,8 @@ beforeAll(async () => {
         const app = express();
         app.use(serve);
 
-        server = app.listen(8080, () => {
-            //console.log(`Server running on 8080, serving from ${fixturesFolderPath}`);
+        server = app.listen(7357, () => {
+            //console.log(`Server running on 7357, serving from ${fixturesFolderPath}`);
             resolve();
         });
     });
@@ -33,7 +33,7 @@ afterAll(async () => {
 });
 
 describe("Test MemoryStore", () => {
-    const hStore = new HTTPStore("http://localhost:8080/");
+    const hStore = new HTTPStore("http://localhost:7357/");
 
     it("Can open simple fixture", async () => {
         const z = await openArray({ store: hStore, path: "simple.zarr" });
