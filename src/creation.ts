@@ -70,7 +70,7 @@ export type CreateArrayOptions = {
  * @param readOnly `true` if array should be protected against modification, defaults to `false`.
  */
 export async function create(
-    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = 0, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false }: CreateArrayOptions,
+    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false }: CreateArrayOptions,
 ): Promise<ZarrArray> {
 
     store = normalizeStoreArgument(store);
@@ -141,7 +141,7 @@ export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>
 }
 
 export async function openArray(
-    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = 0, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: Compressor | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; } = {},
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: Compressor | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; } = {},
 ) {
     store = normalizeStoreArgument(store);
     if (chunkStore === undefined) {

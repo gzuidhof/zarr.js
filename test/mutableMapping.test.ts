@@ -1,6 +1,5 @@
 
-import { createProxy } from "../src/mutableMapping";
-import { MutableMapping } from '../dist/types/mutableMapping';
+import { createProxy, MutableMapping } from "../src/mutableMapping";
 
 describe("Store Proxy", () => {
     const mockStore: MutableMapping<any> = {

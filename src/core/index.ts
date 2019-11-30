@@ -6,7 +6,7 @@ import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
-import { ArraySelection, DimensionSelection, Indexer } from "./types";
+import { ArraySelection, DimensionSelection, Indexer, Slice } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
 import { AssertionError } from "assert";
 import { NestedArray, createNestedArray } from "../nestedArray";
@@ -229,10 +229,14 @@ export class ZarrArray {
     }
   }
 
+  public get(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
+  public get(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
   public get(selection: ArraySelection = null) {
     return this.getBasicSelection(selection);
   }
 
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
+  public async getBasicSelection(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
   public async getBasicSelection(selection: ArraySelection): Promise<number | NestedArray<TypedArray>> {
     // Refresh metadata
     if (!this.cacheMetadata) {

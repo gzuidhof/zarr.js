@@ -1,8 +1,36 @@
 (global as any).fetch = require('node-fetch');
 
-import { Store } from "../../src/storage/types";
 import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
+
+import * as express from "express";
+import * as serveStatic from "serve-static";
+import { Server } from "http";
+import * as path from "path";
+
+let server: Server;
+
+beforeAll(async () => {
+    return await new Promise(resolve => {
+        const fixturesFolderPath = path.normalize(__dirname + "/../../fixtures")
+        const serve = serveStatic(fixturesFolderPath, {dotfiles: "allow"});
+        const app = express();
+        app.use(serve);
+
+        server = app.listen(8080, () => {
+            //console.log(`Server running on 8080, serving from ${fixturesFolderPath}`);
+            resolve();
+        });
+    });
+});
+
+afterAll(async () => {
+    return await new Promise(resolve => {
+        server.close((err) => {
+            resolve();
+        })
+    })
+});
 
 describe("Test MemoryStore", () => {
     const hStore = new HTTPStore("http://localhost:8080/");
@@ -24,5 +52,4 @@ describe("Test MemoryStore", () => {
         expect(await z.get([7, 7])).toEqual(0);
         expect(await z.get([4, 4])).toEqual(0);
     });
-
 });

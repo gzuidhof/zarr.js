@@ -4,6 +4,7 @@ import { ObjectStore } from '../src/storage/objectStore';
 import { initArray, initGroup } from '../src/storage';
 import { Group } from "../src/hierarchy";
 import { Attributes } from '../src/attributes';
+import { rangeTypedArray, NestedArray } from '../src/nestedArray';
 
 
 async function createGroup(store: any = null, path: string | null = null, readOnly = false, chunkStore = null) {
@@ -41,11 +42,11 @@ describe("Groups", () => {
         expect(g.attrs).toBeInstanceOf(Attributes);
     });
 
-    // it("initialize errors if metadata is not initialized", () => {
-    //     // Group metadata not initialized
-    //     const store = new ObjectStore();
-    //     expect(() => new Group(store)).toThrowError();
-    // });
+    it("initialize errors if metadata is not initialized", async () => {
+        // Group metadata not initialized
+        const store = new ObjectStore();
+        await expect(Group.create(store)).rejects.toBeTruthy();
+    });
 
     it("initialize errors if array is ocupying slot", async () => {
         // Group metadata not initialized
@@ -148,4 +149,55 @@ describe("Groups", () => {
         expect(await g1proxy["foo"]).toEqual(g2);
     });
 
+    it("can create datasets", async() => {
+        const g = await createGroup();
+
+        // Create immediate child
+        const d1 = await g.createDataset('foo', 1000, undefined, {chunks:100});
+        expect(d1).toBeInstanceOf(ZarrArray);
+        expect(d1.shape).toEqual([1000]);
+        expect(d1.chunks).toEqual([100]);
+        expect(d1.path).toEqual("foo");
+        expect(d1.name).toEqual("/foo");
+        expect(d1.store).toStrictEqual(g.store);
+
+        // Create as descendent
+        const d2 = await g.createDataset('/a/b/c', 2000, undefined, {chunks:200, dtype:"<i1", fillValue: 42});
+        expect(d2).toBeInstanceOf(ZarrArray);
+        expect(d2.shape).toEqual([2000]);
+        expect(d2.chunks).toEqual([200]);
+        expect(d2.path).toEqual("a/b/c");
+        expect(d2.name).toEqual("/a/b/c");
+        expect(d2.dtype).toEqual("<i1");
+        expect(d2.fillValue).toEqual(42);
+        expect(d2.store).toStrictEqual(g.store);
+
+        // Create with data
+        const data = rangeTypedArray([3000], Int32Array);
+        const nData = new NestedArray(data);
+        const d3 = await g.createDataset('bar', undefined, nData, {chunks:300});
+        expect(d3).toBeInstanceOf(ZarrArray);
+        expect(d3.shape).toEqual([3000]);
+        expect(d3.chunks).toEqual([300]);
+        expect(d3.path).toEqual("bar");
+        expect(d3.name).toEqual("/bar");
+        expect(d3.dtype).toEqual("<i4");
+        expect(d3.fillValue).toEqual(null);
+        expect(d3.store).toStrictEqual(g.store);
+        expect((await d3.get(null)).flatten()).toEqual(data);
+    });
+    // To be implemented
+    // it("can require datasets", async() => {
+    //     const g = await createGroup();
+
+    //     // Create immediate child
+    //     const d1 = await g.requireDataset('foo', 1000, undefined, {chunks:100});
+    //     expect(d1).toBeInstanceOf(ZarrArray);
+    //     expect(d1.shape).toEqual([1000]);
+    //     expect(d1.chunks).toEqual([100]);
+    //     expect(d1.path).toEqual("foo");
+    //     expect(d1.name).toEqual("/foo");
+    //     expect(d1.store).toStrictEqual(g.store);
+
+    // })
 });
