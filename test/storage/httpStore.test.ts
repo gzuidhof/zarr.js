@@ -3,10 +3,10 @@
 import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
 
-import * as express from "express";
-import * as serveStatic from "serve-static";
+import express from "express";
+import serveStatic from "serve-static";
 import { Server } from "http";
-import * as path from "path";
+import path from "path";
 
 let server: Server;
 
