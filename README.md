@@ -1,3 +1,5 @@
+![Zarr.js Logo](logo.png)
+
 # Zarr.js
 Typescript implementation of [Zarr](https://zarr.readthedocs.io/en/stable/)
 
