@@ -1,5 +1,7 @@
 ![Zarr.js Logo](logo.png)
-Typescript implementation of [Zarr](https://zarr.readthedocs.io/en/stable/)  
+![License badge](https://img.shields.io/github/license/gzuidhof/zarr.js) ![NPM badge](https://img.shields.io/npm/v/zarr)
+---
+Typescript implementation of [**Zarr**](https://zarr.readthedocs.io/en/stable/).  
 Zarr is a library for chunked, compressed, N-dimensional arrays.
 
 ## Why a Typescript implementation for Zarr?
