@@ -6,9 +6,8 @@ import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
-import { ArraySelection, DimensionSelection, Indexer } from "./types";
+import { ArraySelection, DimensionSelection, Indexer, Slice } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
-import { AssertionError } from "assert";
 import { NestedArray, createNestedArray } from "../nestedArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError } from '../errors';
@@ -229,10 +228,14 @@ export class ZarrArray {
     }
   }
 
-  public get(selection: ArraySelection = null) {
+  // public get(selection: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
+  // public get(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
+  public get(selection: ArraySelection = null): Promise<NestedArray<TypedArray> | number> {
     return this.getBasicSelection(selection);
   }
 
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
+  public async getBasicSelection(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
   public async getBasicSelection(selection: ArraySelection): Promise<number | NestedArray<TypedArray>> {
     // Refresh metadata
     if (!this.cacheMetadata) {
@@ -294,7 +297,7 @@ export class ZarrArray {
    */
   private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
     if (chunkCoords.length !== this._chunkDataShape.length) {
-      throw new AssertionError({ message: `Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}` });
+      throw new ValueError(`Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}`);
     }
 
     const cKey = this.chunkKey(chunkCoords);

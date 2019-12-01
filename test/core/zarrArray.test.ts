@@ -70,30 +70,32 @@ describe("ZarrArray Creation", () => {
 });
 
 
-describe("ZarrArray 1D Setting", async () => {
-    const a = new NestedArray(null, 100, "<i4");
-    const z = await createArray(a.shape, { chunks: 10, dtype: a.dtype });
-    await z.set(null, a);
-    expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
+describe("ZarrArray 1D Setting", () => {
 
-    for (const value of [-1, 0, 1, 10]) {
-        a.set(slice(15, 35), value);
-        await z.set(slice(15, 35), value);
+    it ("Can set 1D arrays", async() => {
+        const a = new NestedArray(null, 100, "<i4");
+        const z = await createArray(a.shape, { chunks: 10, dtype: a.dtype });
+        await z.set(null, a);
         expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
-        a.set(null, value);
-        await z.set(null, value);
+
+        for (const value of [-1, 0, 1, 10]) {
+            a.set(slice(15, 35), value);
+            await z.set(slice(15, 35), value);
+            expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
+            a.set(null, value);
+            await z.set(null, value);
+            expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
+            // Slicing exactly a chunk
+            expect(nestedArrayEquals(a.get([slice(10, 20)]), await z.get([slice(10, 20)]))).toBeTruthy();
+        }
+
+        const rangeTA = rangeTypedArray([35 - 15], Int32Array);
+        const rangeNA = new NestedArray(rangeTA);
+
+        a.set(slice(15, 35), rangeNA);
+        await z.set(slice(15, 35), rangeNA);
         expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
-        // Slicing exactly a chunk
-        expect(nestedArrayEquals(a.get([slice(10, 20)]), await z.get([slice(10, 20)]))).toBeTruthy();
-    }
-
-    const rangeTA = rangeTypedArray([35 - 15], Int32Array);
-    const rangeNA = new NestedArray(rangeTA);
-
-    a.set(slice(15, 35), rangeNA);
-    await z.set(slice(15, 35), rangeNA);
-    expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
-
+    });
 });
 
 function nestedArrayEquals(a: NestedArray<any> | number, b: NestedArray<any> | number) {

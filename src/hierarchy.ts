@@ -163,7 +163,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return array(data, opts);
     }
 
-    public empty(name: string, shape: number[], opts: CreateArrayOptionsWithoutShape = {}) {
+    public empty(name: string, shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -172,7 +172,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return empty(shape, opts);
     }
 
-    public zeros(name: string, shape: number[], opts: CreateArrayOptionsWithoutShape = {}) {
+    public zeros(name: string, shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -181,7 +181,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return zeros(shape, opts);
     }
 
-    public ones(name: string, shape: number[], opts: CreateArrayOptionsWithoutShape = {}) {
+    public ones(name: string, shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -190,7 +190,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return ones(shape, opts);
     }
 
-    public full(name: string, shape: number[], fillValue: number | null, opts: CreateArrayOptionsWithoutShape = {}) {
+    public full(name: string, shape: number | number[], fillValue: number | null, opts: CreateArrayOptionsWithoutShape = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -199,7 +199,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return full(shape, fillValue, opts);
     }
 
-    public createDataset(name: string, shape?: number[], data?: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptionsWithoutShape) {
+    public createDataset(name: string, shape?: number | number[], data?: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptionsWithoutShape) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -214,7 +214,6 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         } else {
             z = array(data, opts);
         }
-
         return z;
     }
 

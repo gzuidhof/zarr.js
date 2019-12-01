@@ -1,7 +1,7 @@
 import { NestedArray } from "../../src/nestedArray";
 
 
-describe("NestedArray interface", async () => {
+describe("NestedArray interface", () => {
 
 
     it("errors given invalid buffer size", () => {

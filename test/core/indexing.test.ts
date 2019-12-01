@@ -85,45 +85,46 @@ describe("Slice creation", () => {
     });
 });
 
-// describe("GetBasicSelection1DSimple", async () => {
-//     const store = new MemoryStore<ArrayBuffer>();
+describe("GetBasicSelection1DSimple", () => {
+    const store = new MemoryStore<ArrayBuffer>();
 
-//     const u8 = new Int32Array(5);
-//     u8.set([0, 1, 2, 3, 4]);
+    const u8 = new Int32Array(5);
+    u8.set([0, 1, 2, 3, 4]);
 
-//     initArray(store, 8, 5, '<i4', "my_array");
-//     store.setItem("my_array/.zarray", Buffer.from(JSON.stringify({
-//         "chunks": [
-//             5
-//         ],
-//         "compressor": null,
-//         "dtype": "<i4",
-//         "fill_value": 0,
-//         "filters": null,
-//         "order": "C",
-//         "shape": [
-//             8
-//         ],
-//         "zarr_format": 2
-//     })));
-//     store.setItem("my_array/0", u8.buffer);
-//     const z = await ZarrArray.create(store, "my_array");
+    initArray(store, 8, 5, '<i4', "my_array");
+    store.setItem("my_array/.zarray", Buffer.from(JSON.stringify({
+        "chunks": [
+            5
+        ],
+        "compressor": null,
+        "dtype": "<i4",
+        "fill_value": 0,
+        "filters": null,
+        "order": "C",
+        "shape": [
+            8
+        ],
+        "zarr_format": 2
+    })));
+    store.setItem("my_array/0", u8.buffer);
+    
 
-//     //     it("can select slices", async () => {
-//     //         expect(z.getBasicSelection([slice(1, 3)])).resolves.).toEqual(Int32Array.from([1, 2]));
-//     // });
-//     it("can select single values", async () => {
-//         expect(await z.getBasicSelection(0)).toEqual(0);
-//         expect(await z.getBasicSelection(3)).toEqual(3);
-//     });
-//     it("uses the fill value for missing chunks", async () => {
-//         expect(await z.getBasicSelection(6)).toEqual(0);
-//     });
+    it("can select slices and single values", async () => {
+        const z = await ZarrArray.create(store, "my_array");
+        expect((await z.getBasicSelection([slice(1, 3)])).data).toEqual(Int32Array.from([1, 2]));
+        expect(await z.getBasicSelection(0)).toEqual(0);
+        expect(await z.getBasicSelection(3)).toEqual(3);
+    });
 
-// });
+    it("uses the fill value for missing chunks", async () => {
+        const z = await ZarrArray.create(store, "my_array");
+        expect(await z.getBasicSelection(6)).toEqual(0);
+    });
+
+});
 
 
-describe("GetBasicSelections1D", async () => {
+describe("GetBasicSelections1D", () => {
     const basicSelections1D = [
         // single value
         42,
@@ -179,7 +180,7 @@ describe("GetBasicSelections1D", async () => {
     });
 });
 
-describe("GetBasicSelections2D", async () => {
+describe("GetBasicSelections2D", () => {
     const basicSelections2D: any[] = [
         42,
         -1,
