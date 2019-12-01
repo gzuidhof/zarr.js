@@ -150,11 +150,11 @@ describe("Groups", () => {
         expect(await g1proxy["foo"]).toEqual(g2);
     });
 
-    it("can create datasets", async() => {
+    it("can create datasets", async () => {
         const g = await createGroup();
 
         // Create immediate child
-        const d1 = await g.createDataset('foo', 1000, undefined, {chunks:100});
+        const d1 = await g.createDataset('foo', 1000, undefined, { chunks: 100 });
         expect(d1).toBeInstanceOf(ZarrArray);
         expect(d1.shape).toEqual([1000]);
         expect(d1.chunks).toEqual([100]);
@@ -163,7 +163,7 @@ describe("Groups", () => {
         expect(d1.store).toStrictEqual(g.store);
 
         // Create as descendent
-        const d2 = await g.createDataset('/a/b/c', 2000, undefined, {chunks:200, dtype:"<i1", fillValue: 42});
+        const d2 = await g.createDataset('/a/b/c', 2000, undefined, { chunks: 200, dtype: "<i1", fillValue: 42 });
         expect(d2).toBeInstanceOf(ZarrArray);
         expect(d2.shape).toEqual([2000]);
         expect(d2.chunks).toEqual([200]);
@@ -176,7 +176,7 @@ describe("Groups", () => {
         // Create with data
         const data = rangeTypedArray([3000], Int32Array);
         const nData = new NestedArray(data);
-        const d3 = await g.createDataset('bar', undefined, nData, {chunks:300});
+        const d3 = await g.createDataset('bar', undefined, nData, { chunks: 300 });
         expect(d3).toBeInstanceOf(ZarrArray);
         expect(d3.shape).toEqual([3000]);
         expect(d3.chunks).toEqual([300]);

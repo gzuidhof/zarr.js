@@ -1,6 +1,6 @@
 {
   "name": "zarr",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "keywords": [],
   "main": "dist/zarr.umd.js",
@@ -24,8 +24,9 @@
     "build": "tsc && rollup -c rollup.config.ts && typedoc --out docs --target es6 --theme minimal --mode file src",
     "start": "rollup -c rollup.config.ts -w",
     "test": "jest --coverage",
+    "test:browser": "jest --config=jest-browser.config.js --coverage",
     "test:watch": "jest --coverage --watch",
-    "test:prod": "npm run lint && npm run test -- --no-cache",
+    "test:prod": "npm run lint && npm run test -- --no-cache && jest --config=jest-browser.config.js --no-cache",
     "deploy-docs": "ts-node tools/gh-pages-publish",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
     "commit": "git-cz",
@@ -44,33 +45,6 @@
     "commitizen": {
       "path": "node_modules/cz-conventional-changelog"
     }
-  },
-  "jest": {
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "testEnvironment": "node",
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/test/"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 40,
-        "functions": 55,
-        "lines": 55,
-        "statements": 55
-      }
-    },
-    "collectCoverageFrom": [
-      "src/**/*.{js,ts}"
-    ]
   },
   "prettier": {
     "semi": false,
@@ -95,13 +69,16 @@
     "cz-conventional-changelog": "^2.1.0",
     "express": "^4.17.1",
     "husky": "^1.0.1",
-    "jest": "^23.0.0",
+    "jest": "^23.6.0",
     "jest-config": "^23.0.0",
+    "jest-dev-server": "^4.3.0",
+    "jest-puppeteer": "^4.3.0",
     "lint-staged": "^8.0.0",
     "lodash.camelcase": "^4.3.0",
     "node-fetch": "^2.6.0",
     "prettier": "^1.14.3",
     "prompt": "^1.0.0",
+    "puppeteer": "^2.0.0",
     "replace-in-file": "^3.4.2",
     "rimraf": "^2.6.2",
     "rollup": "^0.67.0",
