@@ -61,4 +61,4 @@ typings/
 .next
 
 dist/
-docs/
+typedocs/
