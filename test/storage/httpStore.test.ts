@@ -3,35 +3,6 @@
 import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
 
-import express from "express";
-import serveStatic from "serve-static";
-import { Server } from "http";
-import path from "path";
-
-let server: Server;
-
-beforeAll(async () => {
-    return await new Promise(resolve => {
-        const fixturesFolderPath = path.normalize(__dirname + "/../../fixtures")
-        const serve = serveStatic(fixturesFolderPath, {dotfiles: "allow"});
-        const app = express();
-        app.use(serve);
-
-        server = app.listen(7357, () => {
-            //console.log(`Server running on 7357, serving from ${fixturesFolderPath}`);
-            resolve();
-        });
-    });
-});
-
-afterAll(async () => {
-    return await new Promise(resolve => {
-        server.close((err) => {
-            resolve();
-        })
-    })
-});
-
 describe("Test MemoryStore", () => {
     const hStore = new HTTPStore("http://localhost:7357/");
 
