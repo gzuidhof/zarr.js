@@ -1,5 +1,5 @@
 ![Zarr.js Logo](logo.png)
-![Top Language Badge](https://img.shields.io/github/languages/top/gzuidhof/zarr.js) ![NPM badge](https://img.shields.io/npm/v/zarr) ![License badge](https://img.shields.io/github/license/gzuidhof/zarr.js)  [![Documentation](https://img.shields.io/badge/Read%20the-documentation-1abc9c.svg)](http://guido.io/zarr.js)
+![Top Language Badge](https://img.shields.io/github/languages/top/gzuidhof/zarr.js) [![NPM badge](https://img.shields.io/npm/v/zarr)](https://www.npmjs.com/package/zarr) ![License badge](https://img.shields.io/github/license/gzuidhof/zarr.js)  [![Documentation](https://img.shields.io/badge/Read%20the-documentation-1abc9c.svg)](http://guido.io/zarr.js)
 
 
 Typescript implementation of [**Zarr**](https://zarr.readthedocs.io/en/stable/).  
