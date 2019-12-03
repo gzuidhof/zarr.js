@@ -44,6 +44,7 @@ export class NestedArray<T extends TypedArray> {
             this.data = new DTYPE_TYPEDARRAY_MAPPING[dtype](1);
         }
         else if (
+            // tslint:disable-next-line: strict-type-predicates
             (typeof window === 'undefined' && Buffer.isBuffer(data))
             || data instanceof ArrayBuffer
             || data === null

@@ -1,6 +1,6 @@
 {
   "name": "zarr",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "keywords": [],
   "main": "dist/zarr.umd.js",
