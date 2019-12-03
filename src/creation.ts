@@ -7,6 +7,7 @@ import { TypedArray } from './nestedArray/types';
 import { NestedArray } from './nestedArray/index';
 import { normalizeStoragePath } from './util';
 import { ContainsArrayError, ValueError, ArrayNotFoundError, ContainsGroupError } from './errors';
+import { HTTPStore } from './storage/httpStore';
 
 /**
  * See `create` function for type signature of these values
@@ -195,7 +196,7 @@ export function normalizeStoreArgument(store?: Store | string): Store {
     if (store === undefined) {
         return new MemoryStore();
     } else if (typeof store === "string") {
-        throw new Error("String store arguments are not suppported yet");
+        return new HTTPStore(store)
     }
     return store;
 }

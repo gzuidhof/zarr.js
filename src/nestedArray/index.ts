@@ -44,7 +44,7 @@ export class NestedArray<T extends TypedArray> {
             this.data = new DTYPE_TYPEDARRAY_MAPPING[dtype](1);
         }
         else if (
-            Buffer.isBuffer(data)
+            (typeof window === 'undefined' && Buffer.isBuffer(data))
             || data instanceof ArrayBuffer
             || data === null
             || data.toString().startsWith("[object ArrayBuffer]") // Necessary for Node.js for some reason..
