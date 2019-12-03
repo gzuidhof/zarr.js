@@ -1,11 +1,13 @@
 # Installation
 
-Zarr.js can both be used in the browser as well as in a Node application. See also the [Zarr.js npm package](https://www.npmjs.com/package/zarr) page.
+Zarr.js can be used in the browser as well as in Node applications.
+
+> See also the [**Zarr.js npm page**](https://www.npmjs.com/package/zarr).
 
 
 ## Typescript / Node / Web App
 
-```bash
+```shell
 # Install using npm
 npm i zarr
 
@@ -14,7 +16,7 @@ yarn add zarr
 ```
 
 **Example**
-```typescript
+```javascript
 import { ObjectStore, ones, slice, NestedArray } from "zarr";
 
 async function example() {
@@ -31,7 +33,7 @@ async function example() {
 example();
 ```
 
-## Browser Usage
+## Browser
 
 ### ES Module
 
