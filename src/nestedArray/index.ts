@@ -101,6 +101,15 @@ export class NestedArray<T extends TypedArray> {
         }
         return flattenNestedArray(this.data, this.shape, DTYPE_TYPEDARRAY_MAPPING[this.dtype]) as T;
     }
+
+    /**
+     * Currently only supports a single integer as the size, TODO: support start, stop, step.
+     */
+    public static arange(size: number, dtype: DtypeString = "<i4"): NestedArray<TypedArray> {
+        const constr = DTYPE_TYPEDARRAY_MAPPING[dtype];
+        const data = rangeTypedArray([size], constr);
+        return new NestedArray(data, [size], dtype);
+    }
 }
 
 
