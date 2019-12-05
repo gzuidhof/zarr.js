@@ -65,6 +65,14 @@ describe("NestedArray setting", () => {
             expected: [Int32Array.from([0, 1, 2]), Int32Array.from([3, 4, 5])],
         },
         {
+            name: "2d_2x3_s",
+            destShape: [2, 3],
+            sourceShape: [3],
+            constr: Int32Array,
+            selection: [0],
+            expected: [Int32Array.from([0, 1, 2]), Int32Array.from([3, 4, 5])],
+        },
+        {
             name: "2d_2x3_int_index",
             destShape: [2, 3],
             sourceShape: [1, 3],

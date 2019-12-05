@@ -172,6 +172,13 @@ describe("NestedArray slicing", () => {
             expected: [Int32Array.from([5, 4, 3])],
         },
         {
+            name: "2d_2x3_slice_F",
+            shape: [2, 3],
+            constr: Int32Array,
+            selection: [0, slice(null, null, -1)],
+            expected: Int32Array.from([2, 1, 0]),
+        },
+        {
             name: "4d_1x2x2x4",
             shape: [1, 2, 2, 4],
             constr: Int32Array,
