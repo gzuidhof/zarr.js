@@ -58,7 +58,7 @@ Python (and NumPy in particular) allows you to slice and index arrays by using t
 
 NestedArrays expose two methods for getting and setting respectively, let's first create an array:
 ```javascript
-import { NestedArray } from "zarr";
+import { NestedArray, slice } from "zarr";
 
 const binaryData = Int32Array.from([0,1,2,3,4,5]);
 const n = new NestedArray(binaryData, [2, 3]);
@@ -73,53 +73,67 @@ console.log(n);
  */
 ```
 
-Slicing an array with its `get` function yields either another NestedArray or a number. It takes a single argument, the `selection` you want from the array. For readability in the next examples we will only consider the data field for NestedArrays.
+Slicing a NestedArray with its `get` function returns either another NestedArray or a number. It takes a single argument: the `selection` you want from the array. 
+
+> For readability we state the `data` field value in the comment next to the examples in case of NestedArray result.
+
+#### Selecting along the first dimension
 
 ```javascript
-    import { slice } from "zarr";
+    // n[0] in python
+    n.get([0]); // Int32Array [ 0, 1, 2 ]
+    n.get(0); // Int32Array [ 0, 1, 2 ]
+```
 
-    // Selecting along the first dimension
-    n.get([0]).data; // Int32Array [ 0, 1, 2 ]
-    n.get(0).data; // Int32Array [ 0, 1, 2 ]
 
-    // Selecting a single value
+#### Selecting a single value
+```javascript
+    // n[0,0]
     n.get([0, 0]); // 0
     n.get([-1, 0]); // 3
     n.get([-1, 1]); // 4
+```
 
-    // Slicing everything, like n[:] in Python
-    n.get(null).data; // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 4, 5 ] ]
-    n.get([null]).data; // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 4, 5 ] ]
-    n.get(":").data; // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 4, 5 ] ]
-    
-    // Using slices
+#### Selecting everything, like `n[:]` in python
+```javascript
+    n.get(null); // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 4, 5 ] ]
+    n.get([null]); // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 4, 5 ] ]
+    n.get(":"); // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 4, 5 ] ]
+```
+
+#### Using slices
+```javascript
     // n[:, 0:2]
-    n.get([slice(null), slice(0, 2)]).data; // [ Int32Array [ 0, 1 ], Int32Array [ 3, 4 ] ]
+    n.get([slice(null), slice(0, 2)]); // [ Int32Array [ 0, 1 ], Int32Array [ 3, 4 ] ]
     // n[::-1, 0:2]
-    n.get([slice(null, null, -1), slice(0, 2)]).data; // [ Int32Array [ 3, 4 ], Int32Array [ 0, 1 ] ]
+    n.get([slice(null, null, -1), slice(0, 2)]); // [ Int32Array [ 3, 4 ], Int32Array [ 0, 1 ] ]
+```
 
-    // Using ellipsis
+#### Using ellipsis (`...` in python)
+```javascript
     // n[..., 0:2]
-    n.get(["...", slice(0, 2)]).data; // [ Int32Array [ 0, 1 ], Int32Array [ 3, 4 ] ]
+    n.get(["...", slice(0, 2)]); // [ Int32Array [ 0, 1 ], Int32Array [ 3, 4 ] ]
 ```
 
 ## Setting NestedArray values
 
-Setting values works the same way, `set` takes two arguments: the `selection` and the value you want to set it to. Let's look at some examples
+Setting values works the same way, `set` takes two arguments: the `selection` and the value you want to set it to.
+
+Let's imagine that after each of these commands we reset n to its initial value. In reality we are of course mutating `n`!
+
+#### Setting to a scaslar
 
 ```javascript
-// Let's imagine that after each of these commands we reset n to its initial value. In reality we are of course mutating n!
-
-// Setting to a scalar
-
 n.set([1, 1], 100); // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 100, 5 ] ]
 n.set([1, slice(0, 2)], 100); // [ Int32Array [ 0, 1, 2 ], Int32Array [ 100, 100, 5 ] ]
 
 n.set([1, 1], 100); // [ Int32Array [ 0, 1, 2 ], Int32Array [ 3, 100, 5 ] ]
 n.set([null], 100); // [ Int32Array [ 100, 100, 100 ], Int32Array [ 100, 100, 100 ] ]
+```
 
-// Setting to a different NestedArray
+#### Setting to a different NestedArray
 
+```javascript
 // n[:] = n[:, ::-1]
 n.set([null], n.get([null, slice(null, null, -1)])); // [ Int32Array [ 2, 1, 0 ], Int32Array [ 5, 4, 3 ] ]
 
@@ -131,5 +145,5 @@ n.set([null, slice(0,2)], n.get([null, slice(1,3)])); // [ Int32Array [ 1, 2, 2 
 n.set(0, n.get(1));
 ```
 
-### Instead of `get` and `set` can we use square brackets notation such as  `array[0,2]`? 
-Since recently it is possible to override the behaviour of the square brackets indexing and setting through Proxy objects, this comes with a small performance cost. We can provide a Proxy wrapper for NestedArrays in the future, but these can not be provided for Zarr Arrays as it would be impossible to verify setting a value succeeded succesfully using an asynchronous store. 
+> ### Instead of `get` and `set` can we use square brackets notation such as  `array[0,2]`? 
+> Since recently it is possible to override the behaviour of the square brackets indexing and setting through Proxy objects, this comes with a small performance cost. We can provide a Proxy wrapper for NestedArrays in the future, but these can not be provided for Zarr Arrays as it would be impossible to verify setting a value succeeded succesfully using an asynchronous store. 
