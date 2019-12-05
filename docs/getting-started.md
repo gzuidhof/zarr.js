@@ -9,7 +9,7 @@ As the scijs ecosystem does implement a lot of operations you may want to perfor
 ## Introducing NestedArrays
 We follow [Pyodide](https://hacks.mozilla.org/2019/04/pyodide-bringing-the-scientific-python-stack-to-the-browser/)'s example by expressing our multi-dimensional arrays as Arrays of TypedArrays. In the future we could consider writing an alternative implementing strided arrays and views like NumPy (and `scijs/ndarray`) is implemented.
 
-### Creating NestedArrays
+## Creating NestedArrays
 
 NestedArray is a class that wraps the multi-dimensional array in this format with some metadata (such as its shape). Let's create one!
 
@@ -30,7 +30,7 @@ NestedArray {
 }
 ```
 
-#### Creating from binary data
+### Creating from binary data
 
 Alternatively we can also create one from a raw buffer of data, we will have to specify its datatype.
 
@@ -53,7 +53,7 @@ NestedArray {
 ```
 > These data type strings (`DtypeString`) are the same as the ones found in NumPy. The currently supported types can be found in [this file](https://github.com/gzuidhof/zarr.js/blob/master/src/types.ts).
 
-### Slicing
+## Slicing
 Python (and NumPy in particular) allows you to slice and index arrays by using the square brackets notation (e.g. `myArray[0, :2]`). There are no such language features in JS, so our own implementation is provided for this.
 
 NestedArrays expose two methods for getting and setting respectively, let's first create an array:
@@ -103,6 +103,8 @@ Slicing an array with its `get` function yields either another NestedArray or a 
     n.get(["...", slice(0, 2)]).data; // [ Int32Array [ 0, 1 ], Int32Array [ 3, 4 ] ]
 ```
 
+## Setting NestedArray values
+
 Setting values works the same way, `set` takes two arguments: the `selection` and the value you want to set it to. Let's look at some examples
 
 ```javascript
@@ -129,5 +131,5 @@ n.set([null, slice(0,2)], n.get([null, slice(1,3)])); // [ Int32Array [ 1, 2, 2 
 n.set(0, n.get(1));
 ```
 
-#### Instead of `get` and `set` can we use square brackets notation such as  `array[0,2]`? 
-In JS it is very recently possible to override the behaviour of the square brackets indexing and setting through Proxy objects. This comes with a small performance cost. We can provide a Proxy wrapper for NestedArrays in the future, but these can not be provided for Zarr Arrays as it would be impossible to verify setting a value succeeded succesfully using an asynchronous store. 
+### Instead of `get` and `set` can we use square brackets notation such as  `array[0,2]`? 
+Since recently it is possible to override the behaviour of the square brackets indexing and setting through Proxy objects, this comes with a small performance cost. We can provide a Proxy wrapper for NestedArrays in the future, but these can not be provided for Zarr Arrays as it would be impossible to verify setting a value succeeded succesfully using an asynchronous store. 
