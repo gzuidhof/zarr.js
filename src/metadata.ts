@@ -1,6 +1,5 @@
 import { ZarrMetadataType, UserAttributes } from './types';
 import { ValidStoreType } from './storage/types';
-import { StringDecoder } from 'string_decoder';
 
 export function parseMetadata(s: ValidStoreType | ZarrMetadataType): ZarrMetadataType | UserAttributes {
 

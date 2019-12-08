@@ -97,22 +97,32 @@ export function setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArray
 
 export function setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData, destShape: number[], sourceShape: number[], selection: number | ArraySelection) {
     // This translates "...", ":", null, etc into a list of slices.
-    const normalizedSelection = normalizeArraySelection(selection, destShape, true);
-
-    // Above we force the results to be SliceIndicesIndices only, without integer selections making this cast is safe.
-    const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, destShape) as [SliceIndices[], number[]];
+    const normalizedSelection = normalizeArraySelection(selection, destShape, false);
+    const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, destShape);
 
     // TODO: replace with non stringify equality check
     if (JSON.stringify(outShape) !== JSON.stringify(sourceShape)) {
-        throw new ValueError(`Shape mismatch in source and target NestedArray: ${sourceShape} and ${outShape}`);
+        throw new ValueError(`Shape mismatch in target and source NestedArray: ${outShape} and ${sourceShape}`);
     }
 
     _setNestedArray(dstArr, sourceArr, destShape, sliceIndices);
 }
 
 
-function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData, shape: number[], selection: SliceIndices[]) {
+function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData, shape: number[], selection: (SliceIndices | number)[]) {
+    
     let currentSlice = selection[0];
+
+    if (typeof sourceArr === "number") {
+        _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x+1, 1, 1] : x));
+        return;
+    }
+
+    // This dimension is squeezed.
+    if (typeof currentSlice === "number") {
+        _setNestedArray((dstArr as NDNestedArrayData)[currentSlice], sourceArr, shape.slice(1), selection.slice(1));
+        return;
+    }
 
     const [from, to, step, outputSize] = currentSlice;
 

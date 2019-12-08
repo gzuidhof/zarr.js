@@ -73,9 +73,17 @@ describe("NestedArray setting", () => {
             expected: [Int32Array.from([0, 1, 2]), Int32Array.from([3, 4, 5])],
         },
         {
+            name: "2d_2x3_s",
+            destShape: [2, 3],
+            sourceShape: [2],
+            constr: Int32Array,
+            selection: [slice(null), 0],
+            expected: [Int32Array.from([0, 1, 2]), Int32Array.from([1, 4, 5])],
+        },
+        {
             name: "2d_2x3_int_index",
             destShape: [2, 3],
-            sourceShape: [1, 3],
+            sourceShape: [3],
             constr: Int32Array,
             selection: [1],
             expected: [Int32Array.from([0, 1, 2]), Int32Array.from([0, 1, 2])],
@@ -83,7 +91,7 @@ describe("NestedArray setting", () => {
         {
             name: "2d_2x3_int_index_step_-1",
             destShape: [2, 3],
-            sourceShape: [1, 3],
+            sourceShape: [3],
             constr: Int32Array,
             selection: [1, slice(null, null, -1)],
             expected: [Int32Array.from([0, 1, 2]), Int32Array.from([2, 1, 0])],
@@ -95,6 +103,14 @@ describe("NestedArray setting", () => {
             constr: Int32Array,
             selection: [slice(0, 0)],
             expected: [Int32Array.from([0, 1, 2]), Int32Array.from([3, 4, 5])],
+        },
+        {
+            name: "5d_1x2x1x2x3_int_index_negative_slice",
+            destShape: [1,2,1,2,3],
+            sourceShape: [2, 3],
+            constr: Int32Array,
+            selection: [0, 1, 0, slice(null, null, -1), slice(null, null, -1)],
+            expected: [[[[Int32Array.from([0, 1, 2]), Int32Array.from([3, 4, 5])]], [[Int32Array.from([5, 4, 3]), Int32Array.from([2, 1, 0])]]]]
         },
         {
             name: "4d_1x2x2x4",
