@@ -83,28 +83,5 @@ NestedArray {
 }
 ```
 
-## Remote ZarrArrays
-Most likely when you are using Zarr.js your ZarrArray data will actually live on a remote server in the zarr format, this is exactly the use-case that Zarr.js was created for :).
-
-Let's run through an end-to-end example:
-
-#### Creating Zarr array in Python
-First we create some data in a Python script using the [Python zarr package](https://zarr.readthedocs.io/en/stable/) and persist it to disk:
-```python
-import zarr
-
-
-```
-
-#### Serving the zarr data files
-Next, let's serve the files locally. We can use any HTTP server, to keep things simple let's use the one that ships with Python 3
-
-```shell
-python3 -m http.server
-Serving HTTP on 0.0.0.0 port 8000 ...
-```
-
-
-```
-
-
+#### Next steps
+Read about [ZarrArrays whose data lives remotely](/getting-started/remote-data.md).

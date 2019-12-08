@@ -18,7 +18,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         throw new Error("Method not implemented.");
     }
     async getItem(item: string) {
-        const url = this.url + item;
+        const url = new URL(item, this.url).href;
         const value = await fetch(url);
         return Buffer.from(await value.arrayBuffer());
     }
@@ -33,7 +33,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         throw new Error("Method not implemented.");
     }
     async containsItem(item: string): Promise<boolean> {
-        const url = this.url + item;
+        const url = new URL(item, this.url).href;
         const value = await fetch(url);
 
         return value.status === 200;
