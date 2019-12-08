@@ -1,13 +1,14 @@
 # ZarrArrays
 
-Quote from the Python zarr documentation:  
-*\"Zarr provides classes and functions for working with N-dimensional arrays that behave like NumPy arrays but whose data is divided into chunks and each chunk is compressed. If you are already familiar with HDF5 then Zarr arrays provide similar functionality, but with some additional flexibility.\"*
+From the Python zarr documentation:  
+
+**\"Zarr provides classes and functions for working with N-dimensional arrays that behave like NumPy arrays but whose data is divided into chunks and each chunk is compressed. If you are already familiar with HDF5 then Zarr arrays provide similar functionality, but with some additional flexibility.\"**
 
 ## Creating a ZarrArray
 
 ```javascript
 import {zeros, NestedArray, slice} from "zarr";
-const z = zeros([1000, 1000], {chunks: [100, 100], dtype: '<i4'})
+const z = await zeros([1000, 1000], {chunks: [100, 100], dtype: '<i4'})
 console.log(z);
 ```
 ```output
@@ -27,6 +28,13 @@ ZarrArray {
 
 The code above creates a 2-dimensional array of 32-bit integers with 1000 rows and 1000 columns, divided into chunks where each chunk has 100 rows and 100 columns (and so there will be 100 chunks in total).
 
+> 📝 **Using await to simplify asynchronous code with Promises**  
+Please note that in order to use `await` your code must be wrapped in a function marked with the `async` keyword. In a pinch this will work:
+```javascript
+(async () => {
+  // My code using await
+})();
+```
 
 ## Reading and writing data
 Zarr arrays supports the same interface as [NestedArrays](/getting-started/nested-arrays) for reading and writing data. For example, the entire array can be filled with a scalar value:
