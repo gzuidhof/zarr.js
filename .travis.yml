@@ -5,12 +5,11 @@ cache:
 notifications:
   email: false
 node_js:
+  - '8'
   - '10'
   - '11'
 script:
   - npm run test:prod && npm run build
-after_success:
-  - npm run travis-deploy-once "npm run report-coverage"
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
