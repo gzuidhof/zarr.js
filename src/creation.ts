@@ -196,7 +196,7 @@ export function normalizeStoreArgument(store?: Store | string): Store {
     if (store === undefined) {
         return new MemoryStore();
     } else if (typeof store === "string") {
-        return new HTTPStore(store)
+        return new HTTPStore(store);
     }
     return store;
 }

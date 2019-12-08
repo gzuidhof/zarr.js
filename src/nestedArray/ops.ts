@@ -109,12 +109,12 @@ export function setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, so
 }
 
 
-function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData, shape: number[], selection: (SliceIndices | number)[]) {
-    
+function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
+
     let currentSlice = selection[0];
 
     if (typeof sourceArr === "number") {
-        _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x+1, 1, 1] : x));
+        _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x + 1, 1, 1] : x));
         return;
     }
 
