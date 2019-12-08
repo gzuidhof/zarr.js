@@ -11,7 +11,10 @@ Typescript implementation of [**Zarr**](https://zarr.readthedocs.io/en/stable/).
 npm i zarr
 ```
 
-See the Getting Started section in the [Documentation](http://guido.io/zarr.js).
+See the Getting Started section in the [**Documentation**](http://guido.io/zarr.js).
+
+### Type Docs
+You can generate the type documentation for this project by running `npm run generate-typedocs`. 
 
 ## Why a Typescript implementation for Zarr?
 For better or for worse the browser environment is slowly becoming the world's operating system. Numerical computing with a lot of data is a poor fit for browsers, but for data visualization, exploration and result-sharing the browser is unparalleled.
@@ -21,8 +24,3 @@ With this library a workflow as such becomes possible:
 * You write results to a Zarr store, perhaps one that lives in some cloud storage.
 * In a browser you create a visualization suite which allows for some interactivity. 
 * You share a link to a colleague or friend.
-
-## Thoughts
-* Currently no compression settings are supported. Some compression schemes (e.g. LZMA) will be easy to port, whereas others like the Blosc family will likely require compilation to WASM.
-* No great substitute for NumPy exists in the browser, I don't expect that serious data manipulation workflows will move to the browser any time soon.
-* This library represents multidimensional arrays as nested arrays of TypedArrays, similar as Pyodide. Operataions such as slicing and setting all had to be implemented from scratch to mimic NumPy as closely as possible
