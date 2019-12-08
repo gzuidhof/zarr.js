@@ -141,9 +141,8 @@ n.set([null], n.get([null, slice(null, null, -1)])); // [ Int32Array [ 2, 1, 0 ]
 // n[:, 0:2] = n[:, 1:3]
 n.set([null, slice(0,2)], n.get([null, slice(1,3)])); // [ Int32Array [ 1, 2, 2 ], Int32Array [ 4, 5, 5 ] ]
 
-// TODO this currently errors due to false shape mismatch error..
 // n[0] = n[1]
-n.set(0, n.get(1));
+n.set(0, n.get(1)); // [ Int32Array [ 3, 4, 5 ], Int32Array [ 3, 4, 5 ] ]
 ```
 
 > ### Instead of `get` and `set` can we use square brackets notation such as  `array[0,2]`? 

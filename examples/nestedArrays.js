@@ -1,5 +1,4 @@
-import { NestedArray } from "../dist/zarr.es5.mjs";
-import { slice } from "../dist/zarr.es5.mjs";
+import { NestedArray, slice } from "../dist/zarr.es5.js";
 
 function example1() {
     const typedArray = Int32Array.from([0,1,2,3,4,5]);

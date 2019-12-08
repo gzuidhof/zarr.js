@@ -10,9 +10,8 @@ Typescript implementation of [**Zarr**](https://zarr.readthedocs.io/en/stable/).
 ```
 npm i zarr
 ```
-Please see the [Documentation](guido.io/zarr.js).
 
-
+See the Getting Started section in the [Documentation](http://guido.io/zarr.js).
 
 ## Why a Typescript implementation for Zarr?
 For better or for worse the browser environment is slowly becoming the world's operating system. Numerical computing with a lot of data is a poor fit for browsers, but for data visualization, exploration and result-sharing the browser is unparalleled.

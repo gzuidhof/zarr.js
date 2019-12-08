@@ -1,6 +1,6 @@
 * [Zarr.js](/)
 * [Installation](/installation.md)
-* **Overview**
+* **Getting Started**
   * [NestedArrays](/getting-started/nested-arrays.md)
   * [ZarrArrays](/getting-started/zarr-arrays.md)
 * [Stores](/stores/)
