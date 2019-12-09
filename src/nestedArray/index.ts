@@ -14,7 +14,6 @@ export class NestedArray<T extends TypedArray> {
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString)
     constructor(data: Buffer | ArrayBuffer | NestedArrayData | null, shape: number | number[], dtype: DtypeString)
     constructor(data: Buffer | ArrayBuffer | NestedArrayData | TypedArray | null, shape?: number | number[], dtype?: DtypeString) {
-
         const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
 
         if (shape === undefined) {

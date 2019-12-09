@@ -1,13 +1,13 @@
-import {Codec} from "./types";
-import {ValueError} from "../errors";
-import { gzip, ungzip } from "pako";
+import { Codec } from "./types";
+import { ValueError } from "../errors";
+import pako from "pako";
 
 
-export type ValidGZipLevelSetting = 0 | 9 | 1 | -1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+export type ValidGZipLevelSetting = 0 | 9 | 1 | -1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export class GZip implements Codec {
 
-    public static codecId: "gzip";
+    public static codecId = "gzip";
     public level: ValidGZipLevelSetting;
 
     constructor(level: number) {
@@ -18,12 +18,12 @@ export class GZip implements Codec {
     }
 
     encode(buf: Buffer | ArrayBuffer): Buffer | ArrayBuffer {
-        const gzipped = gzip(new Uint8Array(buf), {level: this.level});
+        const gzipped = pako.gzip(new Uint8Array(buf), { level: this.level });
         return gzipped.buffer;
     }
-    
+
     decode(buf: Buffer | ArrayBuffer, out?: Buffer): Buffer | ArrayBuffer {
-        const compressed = ungzip(new Uint8Array(buf))
+        const compressed = pako.ungzip(new Uint8Array(buf));
         if (out !== undefined) {
             out.set(compressed);
             return out;

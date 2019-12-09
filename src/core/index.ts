@@ -12,7 +12,7 @@ import { NestedArray, createNestedArray } from "../nestedArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError } from '../errors';
 import { Codec } from "../compression/types";
-import { getCodec} from "../compression/creation";
+import { getCodec } from "../compression/creation";
 
 export class ZarrArray {
 
@@ -215,7 +215,7 @@ export class ZarrArray {
     } else {
       this.compressor = null;
     }
-    
+
 
     const attrKey = this.keyPrefix + ATTRS_META_KEY;
     this.attrs = new Attributes<UserAttributes>(this.store, attrKey, this.readOnly, cacheAttrs);
@@ -365,8 +365,9 @@ export class ZarrArray {
     chunkData = this.ensureBuffer(chunkData);
 
     if (this.compressor !== null) {
-      return this.compressor.encode(chunkData);
+      return this.compressor.decode(chunkData);
     }
+
     // TODO filtering etc 
     return chunkData;
   }

@@ -166,7 +166,7 @@ Zarr.js is an early-stage project, use this in production at your own risk. Some
 It uses `PUT`.
 
 * #### Support for compressors and filters
-No compressors or filters are supported yet. There is nothing stopping support - they just need to be implemented.
+Only `zlib` and `gzip` compressors are supported at this point. No other compressors or filters are supported yet - they just need to be implemented *(contributions are welcome)*.
 
 * #### int64 support
   int64 support in browsers is tricky. Because all numbers are internally represented as floating point numbers, whole numbers larger than `2^53-1` can not be reliably represented. `BigInt` and `BigInt64Array` solve this, but they are [not supported in every modern browser](https://caniuse.com/#search=BigInt64Array) yet (in particular Edge and Safari). For maximum compatability save yourself some hassle and try to avoid int64/uint64 zarr arrays.

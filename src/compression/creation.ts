@@ -1,4 +1,4 @@
-import {CompressorConfig} from "../types";
+import { CompressorConfig } from "../types";
 import { GZip } from "./gzip";
 import { Zlib } from "./zlib";
 import { Codec } from "./types";
@@ -9,6 +9,6 @@ export function getCodec(config: CompressorConfig): Codec {
     } else if (config.id === Zlib.codecId) {
         return new Zlib((config as any)["level"]);
     } else {
-        throw new Error(`Compression codec ${config.id} is not supported by Zarr.js yet.`)
+        throw new Error(`Compression codec ${config.id} is not supported by Zarr.js yet.`);
     }
 }
