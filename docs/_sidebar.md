@@ -5,6 +5,6 @@
   * [ZarrArrays](/getting-started/zarr-arrays.md)
   * [Remote Datasets](/getting-started/remote-data.md)
 * **Links**
-    * [ 📦 NPM package](https://www.npmjs.com/package/zarr)
     * [ 🗂️ Github repository](https://github.com/gzuidhof/zarr.js)
+    * [ 📦 NPM package](https://www.npmjs.com/package/zarr)
     * [ 📘 Python Zarr docs](https://zarr.readthedocs.io/en/stable/)
