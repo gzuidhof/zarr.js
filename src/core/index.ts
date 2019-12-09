@@ -11,10 +11,13 @@ import { BasicIndexer, isContiguousSelection } from './indexing';
 import { NestedArray, createNestedArray } from "../nestedArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError } from '../errors';
+import { Codec } from "../compression/types";
+import { getCodec} from "../compression/creation";
 
 export class ZarrArray {
 
   public store: Store;
+  private compressor: Codec | null;
 
   private _chunkStore: Store | null;
   /**
@@ -207,6 +210,12 @@ export class ZarrArray {
     this.cacheMetadata = cacheMetadata;
     this.cacheAttrs = cacheAttrs;
     this.meta = metadata;
+    if (this.meta.compressor !== null) {
+      this.compressor = getCodec(this.meta.compressor);
+    } else {
+      this.compressor = null;
+    }
+    
 
     const attrKey = this.keyPrefix + ATTRS_META_KEY;
     this.attrs = new Attributes<UserAttributes>(this.store, attrKey, this.readOnly, cacheAttrs);
@@ -311,9 +320,8 @@ export class ZarrArray {
         // into the destination array
 
         // TODO check order
-
-        // TODO decompression
-        out.set(outSelection, this.toNestedArray<T>(await cdata));
+        // TODO filters..
+        out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
         return;
       }
       // Decode chunk
@@ -355,7 +363,11 @@ export class ZarrArray {
 
   private decodeChunk(chunkData: ValidStoreType) {
     chunkData = this.ensureBuffer(chunkData);
-    // TODO decompression, filtering etc 
+
+    if (this.compressor !== null) {
+      return this.compressor.encode(chunkData);
+    }
+    // TODO filtering etc 
     return chunkData;
   }
 
@@ -493,7 +505,10 @@ export class ZarrArray {
   }
 
   private encodeChunk(chunk: TypedArray) {
-    // TODO: compression, filters, etc
+    if (this.compressor !== null) {
+      return this.compressor.encode(chunk);
+    }
+    // TODO: filters, etc
     return chunk.buffer;
   }
 }

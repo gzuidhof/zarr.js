@@ -17,20 +17,20 @@ def generate_fixtures():
         compressor=None,
     )
 
-    simple_path = os.path.join(FIXTURES_FOLDER, "simple.zarr")
-    simple_zarr_array = zarr.open(
-        simple_path,
-        shape=(8, 8),
-        chunks=(2, None),
-        dtype="<i4",
-        fill_value=0,
-        mode="w",
-        compressor=None,
-    )
-    simple_zarr_array[0, 0] = 1
-    simple_zarr_array[0, 1] = 2
-    simple_zarr_array[7, 7] = 3
-
+    for compressor, filename_postfix in ([None, ""], ["gzip", "_gzip"], ["zlib", "_zlib"]):
+        simple_path = os.path.join(FIXTURES_FOLDER, "simple{}.zarr".format(filename_postfix))
+        simple_zarr_array = zarr.open(
+            simple_path,
+            shape=(8, 8),
+            chunks=(2, None),
+            dtype="<i4",
+            fill_value=0,
+            mode="w",
+            compressor=compressor,
+        )
+        simple_zarr_array[0, 0] = 1
+        simple_zarr_array[0, 1] = 2
+        simple_zarr_array[7, 7] = 3
 
 if __name__ == "__main__":
     generate_fixtures()

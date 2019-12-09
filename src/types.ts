@@ -27,7 +27,7 @@ export type DtypeString = "<u1" | "<i1" | "<i4" | "<f4" | "<f8" | "<b" | "<B";
  */
 export type ChunksArgument = number | (number | null)[] | boolean | null;
 
-export interface Compressor {
+export interface CompressorConfig {
     id: string;
 }
 export interface Filter {

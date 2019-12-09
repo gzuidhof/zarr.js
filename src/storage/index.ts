@@ -1,7 +1,7 @@
 import { normalizeStoragePath, normalizeChunks, normalizeDtype, normalizeShape, normalizeOrder, normalizeFillValue } from '../util';
 import { Store } from './types';
 import { ARRAY_META_KEY, GROUP_META_KEY } from '../names';
-import { FillType, Order, Filter, Compressor, ZarrGroupMetadata, ChunksArgument, DtypeString, ZarrArrayMetadata, FillTypeSerialized } from '../types';
+import { FillType, Order, Filter, CompressorConfig, ZarrGroupMetadata, ChunksArgument, DtypeString, ZarrArrayMetadata, FillTypeSerialized } from '../types';
 import { ContainsArrayError, ContainsGroupError } from '../errors';
 
 
@@ -115,7 +115,7 @@ async function initArrayMetadata(
     chunks: ChunksArgument,
     dtype: DtypeString,
     path: string,
-    compressor: null | Compressor,
+    compressor: null | CompressorConfig,
     fillValue: FillType,
     order: Order,
     overwrite: boolean,
@@ -183,7 +183,7 @@ export async function initArray(
     chunks: ChunksArgument,
     dtype: DtypeString,
     path: string | null = null,
-    compressor: null | Compressor = null,
+    compressor: null | CompressorConfig = null,
     fillValue: FillType = null,
     order: Order = "C",
     overwrite: boolean = false,

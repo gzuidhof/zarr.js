@@ -1,4 +1,4 @@
-import { ChunksArgument, DtypeString, Compressor, Order, Filter, FillType, PersistenceMode } from './types';
+import { ChunksArgument, DtypeString, CompressorConfig, Order, Filter, FillType, PersistenceMode } from './types';
 import { Store } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
@@ -15,7 +15,7 @@ import { HTTPStore } from './storage/httpStore';
 export interface CreateArrayOptionsWithoutShape {
     chunks?: ChunksArgument;
     dtype?: DtypeString;
-    compressor?: Compressor | null;
+    compressor?: CompressorConfig | null;
     fillValue?: FillType;
     order?: Order;
     store?: Store;
@@ -32,7 +32,7 @@ export type CreateArrayOptions = {
     shape: number | number[];
     chunks?: ChunksArgument;
     dtype?: DtypeString;
-    compressor?: Compressor | null;
+    compressor?: CompressorConfig | null;
     fillValue?: FillType;
     order?: Order;
     store?: Store;
@@ -142,7 +142,7 @@ export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>
 }
 
 export async function openArray(
-    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: Compressor | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; } = {},
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: CompressorConfig | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; } = {},
 ) {
     store = normalizeStoreArgument(store);
     if (chunkStore === undefined) {
