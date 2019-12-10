@@ -3,7 +3,7 @@ import { GZip } from "./gzip";
 import { Zlib } from "./zlib";
 import { Codec } from "./types";
 
-export function getCodec(config: CompressorConfig): Codec {
+export function getCodec(config: CompressorConfig & any): Codec {
     if (config.id === GZip.codecId) {
         return new GZip((config as any)["level"]);
     } else if (config.id === Zlib.codecId) {

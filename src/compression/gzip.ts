@@ -1,6 +1,7 @@
 import { Codec } from "./types";
 import { ValueError } from "../errors";
 import pako from "pako";
+import { TypedArray } from "../zarr";
 
 
 export type ValidGZipLevelSetting = 0 | 9 | 1 | -1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -17,18 +18,18 @@ export class GZip implements Codec {
         this.level = level as ValidGZipLevelSetting;
     }
 
-    encode(buf: Buffer | ArrayBuffer): Buffer | ArrayBuffer {
-        const gzipped = pako.gzip(new Uint8Array(buf), { level: this.level });
+    encode(data: Uint8Array): ArrayBuffer {
+        const gzipped = pako.gzip(data, { level: this.level });
         return gzipped.buffer;
     }
 
-    decode(buf: Buffer | ArrayBuffer, out?: Buffer): Buffer | ArrayBuffer {
-        const compressed = pako.ungzip(new Uint8Array(buf));
+    decode(data: Uint8Array, out?: Uint8Array): ArrayBuffer {
+        const uncompressed = pako.ungzip(data);
         if (out !== undefined) {
-            out.set(compressed);
+            out.set(uncompressed);
             return out;
         }
 
-        return compressed.buffer;
+        return uncompressed.buffer;
     }
 }

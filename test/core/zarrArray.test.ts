@@ -2,7 +2,7 @@
 import { ZarrArray } from '../../src/core';
 import { ObjectStore } from '../../src/storage/objectStore';
 import { initArray, initGroup } from '../../src/storage';
-import { CreateArrayOptions, normalizeStoreArgument, array, CreateArrayOptionsWithoutShape } from '../../src/creation';
+import { normalizeStoreArgument, CreateArrayOptionsWithoutShape } from '../../src/creation';
 import { NestedArray, rangeTypedArray } from '../../src/nestedArray';
 import { slice } from '../../src/core/slice';
 import { arrayEquals1D } from '../../src/util';
@@ -91,7 +91,7 @@ describe("ZarrArray 1D Setting", () => {
 
         const rangeTA = rangeTypedArray([35 - 15], Int32Array);
         const rangeNA = new NestedArray(rangeTA);
-
+        
         a.set(slice(15, 35), rangeNA);
         await z.set(slice(15, 35), rangeNA);
         expect(nestedArrayEquals(a, await z.get())).toBeTruthy();

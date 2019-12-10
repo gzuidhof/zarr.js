@@ -237,8 +237,8 @@ export class ZarrArray {
     }
   }
 
-  // public get(selection: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
-  // public get(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
+  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
+  public get(selection?: ArraySelection): Promise<NestedArray<TypedArray> | number>;
   public get(selection: ArraySelection = null): Promise<NestedArray<TypedArray> | number> {
     return this.getBasicSelection(selection);
   }
@@ -313,7 +313,6 @@ export class ZarrArray {
     // TODO may be better to ask for forgiveness instead
     if (await this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
-
       if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
         // Optimization: we want the whole chunk, and the destination is
         // contiguous, so we can decompress directly from the chunk
@@ -331,6 +330,7 @@ export class ZarrArray {
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
       }
+      
       out.set(outSelection, tmp as NestedArray<T>);
 
     } else { // Chunk isn't there, use fill value
@@ -344,32 +344,32 @@ export class ZarrArray {
     return this.keyPrefix + chunkCoords.join(".");
   }
 
-  private ensureBuffer(chunkData: ValidStoreType) {
+  private ensureByteArray(chunkData: ValidStoreType): Uint8Array {
     if (typeof chunkData === "string") {
-      chunkData = Buffer.from(chunkData);
+      return new Uint8Array(Buffer.from(chunkData).buffer);
     }
-    return chunkData;
+    return new Uint8Array(chunkData);
   }
 
   private toTypedArray(buffer: Buffer | ArrayBuffer) {
     return new DTYPE_TYPEDARRAY_MAPPING[this.dtype](buffer);
   }
 
-  private toNestedArray<T extends TypedArray>(buffer: ValidStoreType) {
-    buffer = this.ensureBuffer(buffer);
+  private toNestedArray<T extends TypedArray>(data: ValidStoreType) {
+    const buffer = this.ensureByteArray(data).buffer;
 
     return new NestedArray<T>(buffer, this.chunks, this.dtype);
   }
 
   private decodeChunk(chunkData: ValidStoreType) {
-    chunkData = this.ensureBuffer(chunkData);
+    const byteChunkData = this.ensureByteArray(chunkData);
 
     if (this.compressor !== null) {
-      return this.compressor.decode(chunkData);
+      return this.compressor.decode(byteChunkData as any);
     }
 
     // TODO filtering etc 
-    return chunkData;
+    return byteChunkData.buffer;
   }
 
   public async set(selection: ArraySelection = null, value: any) {
@@ -500,14 +500,14 @@ export class ZarrArray {
       chunkNestedArray.set(chunkSelection, value);
       chunk = chunkNestedArray.flatten();
     }
-
     const chunkData = this.encodeChunk(chunk);
     this.chunkStore.setItem(chunkKey, chunkData);
   }
 
   private encodeChunk(chunk: TypedArray) {
+    
     if (this.compressor !== null) {
-      return this.compressor.encode(chunk);
+      return this.compressor.encode(new Uint8Array(chunk.buffer));
     }
     // TODO: filters, etc
     return chunk.buffer;

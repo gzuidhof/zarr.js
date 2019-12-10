@@ -1,6 +1,7 @@
 import { Codec } from "./types";
 import { ValueError } from "../errors";
 import pako from "pako";
+import { TypedArray } from "../zarr";
 
 
 export type ValidZlibLevelSetting = 0 | 9 | 1 | -1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -17,19 +18,18 @@ export class Zlib implements Codec {
         this.level = level as ValidZlibLevelSetting;
     }
 
-    encode(buf: Buffer | ArrayBuffer): Buffer | ArrayBuffer {
-        const gzipped = pako.deflate(new Uint8Array(buf), { level: this.level });
+    encode(data: Uint8Array): ArrayBuffer {
+        const gzipped = pako.deflate(data, { level: this.level });
         return gzipped.buffer;
     }
 
-    decode(buf: Buffer | ArrayBuffer, out?: Buffer): Buffer | ArrayBuffer {
-        const compressed = pako.inflate(new Uint8Array(buf));
+    decode(data: Uint8Array, out?: Buffer): ArrayBuffer {
+        const uncompressed = pako.inflate(data);
         if (out !== undefined) {
-            console.log("Setting to set", out);
-            out.set(compressed);
+            out.set(uncompressed);
             return out;
         }
 
-        return compressed.buffer;
+        return uncompressed.buffer;
     }
 }

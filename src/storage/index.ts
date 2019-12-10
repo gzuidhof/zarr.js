@@ -138,10 +138,6 @@ async function initArrayMetadata(
     order = normalizeOrder(order);
     fillValue = normalizeFillValue(fillValue);
 
-    if (compressor !== null) {
-        throw Error("Compressors are not supported yet");
-    }
-
     if (filters !== null && filters.length > 0) {
         throw Error("Filters are not supported yet");
     }
