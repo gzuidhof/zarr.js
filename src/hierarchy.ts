@@ -1,5 +1,5 @@
-import { MutableMappingProxy, createProxy, AsyncMutableMapping, AsyncMutableMappingProxy } from './mutableMapping';
-import { ValidStoreType, Store, } from './storage/types';
+import { createProxy, AsyncMutableMapping, AsyncMutableMappingProxy } from './mutableMapping';
+import { Store, } from './storage/types';
 import { normalizeStoragePath } from './util';
 import { containsArray, pathToPrefix, containsGroup, initGroup } from './storage/index';
 import { ContainsArrayError, GroupNotFoundError, PermissionError, KeyError, ValueError, ContainsGroupError } from './errors';
@@ -7,7 +7,7 @@ import { ZarrGroupMetadata, UserAttributes, PersistenceMode } from './types';
 import { GROUP_META_KEY, ATTRS_META_KEY } from './names';
 import { parseMetadata } from './metadata';
 import { Attributes } from './attributes';
-import { CreateArrayOptions, array, empty, zeros, ones, full, create, normalizeStoreArgument, CreateArrayOptionsWithoutShape } from './creation';
+import { array, empty, zeros, ones, full, create, normalizeStoreArgument, CreateArrayOptionsWithoutShape } from './creation';
 import { NestedArray } from './nestedArray';
 import { TypedArray } from './nestedArray/types';
 import { ZarrArray } from './core';

@@ -8,7 +8,7 @@ import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
 import { ArraySelection, DimensionSelection, Indexer, Slice } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
-import { NestedArray, createNestedArray } from "../nestedArray";
+import { NestedArray } from "../nestedArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError } from '../errors';
 import { Codec } from "../compression/types";

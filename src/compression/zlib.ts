@@ -1,8 +1,6 @@
 import { Codec } from "./types";
 import { ValueError } from "../errors";
 import pako from "pako";
-import { TypedArray } from "../zarr";
-
 
 export type ValidZlibLevelSetting = 0 | 9 | 1 | -1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 

@@ -2,7 +2,7 @@ import { ChunksArgument, DtypeString, CompressorConfig, Order, Filter, FillType,
 import { Store } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
-import { initArray, containsArray, containsGroup, initGroup } from './storage/index';
+import { initArray, containsArray, containsGroup } from './storage/index';
 import { TypedArray } from './nestedArray/types';
 import { NestedArray } from './nestedArray/index';
 import { normalizeStoragePath } from './util';

@@ -1,5 +1,3 @@
-import { TypedArray } from "../zarr";
-
 export abstract class Codec {
     static codecId: string;
     abstract encode(data: Uint8Array): ArrayBuffer;

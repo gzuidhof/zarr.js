@@ -1,5 +1,5 @@
 import { DtypeString } from '../types';
-import { NestedArrayData, TypedArray, TypedArrayConstructor, DTYPE_TYPEDARRAY_MAPPING, NDNestedArrayData, getTypedArrayDtypeString } from './types';
+import { NestedArrayData, TypedArray, TypedArrayConstructor, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString } from './types';
 import { ArraySelection, Slice } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
