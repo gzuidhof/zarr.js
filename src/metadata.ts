@@ -10,8 +10,11 @@ export function parseMetadata(
     // all groups and arrays will already have been parsed from JSON.
     if (typeof s !== 'string') {
         // tslint:disable-next-line: strict-type-predicates
-        if ((typeof window === 'undefined' && Buffer.isBuffer(s)) || s instanceof ArrayBuffer) {
+        if (typeof window === 'undefined' && Buffer.isBuffer(s)) {
             return JSON.parse(s.toString());
+        } else if (s instanceof ArrayBuffer) {
+            // Note, could use a TextDecoder here if we drop support for Edge (much faster)
+            return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(s) as any));
         } else {
             return s;
         }
