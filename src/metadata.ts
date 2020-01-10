@@ -9,7 +9,7 @@ export function parseMetadata(
     // object to accommodate a consolidated metadata store, where all the metadata for
     // all groups and arrays will already have been parsed from JSON.
     if (typeof s !== 'string') {
-        // Assuming it's already parsed
+        // tslint:disable-next-line: strict-type-predicates
         if ((typeof window === 'undefined' && Buffer.isBuffer(s)) || s instanceof ArrayBuffer) {
             return JSON.parse(s.toString());
         } else {

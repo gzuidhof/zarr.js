@@ -21,6 +21,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     async getItem(item: string) {
         const url = new URL(item, this.url).href;
         const value = await fetch(url);
+        // tslint:disable-next-line: strict-type-predicates
         if (typeof window === 'undefined') {
             // Node
             return Buffer.from(await value.arrayBuffer());
