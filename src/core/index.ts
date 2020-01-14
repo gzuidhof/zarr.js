@@ -291,16 +291,30 @@ export class ZarrArray {
       return out;
     }
 
-    const limit = pLimit(options.concurrencyLimit ? options.concurrencyLimit : 10);
+    const concurrencyLimit = (
+      options === undefined
+      || options === null
+      || options.concurrencyLimit === undefined
+      || options.concurrencyLimit === null
+    ) ? 10 : options.concurrencyLimit;
+
+    const progressCallback = (
+      options === undefined
+      || options === null
+      || options.progressCallback === undefined
+      || options.progressCallback === null
+    ) ? null : options.progressCallback;
+
+    const limit = pLimit(concurrencyLimit);
     const input = Array.from(
       indexer.iter(),
       proj => limit(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes))
     );
 
-    if (options.progressCallback) {
+    if (progressCallback) {
       const runProgressCallback = setInterval(() => {
         const progress = (input.length - limit.pendingCount) / input.length;
-        options.progressCallback(progress);
+        progressCallback(progress);
         if (progress === 1) clearInterval(runProgressCallback);
       }, 100); // execute callback every 100ms
     }
