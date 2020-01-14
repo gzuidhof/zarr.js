@@ -16,6 +16,11 @@ import { getCodec } from "../compression/creation";
 
 import pLimit from 'p-limit';
 
+interface StoreGetOptions {
+  concurrencyLimit?: number;
+  progressCallback?: (progress: number) => void;
+}
+
 export class ZarrArray {
 
   public store: Store;
@@ -241,13 +246,13 @@ export class ZarrArray {
 
   public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
   public get(selection?: ArraySelection): Promise<NestedArray<TypedArray> | number>;
-  public get(selection: ArraySelection = null): Promise<NestedArray<TypedArray> | number> {
-    return this.getBasicSelection(selection);
+  public get(selection: ArraySelection = null, options?: StoreGetOptions): Promise<NestedArray<TypedArray> | number> {
+    return this.getBasicSelection(selection, options);
   }
 
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[]): Promise<NestedArray<TypedArray>>;
-  public async getBasicSelection(selection: ArraySelection): Promise<NestedArray<TypedArray> | number>;
-  public async getBasicSelection(selection: ArraySelection): Promise<number | NestedArray<TypedArray>> {
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], options?: StoreGetOptions): Promise<NestedArray<TypedArray>>;
+  public async getBasicSelection(selection: ArraySelection, options?: StoreGetOptions): Promise<NestedArray<TypedArray> | number>;
+  public async getBasicSelection(selection: ArraySelection, options?: StoreGetOptions): Promise<number | NestedArray<TypedArray>> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       await this.reloadMetadata();
@@ -258,16 +263,16 @@ export class ZarrArray {
     if (this.shape === []) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
-      return this.getBasicSelectionND(selection);
+      return this.getBasicSelectionND(selection, options);
     }
   }
 
-  private getBasicSelectionND(selection: ArraySelection) {
+  private getBasicSelectionND(selection: ArraySelection, options?: StoreGetOptions) {
     const indexer = new BasicIndexer(selection, this);
-    return this.getSelection(indexer);
+    return this.getSelection(indexer, options);
   }
 
-  private async getSelection(indexer: BasicIndexer) {
+  private async getSelection(indexer: BasicIndexer, options?: StoreGetOptions) {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be extracted. Each chunk is processed in turn, extracting the
     // necessary data and storing into the correct location in the output array.
@@ -286,11 +291,19 @@ export class ZarrArray {
       return out;
     }
 
-    const limit = pLimit(10);
+    const limit = pLimit(options.concurrencyLimit ? options.concurrencyLimit : 10);
     const input = Array.from(
       indexer.iter(),
       proj => limit(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes))
     );
+
+    if (options.progressCallback) {
+      const runProgressCallback = setInterval(() => {
+        const progress = (input.length - limit.pendingCount) / input.length;
+        options.progressCallback(progress);
+        if (progress === 1) clearInterval(runProgressCallback);
+      }, 100); // execute callback every 100ms
+    }
 
     await Promise.all(input);
 
