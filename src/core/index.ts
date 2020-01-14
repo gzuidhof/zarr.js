@@ -16,6 +16,7 @@ import { getCodec } from "../compression/creation";
 
 import pLimit from 'p-limit';
 
+// TODO: add similar optimizations for `Set`
 interface StoreGetOptions {
   concurrencyLimit?: number;
   progressCallback?: (progress: number) => void;
