@@ -1,4 +1,4 @@
-import { Store, ValidStoreType, AsyncStore, SyncStore } from "../storage/types";
+import { Store, ValidStoreType } from "../storage/types";
 
 import { pathToPrefix } from '../storage/index';
 import { normalizeStoragePath, isTotalSlice, arrayEquals1D } from '../util';
@@ -169,7 +169,7 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  public static async create(store: Store, path: null | string = null, readOnly: boolean = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  public static async create(store: Store, path: null | string = null, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
     const metadata = await this.loadMetadataForConstructor(store, path);
     return new ZarrArray(store, path, metadata as ZarrArrayMetadata, readOnly, chunkStore, cacheMetadata, cacheAttrs);
   }
@@ -198,7 +198,7 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  private constructor(store: Store, path: null | string = null, metadata: ZarrArrayMetadata, readOnly: boolean = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  private constructor(store: Store, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 
@@ -284,7 +284,7 @@ export class ZarrArray {
       return out;
     }
 
-    for (let proj of indexer.iter()) {
+    for (const proj of indexer.iter()) {
       await this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
     }
 
@@ -426,7 +426,7 @@ export class ZarrArray {
     }
 
     // Iterate over chunks in range
-    for (let proj of indexer.iter()) {
+    for (const proj of indexer.iter()) {
       let chunkValue = null;
 
       if (selectionShape === []) {

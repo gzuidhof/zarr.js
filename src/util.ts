@@ -26,6 +26,7 @@ export function humanReadableSize(size: number) {
     return `${(size / (2 ** 50)).toFixed(1)}P`;
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export function normalizeStoragePath(path: string | String | null): string {
     if (path === null) {
         return "";

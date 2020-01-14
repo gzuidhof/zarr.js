@@ -1,6 +1,4 @@
-import { SyncStore, ValidStoreType, AsyncStore } from './types';
-import { createProxy, MutableMappingProxy } from '../mutableMapping';
-import { KeyError } from '../errors';
+import { ValidStoreType, AsyncStore } from './types';
 
 export class HTTPStore implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
@@ -36,7 +34,8 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         const set = await fetch(item, { method: 'PUT' });
         return set.status.toString()[0] === '2';
     }
-    deleteItem(item: string): Promise<boolean> {
+
+    deleteItem(_item: string): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
     async containsItem(item: string): Promise<boolean> {

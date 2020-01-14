@@ -32,6 +32,7 @@ describe("NormalizePath", () => {
         ["/a/b/", "a/b"],
 
         [new String("a/b"), "a/b"],
+    // eslint-disable-next-line @typescript-eslint/ban-types
     ])("normalizes path as expected: output %s, expected %p", (input: string | String, expected: string) => {
         expect(util.normalizeStoragePath(input)).toEqual(expected);
     });

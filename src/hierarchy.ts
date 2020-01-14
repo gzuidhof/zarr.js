@@ -232,7 +232,8 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return true;
     }
 
-    async deleteItem(item: string): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async deleteItem(_item: string): Promise<boolean> {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -258,7 +259,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
  * @param cacheAttrs If `true` (default), user attributes will be cached for attribute read operations.
  *   If `false`, user attributes are reloaded from the store prior to all attribute read operations.
  */
-export async function group(store?: Store | string, path: string | null = null, chunkStore?: Store, overwrite: boolean = false, cacheAttrs: boolean = true) {
+export async function group(store?: Store | string, path: string | null = null, chunkStore?: Store, overwrite = false, cacheAttrs = true) {
     store = normalizeStoreArgument(store);
     path = normalizeStoragePath(path);
 
@@ -279,7 +280,7 @@ export async function group(store?: Store | string, path: string | null = null, 
  *   If False, user attributes are reloaded from the store prior to all attribute read operations.
  * 
  */
-export async function openGroup(store?: Store | string, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: Store, cacheAttrs: boolean = true) {
+export async function openGroup(store?: Store | string, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: Store, cacheAttrs = true) {
     store = normalizeStoreArgument(store);
     if (chunkStore !== undefined) {
         chunkStore = normalizeStoreArgument(store);

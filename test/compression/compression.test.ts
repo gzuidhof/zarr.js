@@ -46,7 +46,6 @@ describe("Test MemoryStore", () => {
     it("Rejects invalid compression configs", () => {
         expect(() => getCodec({id: "gzip", level: -1})).toThrow();
         expect(() => getCodec({id: "zlib", level: -2})).toThrow();
-    })
-
+    });
 
 });
