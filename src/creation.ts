@@ -142,7 +142,7 @@ export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>
 }
 
 export async function openArray(
-    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: CompressorConfig | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; } = {},
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: CompressorConfig | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean } = {},
 ) {
     store = normalizeStoreArgument(store);
     if (chunkStore === undefined) {

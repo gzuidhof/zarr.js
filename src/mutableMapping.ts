@@ -40,10 +40,10 @@ export function createProxy<S, T>(mapping: S & MutableMapping<T>): (S & MutableM
 export function createProxy<S, T>(mapping: S & AsyncMutableMapping<T>): (S & AsyncMutableMappingProxy<T>);
 export function createProxy<S, T>(mapping: (S & MutableMapping<T>) | (S & AsyncMutableMapping<T>)): (S & MutableMappingProxy<T>) | (S & AsyncMutableMappingProxy<T>) {
     return new Proxy(mapping as any, {
-        set(target, key, value, receiver) {
+        set(target, key, value, _receiver) {
             return target.setItem(key as string, value);
         },
-        get(target, key, receiver) {
+        get(target, key, _receiver) {
             return target.getItem(key as string);
         },
         deleteProperty(target, key) {

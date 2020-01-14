@@ -91,7 +91,7 @@ export function setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArray
     const normalizedSelection = normalizeArraySelection(selection, destShape, true);
 
     // Above we force the results to be SliceIndicesIndices only, without integer selections making this cast is safe.
-    const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, destShape) as [SliceIndices[], number[]];
+    const [sliceIndices, _outShape] = selectionToSliceIndices(normalizedSelection, destShape) as [SliceIndices[], number[]];
     _setNestedArrayToScalar(dstArr, value, destShape, sliceIndices);
 }
 
@@ -111,7 +111,7 @@ export function setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, so
 
 function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
 
-    let currentSlice = selection[0];
+    const currentSlice = selection[0];
 
     if (typeof sourceArr === "number") {
         _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x + 1, 1, 1] : x));
@@ -124,7 +124,7 @@ function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceAr
         return;
     }
 
-    const [from, to, step, outputSize] = currentSlice;
+    const [from, _to, step, outputSize] = currentSlice;
 
     if (shape.length === 1) {
         if (step === 1) {
@@ -144,7 +144,7 @@ function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceAr
 }
 
 function _setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArrayData, value: number, shape: number[], selection: SliceIndices[]) {
-    let currentSlice = selection[0];
+    const currentSlice = selection[0];
 
     const [from, to, step, outputSize] = currentSlice;
 

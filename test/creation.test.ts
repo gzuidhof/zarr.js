@@ -1,6 +1,5 @@
 import { array, zeros, empty, ones, full, openArray, create } from "../src/creation";
 import { rangeTypedArray, NestedArray } from '../src/nestedArray/index';
-import { slice } from "../src/core/slice";
 import { MemoryStore } from "../src/storage/memoryStore";
 import { ZarrArray } from "../src/core";
 import { PermissionError } from '../src/errors';

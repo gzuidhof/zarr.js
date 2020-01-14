@@ -1,4 +1,3 @@
-import { Store } from "../../src/storage/types";
 import { MemoryStore } from "../../src/storage/memoryStore";
 
 describe("Test MemoryStore", () => {
