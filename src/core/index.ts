@@ -14,6 +14,8 @@ import { ValueError, PermissionError, KeyError } from '../errors';
 import { Codec } from "../compression/types";
 import { getCodec } from "../compression/creation";
 
+import pLimit from 'p-limit';
+
 export class ZarrArray {
 
   public store: Store;
@@ -284,9 +286,13 @@ export class ZarrArray {
       return out;
     }
 
-    for (const proj of indexer.iter()) {
-      await this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes);
-    }
+    const limit = pLimit(10);
+    const input = Array.from(
+      indexer.iter(),
+      proj => limit(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes))
+    );
+
+    await Promise.all(input);
 
     // Return scalar instead of zero-dimensional array.
     if (out.shape.length === 0) {
@@ -330,7 +336,7 @@ export class ZarrArray {
       if (dropAxes !== null) {
         throw new Error("Drop axes is not supported yet");
       }
-      
+
       out.set(outSelection, tmp as NestedArray<T>);
 
     } else { // Chunk isn't there, use fill value
@@ -368,7 +374,7 @@ export class ZarrArray {
       return this.compressor.decode(byteChunkData as any);
     }
 
-    // TODO filtering etc 
+    // TODO filtering etc
     return byteChunkData.buffer;
   }
 
@@ -505,7 +511,7 @@ export class ZarrArray {
   }
 
   private encodeChunk(chunk: TypedArray) {
-    
+
     if (this.compressor !== null) {
       return this.compressor.encode(new Uint8Array(chunk.buffer));
     }
