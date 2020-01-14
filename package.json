@@ -68,6 +68,7 @@
     "typescript": "^3.0.3"
   },
   "dependencies": {
+    "p-limit": "^2.2.2",
     "pako": "^1.0.10",
     "ts-interface-checker": "^0.1.9"
   }
