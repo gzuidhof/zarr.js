@@ -1,14 +1,14 @@
-import { DtypeString } from '../types'
-import { ValueError } from '../errors'
+import { DtypeString } from '../types';
+import { ValueError } from '../errors';
 
-export type NestedArrayData = TypedArray | NDNestedArrayData
+export type NestedArrayData = TypedArray | NDNestedArrayData;
 export type NDNestedArrayData =
   | TypedArray[]
   | TypedArray[][]
   | TypedArray[][][]
   | TypedArray[][][][]
   | TypedArray[][][][][]
-  | TypedArray[][][][][][]
+  | TypedArray[][][][][][];
 
 export type TypedArray =
   | Uint8Array
@@ -18,7 +18,7 @@ export type TypedArray =
   | Uint32Array
   | Int32Array
   | Float32Array
-  | Float64Array
+  | Float64Array;
 
 // ArrayLike<any> & {
 //     BYTES_PER_ELEMENT: number;
@@ -29,13 +29,13 @@ export type TypedArray =
 //     constructor: TypedArrayConstructor<TypedArray>;
 // };
 export type TypedArrayConstructor<TypedArray> = {
-  new (): TypedArray
+  new (): TypedArray;
   // tslint:disable-next-line: unified-signatures
-  new (size: number): TypedArray
+  new (size: number): TypedArray;
   // tslint:disable-next-line: unified-signatures
-  new (buffer: ArrayBuffer): TypedArray
-  BYTES_PER_ELEMENT: number
-}
+  new (buffer: ArrayBuffer): TypedArray;
+  BYTES_PER_ELEMENT: number;
+};
 
 export const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
   '<b': Int8Array,
@@ -49,19 +49,19 @@ export const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstruct
 
   '<f4': Float32Array,
   '<f8': Float64Array
-}
+};
 
 export function getTypedArrayDtypeString(t: TypedArray): DtypeString {
   // Favour the types below instead of small and big B
-  if (t instanceof Uint8Array) return '<u1'
-  if (t instanceof Int8Array) return '<i1'
-  if (t instanceof Uint16Array) return '<u2'
-  if (t instanceof Int16Array) return '<i2'
-  if (t instanceof Uint32Array) return '<u4'
-  if (t instanceof Int32Array) return '<i4'
+  if (t instanceof Uint8Array) return '<u1';
+  if (t instanceof Int8Array) return '<i1';
+  if (t instanceof Uint16Array) return '<u2';
+  if (t instanceof Int16Array) return '<i2';
+  if (t instanceof Uint32Array) return '<u4';
+  if (t instanceof Int32Array) return '<i4';
 
-  if (t instanceof Float32Array) return '<f4'
-  if (t instanceof Float64Array) return '<f8'
+  if (t instanceof Float32Array) return '<f4';
+  if (t instanceof Float64Array) return '<f8';
 
-  throw new ValueError('Mapping for TypedArray to Dtypestring not known')
+  throw new ValueError('Mapping for TypedArray to Dtypestring not known');
 }

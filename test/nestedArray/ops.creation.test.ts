@@ -1,12 +1,12 @@
-import { createNestedArray, rangeTypedArray } from '../../src/nestedArray'
-import { NestedArrayData, TypedArray, TypedArrayConstructor } from '../../src/nestedArray/types'
+import { createNestedArray, rangeTypedArray } from '../../src/nestedArray';
+import { NestedArrayData, TypedArray, TypedArrayConstructor } from '../../src/nestedArray/types';
 
 describe('NestedArray creation', () => {
   interface TestCase {
-    name: string
-    shape: number[]
-    constr: TypedArrayConstructor<TypedArray>
-    expected: NestedArrayData
+    name: string;
+    shape: number[];
+    constr: TypedArrayConstructor<TypedArray>;
+    expected: NestedArrayData;
   }
 
   const testCases: TestCase[] = [
@@ -171,12 +171,12 @@ describe('NestedArray creation', () => {
         ]
       ]
     }
-  ]
+  ];
 
   test.each(testCases)(`%p`, (t: TestCase) => {
-    const data = rangeTypedArray(t.shape, t.constr)
-    const nestedArray = createNestedArray(data.buffer, t.constr, t.shape)
+    const data = rangeTypedArray(t.shape, t.constr);
+    const nestedArray = createNestedArray(data.buffer, t.constr, t.shape);
 
-    expect(nestedArray).toEqual(t.expected)
-  })
-})
+    expect(nestedArray).toEqual(t.expected);
+  });
+});
