@@ -1,4 +1,3 @@
-import { Store } from "../../src/storage/types";
 import { ObjectStore } from "../../src/storage/objectStore";
 
 describe("Test ObjectStore", () => {

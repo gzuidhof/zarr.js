@@ -1,7 +1,7 @@
-import { MutableMapping, MutableMappingProxy, createProxy, AsyncMutableMapping, AsyncMutableMappingProxy } from './mutableMapping';
-import { SyncStore, ValidStoreType, Store } from './storage/types';
+import { createProxy, AsyncMutableMapping, AsyncMutableMappingProxy } from './mutableMapping';
+import { Store } from './storage/types';
 import { parseMetadata } from './metadata';
-import { ZarrMetadataType, UserAttributes } from './types';
+import { UserAttributes } from './types';
 import { PermissionError } from './errors';
 
 /**

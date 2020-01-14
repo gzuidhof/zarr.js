@@ -166,6 +166,7 @@ export function isContiguousSelection(selection: ArraySelection) {
     return true;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isBasicSelection(selection: ArraySelection): boolean {
     selection = ensureArray(selection);
 
@@ -246,13 +247,13 @@ export class BasicIndexer implements Indexer {
         const dimIndexerIterables = this.dimIndexers.map(x => (() => x.iter()));
         const dimIndexerProduct = product(...dimIndexerIterables);
 
-        for (let dimProjections of dimIndexerProduct) {
+        for (const dimProjections of dimIndexerProduct) {
             // TODO fix this, I think the product outputs too many combinations
             const chunkCoords = [];
             const chunkSelection = [];
             const outSelection = [];
 
-            for (let p of dimProjections) {
+            for (const p of dimProjections) {
                 chunkCoords.push((p).dimChunkIndex);
                 chunkSelection.push((p).dimChunkSelection);
                 if ((p).dimOutSelection !== null) {

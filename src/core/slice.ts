@@ -3,8 +3,6 @@ import { InvalidSliceError } from '../errors';
 import { Slice, SliceArgument, SliceIndices } from "./types";
 
 export function slice(start: SliceArgument, stop: SliceArgument | undefined = undefined, step: number | null = null): Slice {
-    start = start;
-
     // tslint:disable-next-line: strict-type-predicates
     if (start === undefined) { // Not possible in typescript
         throw new InvalidSliceError(start, stop, step, "The first argument must not be undefined");
@@ -107,7 +105,7 @@ export function sliceIndices(slice: Slice, length: number): SliceIndices {
     }
 
     // This clips out of bounds slices
-    let s = adjustIndices(start, stop, step, length);
+    const s = adjustIndices(start, stop, step, length);
     start = s[0];
     stop = s[1];
     step = s[2];

@@ -60,9 +60,9 @@ async function requireParentGroup(store: Store, path: string, chunkStore: Store 
     for (const s of segments.slice(0, segments.length - 1)) {
         p += s;
         if (await containsArray(store, p)) {
-            await initGroupMetadata(store, p, chunkStore, overwrite);
+            await initGroupMetadata(store, p, overwrite);
         } else if (!await containsGroup(store, p)) {
-            await initGroupMetadata(store, p, chunkStore);
+            await initGroupMetadata(store, p);
         }
         p += "/";
     }
@@ -83,7 +83,7 @@ export async function listDir(store: Store, path: string | null = null) {
     }
 }
 
-async function initGroupMetadata(store: Store, path: string | null = null, chunkStore: null | Store = null, overwrite = false) {
+async function initGroupMetadata(store: Store, path: string | null = null,overwrite = false) {
     path = normalizeStoragePath(path);
 
     // Guard conditions
@@ -106,7 +106,7 @@ async function initGroupMetadata(store: Store, path: string | null = null, chunk
 export async function initGroup(store: Store, path: string | null = null, chunkStore: null | Store = null, overwrite = false) {
     path = normalizeStoragePath(path);
     await requireParentGroup(store, path, chunkStore, overwrite);
-    await initGroupMetadata(store, path, chunkStore, overwrite);
+    await initGroupMetadata(store, path, overwrite);
 }
 
 async function initArrayMetadata(
@@ -182,7 +182,7 @@ export async function initArray(
     compressor: null | CompressorConfig = null,
     fillValue: FillType = null,
     order: Order = "C",
-    overwrite: boolean = false,
+    overwrite = false,
     chunkStore: null | Store = null,
     filters: null | Filter[] = null
 ) {

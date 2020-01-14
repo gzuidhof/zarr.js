@@ -9,7 +9,7 @@ export class ObjectStore<T extends ValidStoreType> implements SyncStore<T> {
     rename?: undefined;
 
     public object: {
-        [key: string]: T,
+        [key: string]: T;
     };
 
     constructor() {
@@ -17,7 +17,7 @@ export class ObjectStore<T extends ValidStoreType> implements SyncStore<T> {
     }
 
     getItem(item: string): T {
-        if (!this.object.hasOwnProperty(item)) {
+        if (!Object.prototype.hasOwnProperty.call(this.object, item)) {
             throw new KeyError(item);
         }
         return this.object[item];
@@ -30,7 +30,7 @@ export class ObjectStore<T extends ValidStoreType> implements SyncStore<T> {
         return delete this.object[item];
     }
     containsItem(item: string): boolean {
-        return this.object.hasOwnProperty(item);
+        return Object.prototype.hasOwnProperty.call(this.object, item);
     }
     proxy(): MutableMappingProxy<T> {
         return createProxy(this);
