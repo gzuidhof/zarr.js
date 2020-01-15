@@ -294,12 +294,15 @@ export class ZarrArray {
       return out;
     }
 
+    // create promise queue with concurrency control
     const queue = new PQueue({ concurrency: concurrencyLimit });
 
     if (progressCallback) {
-      let progress = 0;
+
       let queueSize = 0;
       for (const _ of indexer.iter()) queueSize += 1;
+
+      let progress = 0;
       for (const proj of indexer.iter()) {
         (async () => {
           await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
@@ -307,12 +310,16 @@ export class ZarrArray {
           progressCallback({ progress: progress, queueSize: queueSize });
         })();
       }
+
     } else {
+
       for (const proj of indexer.iter()) {
         queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
       }
+
     }
 
+    // gaurantess that all work on queue has finished
     await queue.onIdle();
 
     // Return scalar instead of zero-dimensional array.
