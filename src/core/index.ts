@@ -19,7 +19,10 @@ import PQueue from 'p-queue';
 // TODO: add similar optimizations for `Set`
 interface StoreGetOptions {
   concurrencyLimit?: number;
-  progressCallback?: (progress: number) => void;
+  progressCallback?: (progressUpdate: {
+    progress: number;
+    queueSize: number;
+  }) => void;
 }
 
 export class ZarrArray {
@@ -310,11 +313,13 @@ export class ZarrArray {
 
     if (progressCallback) {
       let progress = 0;
+      let queueSize = 0;
+      for (const _ of indexer.iter()) queueSize += 1;
       for (const proj of indexer.iter()) {
         (async () => {
           await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
           progress += 1;
-          progressCallback(progress);
+          progressCallback({ progress: progress, queueSize: queueSize });
         })();
       }
     } else {
