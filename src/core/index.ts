@@ -490,6 +490,7 @@ export class ZarrArray {
       for (const _ of indexer.iter()) queueSize += 1;
 
       let progress = 0;
+      progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         const chunkValue = this.getChunkValue(proj, indexer, value, selectionShape);
         (async () => {
