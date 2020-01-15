@@ -14,7 +14,7 @@ import { ValueError, PermissionError, KeyError } from '../errors';
 import { Codec } from "../compression/types";
 import { getCodec } from "../compression/creation";
 
-import pLimit from 'p-limit';
+import PQueue from 'p-queue';
 
 // TODO: add similar optimizations for `Set`
 interface StoreGetOptions {
@@ -306,21 +306,24 @@ export class ZarrArray {
       || options.progressCallback === null
     ) ? null : options.progressCallback;
 
-    const limit = pLimit(concurrencyLimit);
-    const input = Array.from(
-      indexer.iter(),
-      proj => limit(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes))
-    );
+    const queue = new PQueue({ concurrency: concurrencyLimit });
 
     if (progressCallback) {
-      const runProgressCallback = setInterval(() => {
-        const progress = (input.length - limit.pendingCount) / input.length;
-        progressCallback(progress);
-        if (progress === 1) clearInterval(runProgressCallback);
-      }, 100); // execute callback every 100ms
+      let progress = 0;
+      for (const proj of indexer.iter()) {
+        (async () => {
+          await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
+          progress += 1;
+          progressCallback(progress);
+        })();
+      }
+    } else {
+      for (const proj of indexer.iter()) {
+        queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
+      }
     }
 
-    await Promise.all(input);
+    await queue.onIdle();
 
     // Return scalar instead of zero-dimensional array.
     if (out.shape.length === 0) {
