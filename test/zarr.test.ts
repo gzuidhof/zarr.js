@@ -1,9 +1,9 @@
 /**
- * Dummy test
+ * Import everything test
  */
-describe("Dummy test", () => {
-  it("Does nothing", () => {
-    expect(1).toEqual(1);
-    // expect(new ZarrArray()).toBeInstanceOf(ZarrArray)
+import * as zarr from "../src/zarr";
+describe("Import test", () => {
+  it("Exposes ZarrArray", () => {
+    expect(zarr.ZarrArray).toBeDefined();
   });
 });

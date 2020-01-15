@@ -1,6 +1,6 @@
 {
   "name": "zarr",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "",
   "keywords": [],
   "main": "dist/zarr.umd.js",
@@ -54,7 +54,7 @@
     "puppeteer": "^2.0.0",
     "replace-in-file": "^3.4.2",
     "rimraf": "^2.6.2",
-    "rollup": "^0.67.0",
+    "rollup": "^0.67.4",
     "rollup-plugin-commonjs": "^9.1.8",
     "rollup-plugin-json": "^3.1.0",
     "rollup-plugin-node-resolve": "^3.4.0",
@@ -62,7 +62,7 @@
     "rollup-plugin-typescript2": "^0.24.3",
     "serve-static": "^1.14.1",
     "ts-interface-builder": "^0.2.1",
-    "ts-jest": "^23.10.2",
+    "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
     "typedoc": "^0.15.0",
     "typescript": "^3.0.3"
