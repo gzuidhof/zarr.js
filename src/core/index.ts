@@ -326,7 +326,7 @@ export class ZarrArray {
 
     }
 
-    // gaurantess that all work on queue has finished
+    // guarantees that all work on queue has finished
     await queue.onIdle();
 
     // Return scalar instead of zero-dimensional array.
@@ -509,7 +509,7 @@ export class ZarrArray {
 
     }
 
-    // gaurantess that all work on queue has finished
+    // guarantees that all work on queue has finished
     await queue.onIdle();
   }
 
