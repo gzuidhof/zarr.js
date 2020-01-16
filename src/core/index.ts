@@ -310,6 +310,7 @@ export class ZarrArray {
       for (const _ of indexer.iter()) queueSize += 1;
 
       let progress = 0;
+      progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         (async () => {
           await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
@@ -319,7 +320,6 @@ export class ZarrArray {
       }
 
     } else {
-
       for (const proj of indexer.iter()) {
         queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
       }

@@ -110,6 +110,19 @@ describe("ZarrArray Set with progress callback", () => {
     });
 });
 
+
+describe("ZarrArray Get with progress callback", () => {
+    it("calls the callback the right amount of times with progress", async () => {
+        const cb = jest.fn();
+        const z = await zeros([5, 100], {chunks: [1, 50]});
+        await z.get(null, {progressCallback: cb});
+        expect(cb.mock.calls.length).toBe(10+1);
+        expect(cb.mock.calls[0][0]).toEqual({progress: 0, queueSize: 10});
+        expect(cb.mock.calls[5][0]).toEqual({progress: 5, queueSize: 10});
+        expect(cb.mock.calls[10][0]).toEqual({progress: 10, queueSize: 10});
+    });  
+});
+
 function nestedArrayEquals(a: NestedArray<any> | number, b: NestedArray<any> | number) {
     if (typeof b !== typeof a) {
         console.log("Types are different");
