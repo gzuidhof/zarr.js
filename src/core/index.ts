@@ -16,7 +16,7 @@ import { getCodec } from "../compression/creation";
 
 import PQueue from 'p-queue';
 
-interface GetOptions {
+export interface GetOptions {
   concurrencyLimit?: number;
   progressCallback?: (progressUpdate: {
     progress: number;
@@ -24,7 +24,7 @@ interface GetOptions {
   }) => void;
 }
 
-interface SetOptions {
+export interface SetOptions {
   concurrencyLimit?: number;
   progressCallback?: (progressUpdate: {
     progress: number;
