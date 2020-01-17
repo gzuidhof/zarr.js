@@ -6,7 +6,7 @@ import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
-import { ArraySelection, DimensionSelection, Indexer, Slice } from "./types";
+import { ArraySelection, DimensionSelection, Indexer, Slice, ChunkProjection } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
 import { NestedArray } from "../nestedArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
@@ -16,8 +16,15 @@ import { getCodec } from "../compression/creation";
 
 import PQueue from 'p-queue';
 
-// TODO: add similar optimizations for `Set`
-interface GetOptions {
+export interface GetOptions {
+  concurrencyLimit?: number;
+  progressCallback?: (progressUpdate: {
+    progress: number;
+    queueSize: number;
+  }) => void;
+}
+
+export interface SetOptions {
   concurrencyLimit?: number;
   progressCallback?: (progressUpdate: {
     progress: number;
@@ -406,11 +413,11 @@ export class ZarrArray {
     return byteChunkData.buffer;
   }
 
-  public async set(selection: ArraySelection = null, value: any) {
-    await this.setBasicSelection(selection, value);
+  public async set(selection: ArraySelection = null, value: any, opts: SetOptions = {}) {
+    await this.setBasicSelection(selection, value, opts);
   }
 
-  public async setBasicSelection(selection: ArraySelection, value: any) {
+  public async setBasicSelection(selection: ArraySelection, value: any, { concurrencyLimit = 10, progressCallback }: SetOptions = {}) {
     if (this.readOnly) {
       throw new PermissionError("Object is read only");
     }
@@ -422,16 +429,32 @@ export class ZarrArray {
     if (this.shape === []) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
-      await this.setBasicSelectionND(selection, value);
+      await this.setBasicSelectionND(selection, value, concurrencyLimit, progressCallback);
     }
   }
 
-  private async setBasicSelectionND(selection: ArraySelection, value: any) {
+  private async setBasicSelectionND(selection: ArraySelection, value: any, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
     const indexer = new BasicIndexer(selection, this);
-    await this.setSelection(indexer, value);
+    await this.setSelection(indexer, value, concurrencyLimit, progressCallback);
   }
 
-  private async setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>) {
+  private getChunkValue(proj: ChunkProjection, indexer: Indexer, value: number | NestedArray<TypedArray>, selectionShape: number[]): number | NestedArray<TypedArray> {
+    let chunkValue: number | NestedArray<TypedArray>;
+    if (selectionShape === []) {
+      chunkValue = value;
+    } else if (typeof value === "number") {
+      chunkValue = value;
+    } else {
+      chunkValue = value.get(proj.outSelection);
+      // tslint:disable-next-line: strict-type-predicates
+      if (indexer.dropAxes !== null) {
+        throw new Error("Handling drop axes not supported yet");
+      }
+    }
+    return chunkValue;
+  }
+
+  private async setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be replaced. Each chunk is processed in turn, extracting the
     // necessary data from the value array and storing into the chunk array.
@@ -459,24 +482,35 @@ export class ZarrArray {
       throw new Error("Unknown data type for setting :(");
     }
 
-    // Iterate over chunks in range
-    for (const proj of indexer.iter()) {
-      let chunkValue = null;
+    const queue = new PQueue({ concurrency: concurrencyLimit });
 
-      if (selectionShape === []) {
-        chunkValue = value;
-      } else if (typeof value === "number") {
-        chunkValue = value;
-      } else {
-        chunkValue = value.get(proj.outSelection);
-        // tslint:disable-next-line: strict-type-predicates
-        if (indexer.dropAxes !== null) {
-          throw new Error("Handling drop axes not supported yet");
-        }
+    if (progressCallback) {
+
+      let queueSize = 0;
+      for (const _ of indexer.iter()) queueSize += 1;
+
+      let progress = 0;
+      progressCallback({ progress: 0, queueSize: queueSize });
+      for (const proj of indexer.iter()) {
+        const chunkValue = this.getChunkValue(proj, indexer, value, selectionShape);
+        (async () => {
+          await queue.add(() => this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue));
+          progress += 1;
+          progressCallback({ progress: progress, queueSize: queueSize });
+        })();
       }
 
-      await this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue);
+    } else {
+
+      for (const proj of indexer.iter()) {
+        const chunkValue = this.getChunkValue(proj, indexer, value, selectionShape);
+        queue.add(() => this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue));
+      }
+
     }
+
+    // guarantees that all work on queue has finished
+    await queue.onIdle();
   }
 
   private async chunkSetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {

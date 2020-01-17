@@ -72,7 +72,7 @@ describe("ZarrArray Creation", () => {
 
 describe("ZarrArray 1D Setting", () => {
 
-    it ("Can set 1D arrays", async() => {
+    it("Can set 1D arrays", async () => {
         const a = new NestedArray(null, 100, "<i4");
         const z = await createArray(a.shape, { chunks: 10, dtype: a.dtype });
         await z.set(null, a);
@@ -91,10 +91,22 @@ describe("ZarrArray 1D Setting", () => {
 
         const rangeTA = rangeTypedArray([35 - 15], Int32Array);
         const rangeNA = new NestedArray(rangeTA);
-        
+
         a.set(slice(15, 35), rangeNA);
         await z.set(slice(15, 35), rangeNA);
         expect(nestedArrayEquals(a, await z.get())).toBeTruthy();
+    });
+});
+
+describe("ZarrArray Set with progress callback", () => {
+    it("calls the callback the right amount of times with progress", async () => {
+        const cb = jest.fn();
+        const z = await zeros([5, 100], { chunks: [1, 50] });
+        await z.set(null, 1, { progressCallback: cb });
+        expect(cb.mock.calls.length).toBe(10 + 1);
+        expect(cb.mock.calls[0][0]).toEqual({ progress: 0, queueSize: 10 });
+        expect(cb.mock.calls[5][0]).toEqual({ progress: 5, queueSize: 10 });
+        expect(cb.mock.calls[10][0]).toEqual({ progress: 10, queueSize: 10 });
     });
 });
 
@@ -110,7 +122,6 @@ describe("ZarrArray Get with progress callback", () => {
         expect(cb.mock.calls[10][0]).toEqual({progress: 10, queueSize: 10});
     });  
 });
-
 
 function nestedArrayEquals(a: NestedArray<any> | number, b: NestedArray<any> | number) {
     if (typeof b !== typeof a) {
