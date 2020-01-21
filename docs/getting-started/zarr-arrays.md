@@ -91,5 +91,28 @@ NestedArray {
 }
 ```
 
+----
+
+Depending on the slicing and chunking of the zarr array, various numbers of requests are made to write or read parts of the store. Both getting and setting functions for a ZarrArray take an optional `options` object argument which gives the user control over aynchronous requests and monitoring the fetching/updating of a ZarrArray. 
+
+```javascript
+const options = {
+  concurrencyLimit: 10, // max number of concurrent requests (default 10)
+  progressCallback: ({ progress, queueSize }) => { 
+    console.log(`${progress / queueSize * 100}% complete.`)
+  } // callback executed after each request
+};
+
+await z.get([null], options);
+```
+
+```output
+// console
+0% complete.
+33.33% complete.
+66.6667% complete.
+... 
+```
+
 #### Next steps
 Read about [ZarrArrays whose data lives remotely](/getting-started/remote-data.md).
