@@ -93,7 +93,7 @@ NestedArray {
 
 ----
 
-Depending on the slicing and chunking of the zarr array, various numbers of requests are made to write or read parts of the store. Both getting and setting functions for a ZarrArray take an optional `options` object argument which gives the user control over aynchronous requests and monitoring the fetching/updating of a ZarrArray. 
+Depending on the slicing and chunking of the zarr array, various numbers of requests are made to write or read parts of the store. Both getting and setting functions for a ZarrArray take an optional `options` object argument which gives the user control over asynchronous requests and monitoring the fetching/updating of a ZarrArray. 
 
 ```javascript
 const options = {
