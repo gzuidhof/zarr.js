@@ -7,6 +7,11 @@ import { isSlice } from "./core/indexing";
 
 const TypeCheckSuite = createCheckers(typesTI);
 
+/**
+ * This should be true only if this javascript is getting executed in Node.
+ */
+export const IS_NODE = typeof process !== "undefined" && process.versions && process.versions.node;
+
 export function humanReadableSize(size: number) {
     if (size < 2 ** 10) {
         return `${size}`;

@@ -1,6 +1,13 @@
 
 import * as util from "../src/util";
 
+describe("Node check", () => {
+    it("detects that the tests run in Node", () => {
+        expect(util.IS_NODE).toBeTruthy();
+    });
+});
+
+
 describe("Human Readable Size", () => {
     it("describes values as expected", () => {
         expect(util.humanReadableSize(100)).toEqual("100");
