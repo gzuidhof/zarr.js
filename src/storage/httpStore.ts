@@ -1,4 +1,5 @@
 import { ValidStoreType, AsyncStore } from './types';
+import { IS_NODE } from '../util';
 
 export class HTTPStore implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
@@ -19,8 +20,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     async getItem(item: string) {
         const url = new URL(item, this.url).href;
         const value = await fetch(url);
-        // tslint:disable-next-line: strict-type-predicates
-        if (typeof window === 'undefined') {
+        if (IS_NODE) {
             // Node
             return Buffer.from(await value.arrayBuffer());
         }

@@ -1,5 +1,6 @@
 import { ZarrMetadataType, UserAttributes } from './types';
 import { ValidStoreType } from './storage/types';
+import { IS_NODE } from './util';
 
 export function parseMetadata(
     s: ValidStoreType | ZarrMetadataType
@@ -10,7 +11,7 @@ export function parseMetadata(
     // all groups and arrays will already have been parsed from JSON.
     if (typeof s !== 'string') {
         // tslint:disable-next-line: strict-type-predicates
-        if (typeof window === 'undefined' && Buffer.isBuffer(s)) {
+        if (IS_NODE && Buffer.isBuffer(s)) {
             return JSON.parse(s.toString());
         } else if (s instanceof ArrayBuffer) {
             // Note, could use a TextDecoder here if we drop support for Edge (much faster)

@@ -3,7 +3,7 @@ import { NestedArrayData, TypedArray, TypedArrayConstructor, DTYPE_TYPEDARRAY_MA
 import { ArraySelection, Slice } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
-import { normalizeShape } from '../util';
+import { normalizeShape, IS_NODE } from '../util';
 import { setNestedArray, setNestedArrayToScalar, flattenNestedArray, sliceNestedArray } from './ops';
 
 export class NestedArray<T extends TypedArray> {
@@ -44,7 +44,7 @@ export class NestedArray<T extends TypedArray> {
         }
         else if (
             // tslint:disable-next-line: strict-type-predicates
-            (typeof window === 'undefined' && Buffer.isBuffer(data))
+            (IS_NODE && Buffer.isBuffer(data))
             || data instanceof ArrayBuffer
             || data === null
             || data.toString().startsWith("[object ArrayBuffer]") // Necessary for Node.js for some reason..
