@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>zarr.js demo</title>
+  </head>
+  <body>
+    <script src="http://localhost:8000/zarr.umd.js"></script>
+    <script>
+      const baseUrl = "https://raw.githubusercontent.com";
+      const config = {
+        store: `${baseUrl}/gzuidhof/zarr.js/master/fixtures/`,
+        path: "simple.zarr",
+        mode: "r"
+      };
+      async function exampleUMD() {
+        const arrMeta = await fetch(
+          `${config.store}${config.path}/.zarray`
+        ).then(res => res.json());
+
+        document.getElementById("result-metadata").innerText = "Array Metadata: " + JSON.stringify(arrMeta);
+
+        const z = await zarr.openArray(config);
+        document.getElementById("zarray-tostring").innerText = JSON.stringify(z, 2, 2)
+      }
+      exampleUMD();
+    </script>
+
+    <p id="result-metadata"></p>
+    <p id="zarray-tostring"></p>
+  </body>
+</html>
