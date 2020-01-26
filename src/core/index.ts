@@ -257,13 +257,19 @@ export class ZarrArray {
 
   public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray>>;
   public get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
-    return this.getBasicSelection(selection, opts);
+  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | TypedArray | number> {
+    return this.getBasicSelection(selection, false, opts);
   }
 
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray>>;
-  public async getBasicSelection(selection: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public async getBasicSelection(selection: ArraySelection, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<number | NestedArray<TypedArray>> {
+  public getRaw(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<TypedArray>;
+  public getRaw(selection?: ArraySelection, opts?: GetOptions): Promise<TypedArray | number>;
+  public getRaw(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | TypedArray | number> {
+    return this.getBasicSelection(selection, true, opts);
+  }
+
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | TypedArray>;
+  public async getBasicSelection(selection: ArraySelection, asRaw: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | number | TypedArray>;
+  public async getBasicSelection(selection: ArraySelection, asRaw: boolean, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<number | NestedArray<TypedArray> | TypedArray> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       await this.reloadMetadata();
@@ -273,16 +279,16 @@ export class ZarrArray {
     if (this.shape === []) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
-      return this.getBasicSelectionND(selection, concurrencyLimit, progressCallback);
+      return this.getBasicSelectionND(selection, asRaw, concurrencyLimit, progressCallback);
     }
   }
 
-  private getBasicSelectionND(selection: ArraySelection, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
+  private getBasicSelectionND(selection: ArraySelection, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void): Promise<number | NestedArray<TypedArray> | TypedArray> {
     const indexer = new BasicIndexer(selection, this);
-    return this.getSelection(indexer, concurrencyLimit, progressCallback);
+    return this.getSelection(indexer, asRaw, concurrencyLimit, progressCallback);
   }
 
-  private async getSelection(indexer: BasicIndexer, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
+  private async getSelection(indexer: BasicIndexer, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void): Promise<number | NestedArray<TypedArray> | TypedArray> {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be extracted. Each chunk is processed in turn, extracting the
     // necessary data and storing into the correct location in the output array.
@@ -295,7 +301,9 @@ export class ZarrArray {
     const outDtype = this.dtype;
     const outShape = indexer.shape;
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
-    const out = new NestedArray(null, outShape, outDtype);
+    const out = asRaw
+      ? new DTYPE_TYPEDARRAY_MAPPING[outDtype](outSize)
+      : new NestedArray(null, outShape, outDtype);
 
     if (outSize === 0) {
       return out;
@@ -330,11 +338,15 @@ export class ZarrArray {
     await queue.onIdle();
 
     // Return scalar instead of zero-dimensional array.
-    if (out.shape.length === 0) {
+    if (out instanceof NestedArray && out.shape.length === 0) {
       return out.data[0] as number;
     }
 
     return out;
+  }
+
+  private setTypedArray(outSelection: DimensionSelection[], rawArr: TypedArray) {
+
   }
 
   /**
@@ -345,7 +357,7 @@ export class ZarrArray {
    * @param outSelection Location of region within output array to store results in.
    * @param dropAxes Axes to squeeze out of the chunk.
    */
-  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
+  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T> | T, outSelection: DimensionSelection[], dropAxes: null | number[]) {
     if (chunkCoords.length !== this._chunkDataShape.length) {
       throw new ValueError(`Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}`);
     }
@@ -361,7 +373,9 @@ export class ZarrArray {
 
         // TODO check order
         // TODO filters..
-        out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
+        if (out instanceof NestedArray) {
+          out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
+        }
         return;
       }
       // Decode chunk
@@ -372,11 +386,15 @@ export class ZarrArray {
         throw new Error("Drop axes is not supported yet");
       }
 
-      out.set(outSelection, tmp as NestedArray<T>);
+      if (out instanceof NestedArray) {
+        out.set(outSelection, tmp as NestedArray<T>);
+      }
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
-        out.set(outSelection, this.fillValue);
+        if (out instanceof NestedArray) {
+          out.set(outSelection, this.fillValue);
+        }
       }
     }
   }
