@@ -29,11 +29,11 @@ export type TypedArray =
 //     constructor: TypedArrayConstructor<TypedArray>;
 // };
 export type TypedArrayConstructor<TypedArray> = {
-  new (): TypedArray;
+  new(): TypedArray;
   // tslint:disable-next-line: unified-signatures
-  new (size: number): TypedArray;
+  new(size: number): TypedArray;
   // tslint:disable-next-line: unified-signatures
-  new (buffer: ArrayBuffer): TypedArray;
+  new(buffer: ArrayBuffer): TypedArray;
   BYTES_PER_ELEMENT: number;
 };
 
