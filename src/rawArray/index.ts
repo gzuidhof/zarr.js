@@ -1,19 +1,15 @@
 import { DtypeString } from '../types';
-import { ArraySelection, Slice } from '../core/types';
+import { ArraySelection } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE } from '../util';
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
 
-// private setTypedArray(outSelection: DimensionSelection[], dstArr: TypedArray, value: TypedArray | number) {
-//     return;
-//     // dstArr.fill(value, from, to);
-//   }
 
 export class RawArray {
     dtype: DtypeString;
     shape: number[];
-    data: TypedArray;
+    data!: TypedArray;
 
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString)
     constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString)
@@ -40,9 +36,7 @@ export class RawArray {
 
         if (dataIsTypedArray && shape.length !== 1) {
             data = (data as TypedArray).buffer;
-        }
-
-        else if (
+        } else if (
             // tslint:disable-next-line: strict-type-predicates
             (IS_NODE && Buffer.isBuffer(data))
             || data instanceof ArrayBuffer
@@ -61,8 +55,7 @@ export class RawArray {
                 throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
             }
             const typeConstructor: TypedArrayConstructor<TypedArray> = DTYPE_TYPEDARRAY_MAPPING[dtype];
-            const size = shape.reduce((x, y) => x * y, 1);
-            this.data = new typeConstructor(size);
+            this.data = new typeConstructor(numShapeElements);
         } else {
             this.data = data;
         }
@@ -77,11 +70,14 @@ export class RawArray {
                 // Zero dimension array..
                 this.data[0] = value;
             } else {
-                setNestedArrayToScalar(this.data, value, this.shape, selection);
+                // setNestedArrayToScalar(this.data, value, this.shape, selection);
+                console.log(selection, "number");
             }
         } else {
-            setNestedArray(this.data, value.data, this.shape, value.shape, selection);
+            // setRawArray(this.data, value, this.shape, selection);
+            console.log(selection);
         }
+
     }
 }
 
