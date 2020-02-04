@@ -2,14 +2,14 @@ import { DtypeString } from '../types';
 import { ArraySelection } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
-import { normalizeShape, IS_NODE } from '../util';
+import { normalizeShape, IS_NODE, getStrides } from '../util';
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
 import { setRawArray } from './ops';
 
 export class RawArray {
     dtype: DtypeString;
     shape: number[];
-    stride: number[];
+    strides: number[];
     data!: TypedArray;
 
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, stride?: number[])
@@ -35,15 +35,10 @@ export class RawArray {
         this.shape = shape;
         this.dtype = dtype;
 
-        if (stride === undefined) {
-            const d = shape.length;
-            stride = new Array(d);
-            for (let i = d - 1, sz = 1; i >= 0; --i) {
-                stride[i] = sz;
-                sz *= shape[i];
-            }
+        if (strides === undefined) {
+            strides = getStrides(shape);
         }
-        this.stride = stride;
+        this.strides = strides;
 
         if (dataIsTypedArray && shape.length !== 1) {
             data = (data as TypedArray).buffer;

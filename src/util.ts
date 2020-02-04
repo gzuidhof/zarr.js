@@ -128,8 +128,8 @@ export function normalizeFillValue(fillValue: FillType): FillType {
 /**
  * Determine whether `item` specifies a complete slice of array with the
  *  given `shape`. Used to optimize __setitem__ operations on chunks
- * @param item 
- * @param shape 
+ * @param item
+ * @param shape
  */
 export function isTotalSlice(item: DimensionSelection | DimensionSelection[], shape: number[]): boolean {
     if (item === null) {
@@ -180,4 +180,22 @@ export function arrayEquals1D(a: ArrayLike<any>, b: ArrayLike<any>) {
         }
     }
     return true;
+}
+
+/*
+ * Determines "C" order strides for a given shape array.
+ * Strides provide integer steps in each dimention to traverse an ndarray.
+ *
+ * NOTE: These strides here are distinct from numpy.ndarray.strides, which describe actual byte steps.
+ */
+export function getStrides(shape: number[]): number[] {
+    // adapted from https://github.com/scijs/ndarray/blob/master/ndarray.js#L326-L330
+    const ndim = shape.length;
+    const strides = Array(ndim);
+    let step = 1; // strides assumed to be contiguous, so init step is 1
+    for (let i = ndim - 1; i >= 0; i--) {
+        strides[i] = step;
+        step *= shape[i];
+    }
+    return strides;
 }
