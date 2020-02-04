@@ -1,7 +1,7 @@
 import { ArraySelection, SliceIndices } from '../core/types';
 import { ValueError } from '../errors';
 import { normalizeArraySelection, selectionToSliceIndices } from '../core/indexing';
-import { TypedArray, TypedArrayConstructor, NestedArrayData, NDNestedArrayData } from '../nestedArray/types';
+import { TypedArray, TypedArrayConstructor } from '../nestedArray/types';
 
 // TODO
 // export function setRawArrayToScalar<T extends TypedArray>(dstArr: NestedArrayData, value: number, destShape: number[], selection: number | ArraySelection) {
@@ -17,44 +17,44 @@ export function setRawArray<T extends TypedArray>(dstArr: TypedArray, sourceArr:
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedSelection = normalizeArraySelection(selection, destShape, false);
     const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, destShape);
-
-    _setRawArray(dstArr, sourceArr, destShape, sliceIndices);
+    console.log(sliceIndices, outShape);
+    // _setRawArray(dstArr, sourceArr, destShape, sliceIndices);
 }
 
 
-function _setRawArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
+// function _setRawArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
 
-    const currentSlice = selection[0];
+//     const currentSlice = selection[0];
 
-    if (typeof sourceArr === "number") {
-        _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x + 1, 1, 1] : x));
-        return;
-    }
+//     if (typeof sourceArr === "number") {
+//         _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x + 1, 1, 1] : x));
+//         return;
+//     }
 
-    // This dimension is squeezed.
-    if (typeof currentSlice === "number") {
-        _setNestedArray((dstArr as NDNestedArrayData)[currentSlice], sourceArr, shape.slice(1), selection.slice(1));
-        return;
-    }
+//     // This dimension is squeezed.
+//     if (typeof currentSlice === "number") {
+//         _setNestedArray((dstArr as NDNestedArrayData)[currentSlice], sourceArr, shape.slice(1), selection.slice(1));
+//         return;
+//     }
 
-    const [from, _to, step, outputSize] = currentSlice;
+//     const [from, _to, step, outputSize] = currentSlice;
 
-    if (shape.length === 1) {
-        if (step === 1) {
-            (dstArr as TypedArray).set(sourceArr as TypedArray, from);
-            return;
-        }
+//     if (shape.length === 1) {
+//         if (step === 1) {
+//             (dstArr as TypedArray).set(sourceArr as TypedArray, from);
+//             return;
+//         }
 
-        for (let i = 0; i < outputSize; i++) {
-            dstArr[from + i * step] = (sourceArr)[i];
-        }
-        return;
-    }
+//         for (let i = 0; i < outputSize; i++) {
+//             dstArr[from + i * step] = (sourceArr)[i];
+//         }
+//         return;
+//     }
 
-    for (let i = 0; i < outputSize; i++) {
-        _setNestedArray((dstArr as NDNestedArrayData)[from + i * step], (sourceArr as NDNestedArrayData)[i], shape.slice(1), selection.slice(1));
-    }
-}
+//     for (let i = 0; i < outputSize; i++) {
+//         _setNestedArray((dstArr as NDNestedArrayData)[from + i * step], (sourceArr as NDNestedArrayData)[i], shape.slice(1), selection.slice(1));
+//     }
+// }
 
 // function _setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArrayData, value: number, shape: number[], selection: SliceIndices[]) {
 //     const currentSlice = selection[0];

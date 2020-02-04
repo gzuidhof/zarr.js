@@ -375,8 +375,10 @@ export class ZarrArray {
         } else {
           out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
         }
+        console.log(cKey);
         return;
       }
+      console.log(cKey);
       console.log(outSelection);
       // out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
       // Decode chunk

@@ -4,16 +4,17 @@ import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE } from '../util';
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
-
+import { setRawArray } from './ops';
 
 export class RawArray {
     dtype: DtypeString;
     shape: number[];
+    stride: number[];
     data!: TypedArray;
 
-    constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString)
-    constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString)
-    constructor(data: Buffer | ArrayBuffer | TypedArray | null, shape?: number | number[], dtype?: DtypeString) {
+    constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, stride?: number[])
+    constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString, stride?: number[])
+    constructor(data: Buffer | ArrayBuffer | TypedArray | null, shape?: number | number[], dtype?: DtypeString, stride?: number[]) {
         const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
 
         if (shape === undefined) {
@@ -33,6 +34,16 @@ export class RawArray {
         shape = normalizeShape(shape);
         this.shape = shape;
         this.dtype = dtype;
+
+        if (stride === undefined) {
+            const d = shape.length;
+            stride = new Array(d);
+            for (let i = d - 1, sz = 1; i >= 0; --i) {
+                stride[i] = sz;
+                sz *= shape[i];
+            }
+        }
+        this.stride = stride;
 
         if (dataIsTypedArray && shape.length !== 1) {
             data = (data as TypedArray).buffer;
@@ -64,7 +75,9 @@ export class RawArray {
     public set(selection: ArraySelection = null, value: ArrayBuffer | number) {
         if (selection === null) {
             selection = [slice(null)];
+            console.log('yo');
         }
+
         if (typeof value === "number") {
             if (this.shape.length === 0) {
                 // Zero dimension array..
