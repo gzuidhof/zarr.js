@@ -12,9 +12,9 @@ export class RawArray {
     strides: number[];
     data!: TypedArray;
 
-    constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, stride?: number[])
-    constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString, stride?: number[])
-    constructor(data: Buffer | ArrayBuffer | TypedArray | null, shape?: number | number[], dtype?: DtypeString, stride?: number[]) {
+    constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, strides?: number[])
+    constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString, strides?: number[])
+    constructor(data: Buffer | ArrayBuffer | TypedArray | null, shape?: number | number[], dtype?: DtypeString, strides?: number[]) {
         const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
 
         if (shape === undefined) {
@@ -23,6 +23,7 @@ export class RawArray {
             }
             shape = [(data as TypedArray).length];
         }
+        shape = normalizeShape(shape);
 
         if (dtype === undefined) {
             if (!dataIsTypedArray) {
@@ -31,13 +32,12 @@ export class RawArray {
             dtype = getTypedArrayDtypeString(data as TypedArray);
         }
 
-        shape = normalizeShape(shape);
-        this.shape = shape;
-        this.dtype = dtype;
-
         if (strides === undefined) {
             strides = getStrides(shape);
         }
+
+        this.shape = shape;
+        this.dtype = dtype;
         this.strides = strides;
 
         if (dataIsTypedArray && shape.length !== 1) {
@@ -67,10 +67,9 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection = null, value: ArrayBuffer | number) {
+    public set(selection: ArraySelection = null, value: TypedArray | number) {
         if (selection === null) {
             selection = [slice(null)];
-            console.log('yo');
         }
 
         if (typeof value === "number") {
@@ -78,14 +77,11 @@ export class RawArray {
                 // Zero dimension array..
                 this.data[0] = value;
             } else {
-                // setNestedArrayToScalar(this.data, value, this.shape, selection);
-                console.log(selection, "number");
+                this.data.fill(value);
             }
         } else {
-            // setRawArray(this.data, value, this.shape, selection);
-            console.log(selection);
+            setRawArray(this.data, this.strides, value, this.shape, this.strides, selection);
         }
-
     }
 }
 

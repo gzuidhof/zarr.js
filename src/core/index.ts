@@ -375,12 +375,11 @@ export class ZarrArray {
         } else {
           out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
         }
-        console.log(cKey);
         return;
       }
-      console.log(cKey);
-      console.log(outSelection);
-      // out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
+      if (out instanceof RawArray) {
+        out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
+      }
       // Decode chunk
       const chunk = this.toNestedArray(this.decodeChunk(await cdata));
       const tmp = chunk.get(chunkSelection);
