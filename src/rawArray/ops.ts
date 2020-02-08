@@ -34,7 +34,7 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: numbe
 
     if (shape.length === 1) {
         for (let i = 0; i < outputSize; i++) {
-            dstArr[from + dstOffset + i] = sourceArr[sfrom + sourceOffset + i];
+            dstArr[dstOffset + from + i] = sourceArr[sourceOffset + sfrom + i];
         }
         return;
     }
@@ -43,10 +43,10 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: numbe
         _setRawArray(
             dstArr,
             dstStrides.slice(1),
-            dstOffset + from * outputSize + dstStrides[0] * j,
+            dstOffset + dstStrides[0] * (from + j),
             sourceArr,
             sourceStrides.slice(1),
-            sourceOffset + sourceStrides[0] * j,
+            sourceOffset + sourceStrides[0] * (sfrom + j),
             shape.slice(1),
             selection.slice(1),
             sourceSelection.slice(1),
