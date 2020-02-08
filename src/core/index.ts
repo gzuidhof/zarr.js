@@ -373,23 +373,25 @@ export class ZarrArray {
         if (out instanceof NestedArray) {
           out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
         } else {
-          out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)));
+          out.set(outSelection, chunkSelection.filter(d => !(typeof (d) === "number")), this.toRawArray(this.decodeChunk(await cdata)));
         }
         return;
       }
-      if (out instanceof RawArray) {
-        out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)));
-      }
-      // Decode chunk
-      const chunk = this.toNestedArray(this.decodeChunk(await cdata));
-      const tmp = chunk.get(chunkSelection);
-
-      if (dropAxes !== null) {
-        throw new Error("Drop axes is not supported yet");
-      }
 
       if (out instanceof NestedArray) {
-        out.set(outSelection, tmp as NestedArray<T>);
+        // Decode chunk
+        const chunk = this.toNestedArray(this.decodeChunk(await cdata));
+        const tmp = chunk.get(chunkSelection);
+
+        if (dropAxes !== null) {
+          throw new Error("Drop axes is not supported yet");
+        }
+
+        if (out instanceof NestedArray) {
+          out.set(outSelection, tmp as NestedArray<T>);
+        }
+      } else {
+        out.set(outSelection, chunkSelection.filter(d => !(typeof (d) === "number")), this.toRawArray(this.decodeChunk(await cdata)));
       }
 
     } else { // Chunk isn't there, use fill value
@@ -417,8 +419,8 @@ export class ZarrArray {
   }
 
   private toRawArray(buffer: Buffer | ArrayBuffer) {
-    console.log(this.chunks);
-    return new RawArray(buffer, this.chunks, this.dtype);
+    const shape = this.chunks.filter(i => i !== 1); // if chunk is (1,3,2), shape of resulting arr is (3,2)
+    return new RawArray(buffer, shape, this.dtype);
   }
 
   private toNestedArray<T extends TypedArray>(data: ValidStoreType) {

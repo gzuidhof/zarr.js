@@ -72,7 +72,7 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection = null, value: RawArray) {
+    public set(selection: ArraySelection = null, sourceSelection: ArraySelection, value: RawArray | number) {
         if (selection === null) {
             selection = [slice(null)];
         }
@@ -85,7 +85,7 @@ export class RawArray {
                 this.data.fill(value);
             }
         } else {
-            setRawArray(this.data, this.strides, value.data, value.strides, this.shape, selection);
+            setRawArray(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, sourceSelection);
         }
     }
 }
