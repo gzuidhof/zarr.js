@@ -10,7 +10,7 @@ export class RawArray {
     dtype: DtypeString;
     shape: number[];
     strides: number[];
-    data!: TypedArray;
+    data: TypedArray;
 
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, strides?: number[])
     constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString, strides?: number[])
@@ -42,6 +42,11 @@ export class RawArray {
 
         if (dataIsTypedArray && shape.length !== 1) {
             data = (data as TypedArray).buffer;
+        }
+
+        // Zero dimension array.. they are a bit weirdly represented now, they will only ever occur internally
+        if (this.shape.length === 0) {
+            this.data = new DTYPE_TYPEDARRAY_MAPPING[dtype](1);
         } else if (
             // tslint:disable-next-line: strict-type-predicates
             (IS_NODE && Buffer.isBuffer(data))
@@ -61,13 +66,13 @@ export class RawArray {
                 throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
             }
             const typeConstructor: TypedArrayConstructor<TypedArray> = DTYPE_TYPEDARRAY_MAPPING[dtype];
-            this.data = new typeConstructor(numShapeElements);
+            this.data = new typeConstructor(data as ArrayBuffer);
         } else {
             this.data = data;
         }
     }
 
-    public set(selection: ArraySelection = null, value: TypedArray | number) {
+    public set(selection: ArraySelection = null, value: RawArray) {
         if (selection === null) {
             selection = [slice(null)];
         }
@@ -80,7 +85,7 @@ export class RawArray {
                 this.data.fill(value);
             }
         } else {
-            setRawArray(this.data, this.strides, value, this.shape, this.strides, selection);
+            setRawArray(this.data, this.strides, value.data, value.strides, this.shape, selection);
         }
     }
 }

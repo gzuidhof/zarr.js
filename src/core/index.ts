@@ -373,12 +373,12 @@ export class ZarrArray {
         if (out instanceof NestedArray) {
           out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
         } else {
-          out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
+          out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)));
         }
         return;
       }
       if (out instanceof RawArray) {
-        out.set(outSelection, this.toTypedArray(this.decodeChunk(await cdata)));
+        out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)));
       }
       // Decode chunk
       const chunk = this.toNestedArray(this.decodeChunk(await cdata));
@@ -414,6 +414,11 @@ export class ZarrArray {
 
   private toTypedArray(buffer: Buffer | ArrayBuffer) {
     return new DTYPE_TYPEDARRAY_MAPPING[this.dtype](buffer);
+  }
+
+  private toRawArray(buffer: Buffer | ArrayBuffer) {
+    console.log(this.chunks);
+    return new RawArray(buffer, this.chunks, this.dtype);
   }
 
   private toNestedArray<T extends TypedArray>(data: ValidStoreType) {
