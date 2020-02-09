@@ -72,11 +72,10 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection = null, value: RawArray | number, sourceSelection?: ArraySelection) {
+    public set(selection: ArraySelection = null, value: RawArray | number, valueSelection?: ArraySelection) {
         if (selection === null) {
             selection = [slice(null)];
         }
-
         if (typeof value === "number") {
             if (this.shape.length === 0) {
                 // Zero dimension array..
@@ -84,10 +83,11 @@ export class RawArray {
             } else {
                 setRawArrayToScalar(this.data, this.strides, this.shape, selection, value);
             }
-        } else if (sourceSelection) {
+        } if (value instanceof RawArray && valueSelection) {
             // Copy directly from decoded chunk to destination array
-            setRawArrayDirect(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, sourceSelection);
+            setRawArrayDirect(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, valueSelection);
         }
+
     }
 }
 
