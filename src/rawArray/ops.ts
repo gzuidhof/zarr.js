@@ -13,15 +13,18 @@ export function setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstS
     _setRawArrayDirect(dstArr, dstStrides, 0, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, 0, sourceSliceIndicies);
 }
 
-function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset: number, dstSelection: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceOffset: number, sourceSelection: (SliceIndices | number)[]) {
-    if (sourceSelection.length === 0) {
+function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset: number, dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceOffset: number, sourceSliceIndicies: (SliceIndices | number)[]) {
+    if (sourceSliceIndicies.length === 0) {
         // Case when last source dimension is squeezed
         dstArr[dstOffset] = sourceArr[sourceOffset];
         return;
     }
 
-    const currentDstSlice = dstSelection[0];
-    const currentSourceSlice = sourceSelection[0];
+    const [currentDstSlice, ...nextDstSliceIndicies] = dstSliceIndices;
+    const [currentSourceSlice, ...nextSourceSliceIndicies] = sourceSliceIndicies;
+
+    const [currentDstStride, ...nextDstStrides] = dstStrides;
+    const [currentSourceStride, ...nextSourceStrides] = sourceStrides;
 
     // This source dimension is squeezed
     if (typeof currentSourceSlice === "number") {
@@ -44,22 +47,22 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
 
         */
         _setRawArrayDirect(
-            // Don't need to change destination offset, just source
-            dstArr, dstStrides, dstOffset, dstSelection,
+            // Don't update destination offset/slices, just source
+            dstArr, dstStrides, dstOffset, dstSliceIndices,
             sourceArr,
-            sourceStrides.slice(1),
-            sourceOffset + sourceStrides[0] * currentSourceSlice,
-            sourceSelection.slice(1),
+            nextSourceStrides,
+            sourceOffset + currentSourceStride * currentSourceSlice,
+            nextSourceSliceIndicies,
         );
         return;
     }
 
-    const [from, , , outputSize] = currentDstSlice;
+    const [from, , , outputSize] = currentDstSlice; // just need start and size
     const [sfrom] = currentSourceSlice; // Will always be subset of dst, so don't need output size
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + dstStrides[0] * (from + i)] = sourceArr[sourceOffset + sourceStrides[0] * (sfrom + i)];
+            dstArr[dstOffset + currentDstStride * (from + i)] = sourceArr[sourceOffset + currentSourceStride * (sfrom + i)];
         }
         return;
     }
@@ -68,13 +71,13 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
         // Apply strides as above, using both destination and source-specific strides.
         _setRawArrayDirect(
             dstArr,
-            dstStrides.slice(1),
-            dstOffset + dstStrides[0] * (from + j),
-            dstSelection.slice(1),
+            nextDstStrides,
+            dstOffset + currentDstStride * (from + j),
+            nextDstSliceIndicies,
             sourceArr,
-            sourceStrides.slice(1),
-            sourceOffset + sourceStrides[0] * (sfrom + j),
-            sourceSelection.slice(1),
+            nextSourceStrides,
+            sourceOffset + currentSourceStride * (sfrom + j),
+            nextSourceSliceIndicies,
         );
     }
 }
