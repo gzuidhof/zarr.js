@@ -339,7 +339,7 @@ export class ZarrArray {
     await queue.onIdle();
 
     // Return scalar instead of zero-dimensional array.
-    if (out instanceof NestedArray && out.shape.length === 0) {
+    if (out.shape.length === 0) {
       return out.data[0] as number;
     }
 
