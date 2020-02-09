@@ -387,18 +387,15 @@ export class ZarrArray {
           throw new Error("Drop axes is not supported yet");
         }
 
-        if (out instanceof NestedArray) {
-          out.set(outSelection, tmp as NestedArray<T>);
-        }
+        out.set(outSelection, tmp as NestedArray<T>);
+
       } else {
         out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
       }
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
-        if (out instanceof NestedArray) {
-          out.set(outSelection, this.fillValue);
-        }
+        out.set(outSelection, this.fillValue);
       }
     }
   }

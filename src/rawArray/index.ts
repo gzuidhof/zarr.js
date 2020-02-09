@@ -4,7 +4,7 @@ import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE, getStrides } from '../util';
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
-import { setRawArrayDirect } from './ops';
+import { setRawArrayDirect, setRawArrayToScalar } from './ops';
 
 export class RawArray {
     dtype: DtypeString;
@@ -82,7 +82,7 @@ export class RawArray {
                 // Zero dimension array..
                 this.data[0] = value;
             } else {
-                this.data.fill(value);
+                setRawArrayToScalar(this.data, this.strides, this.shape, selection, value);
             }
         } else if (sourceSelection) {
             // Copy directly from decoded chunk to destination array
