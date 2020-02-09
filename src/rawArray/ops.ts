@@ -24,8 +24,24 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: numbe
         return;
     }
 
-    if (typeof currentDstSlice === "number" || typeof currentSourceSlice === "number") {
+    if (typeof currentDstSlice === "number") {
         console.warn("setting single index not implemented.");
+        return;
+    }
+
+    // This dimension is squeezed
+    if (typeof currentSourceSlice === "number") {
+        _setRawArray(
+            dstArr,
+            dstStrides,
+            dstOffset,
+            sourceArr,
+            sourceStrides.slice(1),
+            sourceOffset + sourceStrides[0] * currentSourceSlice,
+            shape,
+            selection,
+            sourceSelection.slice(1),
+        );
         return;
     }
 

@@ -373,7 +373,7 @@ export class ZarrArray {
         if (out instanceof NestedArray) {
           out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
         } else {
-          out.set(outSelection, chunkSelection.filter(d => !(typeof (d) === "number")), this.toRawArray(this.decodeChunk(await cdata)));
+          out.set(outSelection, chunkSelection, this.toRawArray(this.decodeChunk(await cdata)));
         }
         return;
       }
@@ -391,7 +391,7 @@ export class ZarrArray {
           out.set(outSelection, tmp as NestedArray<T>);
         }
       } else {
-        out.set(outSelection, chunkSelection.filter(d => !(typeof (d) === "number")), this.toRawArray(this.decodeChunk(await cdata)));
+        out.set(outSelection, chunkSelection, this.toRawArray(this.decodeChunk(await cdata)));
       }
 
     } else { // Chunk isn't there, use fill value
@@ -419,8 +419,7 @@ export class ZarrArray {
   }
 
   private toRawArray(buffer: Buffer | ArrayBuffer) {
-    const shape = this.chunks.filter(i => i !== 1); // if chunk is (1,3,2), shape of resulting arr is (3,2)
-    return new RawArray(buffer, shape, this.dtype);
+    return new RawArray(buffer, this.chunks, this.dtype);
   }
 
   private toNestedArray<T extends TypedArray>(data: ValidStoreType) {
