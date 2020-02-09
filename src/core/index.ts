@@ -373,7 +373,7 @@ export class ZarrArray {
         if (out instanceof NestedArray) {
           out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
         } else {
-          out.set(outSelection, chunkSelection, this.toRawArray(this.decodeChunk(await cdata)));
+          out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
         }
         return;
       }
@@ -391,7 +391,7 @@ export class ZarrArray {
           out.set(outSelection, tmp as NestedArray<T>);
         }
       } else {
-        out.set(outSelection, chunkSelection, this.toRawArray(this.decodeChunk(await cdata)));
+        out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
       }
 
     } else { // Chunk isn't there, use fill value

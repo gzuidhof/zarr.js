@@ -4,7 +4,7 @@ import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE, getStrides } from '../util';
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
-import { setRawArray } from './ops';
+import { setRawArrayDirect } from './ops';
 
 export class RawArray {
     dtype: DtypeString;
@@ -72,7 +72,7 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection = null, sourceSelection: ArraySelection, value: RawArray | number) {
+    public set(selection: ArraySelection = null, value: RawArray | number, sourceSelection?: ArraySelection) {
         if (selection === null) {
             selection = [slice(null)];
         }
@@ -84,8 +84,9 @@ export class RawArray {
             } else {
                 this.data.fill(value);
             }
-        } else {
-            setRawArray(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, sourceSelection);
+        } else if (sourceSelection) {
+            // Copy directly from decoded chunk to destination array
+            setRawArrayDirect(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, sourceSelection);
         }
     }
 }
