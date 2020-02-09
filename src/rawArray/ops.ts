@@ -11,35 +11,40 @@ export function setRawArray(dstArr: TypedArray, dstStrides: number[], dstShape: 
     const normalizedSourceSelection = normalizeArraySelection(sourceSelection, sourceShape, false);
     const [sourceSliceIndicies, sShape] = selectionToSliceIndices(normalizedSourceSelection, sourceShape);
 
-    _setRawArray(dstArr, dstStrides, 0, sourceArr, sourceStrides, 0, dstShape, dstSliceIndices, sourceSliceIndicies);
+    _setRawArray(dstArr, dstStrides, 0, dstSliceIndices, dstShape, sourceArr, sourceStrides, 0, sourceSliceIndicies);
 }
 
-function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: number, sourceArr: TypedArray | number, sourceStrides: number[], sourceOffset: number, shape: number[], selection: (SliceIndices | number)[], sourceSelection: (SliceIndices | number)[]) {
-    const currentDstSlice = selection[0];
+function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: number, dstSelection: (SliceIndices | number)[], dstShape: number[], sourceArr: TypedArray, sourceStrides: number[], sourceOffset: number, sourceSelection: (SliceIndices | number)[]) {
+    const currentDstSlice = dstSelection[0];
     const currentSourceSlice = sourceSelection[0];
 
-
-    if (typeof sourceArr === "number") {
-        console.warn("setting selection to scalar not yet implemented");
-        return;
-    }
-
+    // This destination dimension is squeezed
     if (typeof currentDstSlice === "number") {
-        console.warn("setting single index not implemented.");
+        _setRawArray(
+            dstArr,
+            dstStrides.slice(1),
+            dstOffset + dstStrides[0] * currentDstSlice,
+            dstSelection.slice(1),
+            dstShape.slice(1),
+            sourceArr,
+            sourceStrides,
+            sourceOffset,
+            sourceSelection,
+        );
         return;
     }
 
-    // This dimension is squeezed
+    // This source dimension is squeezed
     if (typeof currentSourceSlice === "number") {
         _setRawArray(
             dstArr,
             dstStrides,
             dstOffset,
+            dstSelection,
+            dstShape,
             sourceArr,
             sourceStrides.slice(1),
             sourceOffset + sourceStrides[0] * currentSourceSlice,
-            shape,
-            selection,
             sourceSelection.slice(1),
         );
         return;
@@ -48,7 +53,7 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: numbe
     const [from, _to, step, outputSize] = currentDstSlice;
     const [sfrom, _sto, sstep, soutputSize] = currentSourceSlice;
 
-    if (shape.length === 1) {
+    if (dstShape.length === 1) {
         for (let i = 0; i < outputSize; i++) {
             dstArr[dstOffset + from + i] = sourceArr[sourceOffset + sfrom + i];
         }
@@ -60,11 +65,11 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstOffset: numbe
             dstArr,
             dstStrides.slice(1),
             dstOffset + dstStrides[0] * (from + j),
+            dstSelection.slice(1),
+            dstShape.slice(1),
             sourceArr,
             sourceStrides.slice(1),
             sourceOffset + sourceStrides[0] * (sfrom + j),
-            shape.slice(1),
-            selection.slice(1),
             sourceSelection.slice(1),
         );
     }
