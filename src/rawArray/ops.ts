@@ -67,12 +67,12 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
         return;
     }
 
-    const [from, _to, _step, outputSize] = currentDstSlice; // just need start and size
-    const [sfrom] = currentSourceSlice; // Will always be subset of dst, so don't need output size just start
+    const [from, _to, step, outputSize] = currentDstSlice; // just need start and size
+    const [sfrom, _sto, sstep, _soutputSize] = currentSourceSlice; // Will always be subset of dst, so don't need output size just start
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + currentDstStride * (from + i)] = sourceArr[sourceOffset + currentSourceStride * (sfrom + i)];
+            dstArr[dstOffset + step * (from + i)] = sourceArr[sourceOffset + sstep * (sfrom + i)];
         }
         return;
     }
@@ -96,11 +96,11 @@ function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: num
     const [currentDstSlice, ...nextDstSliceIndicies] = dstSliceIndices;
     const [currentDstStride, ...nextDstStrides] = dstStrides;
 
-    const [from, _to, _step, outputSize] = currentDstSlice;
+    const [from, _to, step, outputSize] = currentDstSlice;
 
     if (dstStrides.length === 1) {
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + currentDstStride * (from + i)] = value;
+            dstArr[dstOffset + step * (from + i)] = value;
         }
         return;
     }

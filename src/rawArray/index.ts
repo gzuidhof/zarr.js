@@ -13,7 +13,7 @@ export class RawArray {
     data: TypedArray;
 
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, strides?: number[])
-    constructor(data: Buffer | ArrayBuffer | null, shape: number | number[], dtype: DtypeString, strides?: number[])
+    constructor(data: Buffer | ArrayBuffer | null, shape?: number | number[], dtype?: DtypeString, strides?: number[])
     constructor(data: Buffer | ArrayBuffer | TypedArray | null, shape?: number | number[], dtype?: DtypeString, strides?: number[]) {
         const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
 
