@@ -77,16 +77,16 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
         return;
     }
 
-    for (let j = 0; j < outputSize; j++) {
+    for (let i = 0; i < outputSize; i++) {
         // Apply strides as above, using both destination and source-specific strides.
         _setRawArrayDirect(
             dstArr,
             nextDstStrides,
-            dstOffset + currentDstStride * (from + (j * step)),
+            dstOffset + currentDstStride * (from + (i * step)),
             nextDstSliceIndicies,
             sourceArr,
             nextSourceStrides,
-            sourceOffset + currentSourceStride * (sfrom + (j * sstep)),
+            sourceOffset + currentSourceStride * (sfrom + (i * sstep)),
             nextSourceSliceIndicies,
         );
     }
@@ -100,12 +100,18 @@ function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: num
 
     if (dstStrides.length === 1) {
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + step * (from + i)] = value;
+            dstArr[dstOffset + currentDstStride * (from + (step * i))] = value;
         }
         return;
     }
 
-    for (let j = 0; j < outputSize; j++) {
-        _setRawArrayToScalar(value, dstArr, nextDstStrides, nextDstSliceIndicies, dstOffset + currentDstStride * (from + j));
+    for (let i = 0; i < outputSize; i++) {
+        _setRawArrayToScalar(
+            value,
+            dstArr,
+            nextDstStrides,
+            nextDstSliceIndicies,
+            dstOffset + currentDstStride * (from + (step * i))
+        );
     }
 }
