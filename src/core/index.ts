@@ -302,6 +302,19 @@ export class ZarrArray {
     const outDtype = this.dtype;
     const outShape = indexer.shape;
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
+
+    if (asRaw && (outSize === this.chunkSize)) {
+      // Optimization if output strided array _is_ chunk exactly
+      // Decode directly as new TypedArray and return
+      const itr = indexer.iter();
+      const proj = itr.next(); // make sure there is only one projection
+      if (proj.done === false && itr.next().done === true) {
+        const chunkProjection = proj.value as ChunkProjection;
+        this.decodeDirectToRawArray(chunkProjection, outShape, outSize);
+      }
+
+    }
+
     const out = asRaw
       ? new RawArray(null, outShape, outDtype)
       : new NestedArray(null, outShape, outDtype);
@@ -315,10 +328,9 @@ export class ZarrArray {
 
     if (progressCallback) {
 
+      let progress = 0;
       let queueSize = 0;
       for (const _ of indexer.iter()) queueSize += 1;
-
-      let progress = 0;
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         (async () => {
@@ -332,7 +344,6 @@ export class ZarrArray {
       for (const proj of indexer.iter()) {
         queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
       }
-
     }
 
     // guarantees that all work on queue has finished
@@ -392,8 +403,6 @@ export class ZarrArray {
         since store/output are different shapes/strides.
         */
         out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
-        // TODO: Possible optimization
-        // If desired output is exactly entire chunk, just return chunk directly. Case for using zarr for tiled images.
       }
 
     } else { // Chunk isn't there, use fill value
@@ -437,6 +446,17 @@ export class ZarrArray {
 
     // TODO filtering etc
     return byteChunkData.buffer;
+  }
+
+  private async decodeDirectToRawArray({ chunkCoords }: ChunkProjection, outShape: number[], outSize: number): Promise<RawArray> {
+    const cKey = this.chunkKey(chunkCoords);
+    if (await this.chunkStore.containsItem(cKey)) {
+      const cdata = this.chunkStore.getItem(cKey);
+      return new RawArray(this.decodeChunk(await cdata), outShape, this.dtype);
+    } else {
+      const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
+      return new RawArray(data.fill(this.fillValue as number), outShape);
+    }
   }
 
   public async set(selection: ArraySelection = null, value: any, opts: SetOptions = {}) {

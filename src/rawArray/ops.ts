@@ -71,6 +71,9 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
     const [sfrom, _sto, sstep, _soutputSize] = currentSourceSlice; // Will always be subset of dst, so don't need output size just start
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
+        // TODO: probably should use TypedArray.set(TypedArray, offset) for better performance
+        // if step === sstep currestDstStride === currentSourceStride === 1
+
         for (let i = 0; i < outputSize; i++) {
             dstArr[dstOffset + currentDstStride * (from + (step * i))] = sourceArr[sourceOffset + currentSourceStride * (sfrom + (sstep * i))];
         }
