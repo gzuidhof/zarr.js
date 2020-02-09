@@ -13,12 +13,12 @@ export function setRawArrayToScalar(dstArr: TypedArray, dstStrides: number[], ds
 export function setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, sourceArr: TypedArray, sourceStrides: number[], sourceShape: number[], sourceSelection: number | ArraySelection) {
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedDstSelection = normalizeArraySelection(dstSelection, dstShape, true);
+    // Above we force the results to be dstSliceIndices only, without integer selections making this cast is safe.
     const [dstSliceIndices] = selectionToSliceIndices(normalizedDstSelection, dstShape);
 
     const normalizedSourceSelection = normalizeArraySelection(sourceSelection, sourceShape, false);
     const [sourceSliceIndicies] = selectionToSliceIndices(normalizedSourceSelection, sourceShape);
 
-    // Above we force the results to be dstSliceIndices only, without integer selections making this cast is safe.
     _setRawArrayDirect(dstArr, dstStrides, 0, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, 0, sourceSliceIndicies);
 }
 
@@ -72,7 +72,7 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + step * (from + i)] = sourceArr[sourceOffset + sstep * (sfrom + i)];
+            dstArr[dstOffset + currentDstStride * (from + (step * i))] = sourceArr[sourceOffset + currentSourceStride * (sfrom + (sstep * i))];
         }
         return;
     }
@@ -82,11 +82,11 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
         _setRawArrayDirect(
             dstArr,
             nextDstStrides,
-            dstOffset + currentDstStride * (from + j),
+            dstOffset + currentDstStride * (from + (j * step)),
             nextDstSliceIndicies,
             sourceArr,
             nextSourceStrides,
-            sourceOffset + currentSourceStride * (sfrom + j),
+            sourceOffset + currentSourceStride * (sfrom + (j * sstep)),
             nextSourceSliceIndicies,
         );
     }
