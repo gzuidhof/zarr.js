@@ -54,7 +54,7 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
         return;
     }
 
-    const [from, , outputSize] = currentDstSlice;
+    const [from, , , outputSize] = currentDstSlice;
     const [sfrom] = currentSourceSlice; // Will always be subset of dst, so don't need output size
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
