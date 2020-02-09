@@ -268,9 +268,9 @@ export class ZarrArray {
     return this.getBasicSelection(selection, true, opts);
   }
 
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | RawArray>;
-  public async getBasicSelection(selection: ArraySelection, asRaw: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | number | RawArray>;
-  public async getBasicSelection(selection: ArraySelection, asRaw: boolean, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<number | NestedArray<TypedArray> | RawArray> {
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | RawArray>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | number | RawArray>;
+  public async getBasicSelection(selection: ArraySelection, asRaw = false, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<number | NestedArray<TypedArray> | RawArray> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       await this.reloadMetadata();
@@ -363,22 +363,20 @@ export class ZarrArray {
     // TODO may be better to ask for forgiveness instead
     if (await this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
-      if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
-        // Optimization: we want the whole chunk, and the destination is
-        // contiguous, so we can decompress directly from the chunk
-        // into the destination array
-
-        // TODO check order
-        // TODO filters..
-        if (out instanceof NestedArray) {
-          out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
-        } else {
-          out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
-        }
-        return;
-      }
 
       if (out instanceof NestedArray) {
+
+        if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
+          // Optimization: we want the whole chunk, and the destination is
+          // contiguous, so we can decompress directly from the chunk
+          // into the destination array
+
+          // TODO check order
+          // TODO filters..
+          out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
+          return;
+        }
+
         // Decode chunk
         const chunk = this.toNestedArray(this.decodeChunk(await cdata));
         const tmp = chunk.get(chunkSelection);
@@ -388,9 +386,14 @@ export class ZarrArray {
         }
 
         out.set(outSelection, tmp as NestedArray<T>);
-
       } else {
+        /* RawArray
+        Copies chunk by index directly into output. Doesn't matter if selection is contiguous
+        since store/output are different shapes/strides.
+        */
         out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
+        // TODO: Possible optimization
+        // If desired output is exactly entire chunk, just return chunk directly. Case for using zarr for tiled images.
       }
 
     } else { // Chunk isn't there, use fill value
