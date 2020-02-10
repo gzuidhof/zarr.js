@@ -19,13 +19,13 @@ export function setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstS
     const normalizedSourceSelection = normalizeArraySelection(sourceSelection, sourceShape, false);
     const [sourceSliceIndicies] = selectionToSliceIndices(normalizedSourceSelection, sourceShape);
 
-    _setRawArrayDirect(dstArr, dstStrides, 0, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, 0, sourceSliceIndicies);
+    _setRawArrayDirect(dstArr, dstStrides, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, sourceSliceIndicies);
 }
 
-function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset: number, dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceOffset: number, sourceSliceIndicies: (SliceIndices | number)[]) {
+function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceSliceIndicies: (SliceIndices | number)[]) {
     if (sourceSliceIndicies.length === 0) {
         // Case when last source dimension is squeezed
-        dstArr[dstOffset] = sourceArr[sourceOffset];
+        dstArr.set(sourceArr);
         return;
     }
 
@@ -43,25 +43,15 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
 
         Ex. if 0th dimension is squeezed to 2nd index (numpy : arr[2,i])
 
-            sourceArr[stride[0]* 2 + i] --> next sourceOffset === stride[0] * 2
+            sourceArr[stride[0]* 2 + i] --> sourceArr.subarray(stride[0] * 2)[i] (sourceArr[i] in next call)
 
         Thus, subsequent squeezed dims are appended to the source offset.
-
-        Ex. in numpy : arr[0,2,:]
-
-            sourceArr and sourceOffset recursion:
-
-            Call 0: sourceOffset === stride[0] * 0
-            Call 1: sourceOffset === stride[0] * 0 + stride[1] * 2
-            Call 2: Fill sourceArr[sourceOffset]
-
         */
         _setRawArrayDirect(
             // Don't update destination offset/slices, just source
-            dstArr, dstStrides, dstOffset, dstSliceIndices,
-            sourceArr,
+            dstArr, dstStrides, dstSliceIndices,
+            sourceArr.subarray(currentSourceStride * currentSourceSlice),
             nextSourceStrides,
-            sourceOffset + currentSourceStride * currentSourceSlice,
             nextSourceSliceIndicies,
         );
         return;
@@ -72,13 +62,12 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
         if (step === 1 && currentDstStride === 1 && sstep === 1 && currentSourceStride === 1) {
-            const subView = sourceArr.subarray(sourceOffset + sfrom, sourceOffset + sfrom + outputSize);
-            dstArr.set(subView, dstOffset + from);
+            dstArr.set(sourceArr.subarray(sfrom, sfrom + outputSize), from);
             return;
         }
 
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + currentDstStride * (from + (step * i))] = sourceArr[sourceOffset + currentSourceStride * (sfrom + (sstep * i))];
+            dstArr[currentDstStride * (from + (step * i))] = sourceArr[currentSourceStride * (sfrom + (sstep * i))];
         }
         return;
     }
@@ -86,27 +75,30 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstOffset:
     for (let i = 0; i < outputSize; i++) {
         // Apply strides as above, using both destination and source-specific strides.
         _setRawArrayDirect(
-            dstArr,
+            dstArr.subarray(currentDstStride * (from + (i * step))),
             nextDstStrides,
-            dstOffset + currentDstStride * (from + (i * step)),
             nextDstSliceIndicies,
-            sourceArr,
+            sourceArr.subarray(currentSourceStride * (sfrom + (i * sstep))),
             nextSourceStrides,
-            sourceOffset + currentSourceStride * (sfrom + (i * sstep)),
             nextSourceSliceIndicies,
         );
     }
 }
 
-function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[], dstOffset = 0) {
+function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[]) {
     const [currentDstSlice, ...nextDstSliceIndicies] = dstSliceIndices;
     const [currentDstStride, ...nextDstStrides] = dstStrides;
 
     const [from, _to, step, outputSize] = currentDstSlice;
 
     if (dstStrides.length === 1) {
+        if (step === 1 && currentDstStride === 1) {
+            dstArr.fill(value, from, from + outputSize);
+            return;
+        }
+
         for (let i = 0; i < outputSize; i++) {
-            dstArr[dstOffset + currentDstStride * (from + (step * i))] = value;
+            dstArr[currentDstStride * (from + (step * i))] = value;
         }
         return;
     }
@@ -114,10 +106,9 @@ function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: num
     for (let i = 0; i < outputSize; i++) {
         _setRawArrayToScalar(
             value,
-            dstArr,
+            dstArr.subarray(currentDstStride * (from + (step * i))),
             nextDstStrides,
             nextDstSliceIndicies,
-            dstOffset + currentDstStride * (from + (step * i))
         );
     }
 }
