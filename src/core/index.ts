@@ -310,9 +310,9 @@ export class ZarrArray {
       const proj = itr.next(); // make sure there is only one projection
       if (proj.done === false && itr.next().done === true) {
         const chunkProjection = proj.value as ChunkProjection;
-        this.decodeDirectToRawArray(chunkProjection, outShape, outSize);
+        const out = await this.decodeDirectToRawArray(chunkProjection, outShape, outSize);
+        return out;
       }
-
     }
 
     const out = asRaw
