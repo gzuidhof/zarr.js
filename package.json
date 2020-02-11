@@ -1,8 +1,14 @@
 {
   "name": "zarr",
   "version": "0.1.5",
-  "description": "",
-  "keywords": [],
+  "description": "Javascript implementation of Zarr",
+  "keywords": [
+    "ndarray",
+    "zarr",
+    "module",
+    "utility",
+    "async"
+  ],
   "main": "dist/zarr.umd.js",
   "module": "dist/zarr.es5.js",
   "typings": "dist/types/zarr.d.ts",
