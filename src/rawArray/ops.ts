@@ -116,7 +116,7 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstSliceIndices:
 function _setRawArrayFromChunkItem(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceSliceIndices: (SliceIndices | number)[]) {
     if (sourceSliceIndices.length === 0) {
         // Case when last source dimension is squeezed
-        dstArr.set(sourceArr);
+        dstArr.set(sourceArr.subarray(0, dstArr.length));
         return;
     }
 
