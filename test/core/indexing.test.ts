@@ -112,6 +112,7 @@ describe("GetBasicSelection1DSimple", () => {
     it("can select slices and single values, uses fill value", async () => {
         await setup("array_name_0");
         const z = await ZarrArray.create(store, "array_name_0");
+        expect((await z.getBasicSelection([slice(1, 3)]) as NestedArray<Int32Array>).data).toEqual(Int32Array.from([1, 2]));
         expect(await z.getBasicSelection(0)).toEqual(0);
         expect(await z.getBasicSelection(3)).toEqual(3);
 
@@ -205,7 +206,7 @@ describe("GetBasicSelections2D", () => {
         slice(-1, 0),  // empty result N
         slice(-2000, 0), // N
         slice(-2000, 2000),
-        // // 2D slices
+        // 2D slices
         [slice(null), slice(1, 5)],
         [slice(250, 350), slice(null)],
         [slice(250, 350), slice(1, 5)],
