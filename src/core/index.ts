@@ -256,21 +256,26 @@ export class ZarrArray {
     }
   }
 
-  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray>>;
+  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
   public get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | RawArray | number> {
+  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
     return this.getBasicSelection(selection, false, opts);
   }
 
-  public getRaw(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<RawArray>;
+  public getRaw(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<RawArray | number>;
   public getRaw(selection?: ArraySelection, opts?: GetOptions): Promise<RawArray | number>;
-  public getRaw(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | RawArray | number> {
+  public getRaw(selection: ArraySelection = null, opts: GetOptions = {}): Promise<RawArray | number> {
     return this.getBasicSelection(selection, true, opts);
   }
 
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | RawArray>;
-  public async getBasicSelection(selection: ArraySelection, asRaw?: boolean, opts?: GetOptions): Promise<NestedArray<TypedArray> | number | RawArray>;
-  public async getBasicSelection(selection: ArraySelection, asRaw = false, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<number | NestedArray<TypedArray> | RawArray> {
+  // asRaw = false
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: false, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: false, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  // asRaw = true
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: true, opts?: GetOptions): Promise<RawArray | number>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: true, opts?: GetOptions): Promise<RawArray | number>;
+
+  public async getBasicSelection(selection: ArraySelection, asRaw = false, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<NestedArray<TypedArray> | RawArray | number> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       await this.reloadMetadata();
