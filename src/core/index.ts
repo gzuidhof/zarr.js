@@ -9,6 +9,7 @@ import { parseMetadata } from "../metadata";
 import { ArraySelection, DimensionSelection, Indexer, Slice, ChunkProjection } from "./types";
 import { BasicIndexer, isContiguousSelection } from './indexing';
 import { NestedArray } from "../nestedArray";
+import { RawArray } from "../rawArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError } from '../errors';
 import { Codec } from "../compression/types";
@@ -255,15 +256,26 @@ export class ZarrArray {
     }
   }
 
-  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray>>;
+  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
   public get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
   public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
-    return this.getBasicSelection(selection, opts);
+    return this.getBasicSelection(selection, false, opts);
   }
 
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray>>;
-  public async getBasicSelection(selection: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public async getBasicSelection(selection: ArraySelection, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<number | NestedArray<TypedArray>> {
+  public getRaw(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<RawArray | number>;
+  public getRaw(selection?: ArraySelection, opts?: GetOptions): Promise<RawArray | number>;
+  public getRaw(selection: ArraySelection = null, opts: GetOptions = {}): Promise<RawArray | number> {
+    return this.getBasicSelection(selection, true, opts);
+  }
+
+  // asRaw = false
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: false, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: false, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  // asRaw = true
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: true, opts?: GetOptions): Promise<RawArray | number>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: true, opts?: GetOptions): Promise<RawArray | number>;
+
+  public async getBasicSelection(selection: ArraySelection, asRaw = false, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<NestedArray<TypedArray> | RawArray | number> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       await this.reloadMetadata();
@@ -273,16 +285,16 @@ export class ZarrArray {
     if (this.shape === []) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
-      return this.getBasicSelectionND(selection, concurrencyLimit, progressCallback);
+      return this.getBasicSelectionND(selection, asRaw, concurrencyLimit, progressCallback);
     }
   }
 
-  private getBasicSelectionND(selection: ArraySelection, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
+  private getBasicSelectionND(selection: ArraySelection, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void): Promise<number | NestedArray<TypedArray> | RawArray> {
     const indexer = new BasicIndexer(selection, this);
-    return this.getSelection(indexer, concurrencyLimit, progressCallback);
+    return this.getSelection(indexer, asRaw, concurrencyLimit, progressCallback);
   }
 
-  private async getSelection(indexer: BasicIndexer, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
+  private async getSelection(indexer: BasicIndexer, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void): Promise<number | NestedArray<TypedArray> | RawArray> {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be extracted. Each chunk is processed in turn, extracting the
     // necessary data and storing into the correct location in the output array.
@@ -295,7 +307,22 @@ export class ZarrArray {
     const outDtype = this.dtype;
     const outShape = indexer.shape;
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
-    const out = new NestedArray(null, outShape, outDtype);
+
+    if (asRaw && (outSize === this.chunkSize)) {
+      // Optimization: if output strided array _is_ chunk exactly,
+      // decode directly as new TypedArray and return
+      const itr = indexer.iter();
+      const proj = itr.next(); // ensure there is only one projection
+      if (proj.done === false && itr.next().done === true) {
+        const chunkProjection = proj.value as ChunkProjection;
+        const out = await this.decodeDirectToRawArray(chunkProjection, outShape, outSize);
+        return out;
+      }
+    }
+
+    const out = asRaw
+      ? new RawArray(null, outShape, outDtype)
+      : new NestedArray(null, outShape, outDtype);
 
     if (outSize === 0) {
       return out;
@@ -306,10 +333,9 @@ export class ZarrArray {
 
     if (progressCallback) {
 
+      let progress = 0;
       let queueSize = 0;
       for (const _ of indexer.iter()) queueSize += 1;
-
-      let progress = 0;
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         (async () => {
@@ -323,7 +349,6 @@ export class ZarrArray {
       for (const proj of indexer.iter()) {
         queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
       }
-
     }
 
     // guarantees that all work on queue has finished
@@ -345,7 +370,7 @@ export class ZarrArray {
    * @param outSelection Location of region within output array to store results in.
    * @param dropAxes Axes to squeeze out of the chunk.
    */
-  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T>, outSelection: DimensionSelection[], dropAxes: null | number[]) {
+  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T> | RawArray, outSelection: DimensionSelection[], dropAxes: null | number[]) {
     if (chunkCoords.length !== this._chunkDataShape.length) {
       throw new ValueError(`Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}`);
     }
@@ -354,25 +379,36 @@ export class ZarrArray {
     // TODO may be better to ask for forgiveness instead
     if (await this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
-      if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
-        // Optimization: we want the whole chunk, and the destination is
-        // contiguous, so we can decompress directly from the chunk
-        // into the destination array
 
-        // TODO check order
-        // TODO filters..
-        out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
-        return;
+      if (out instanceof NestedArray) {
+
+        if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
+          // Optimization: we want the whole chunk, and the destination is
+          // contiguous, so we can decompress directly from the chunk
+          // into the destination array
+
+          // TODO check order
+          // TODO filters..
+          out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
+          return;
+        }
+
+        // Decode chunk
+        const chunk = this.toNestedArray(this.decodeChunk(await cdata));
+        const tmp = chunk.get(chunkSelection);
+
+        if (dropAxes !== null) {
+          throw new Error("Drop axes is not supported yet");
+        }
+
+        out.set(outSelection, tmp as NestedArray<T>);
+      } else {
+        /* RawArray
+        Copies chunk by index directly into output. Doesn't matter if selection is contiguous
+        since store/output are different shapes/strides.
+        */
+        out.set(outSelection, this.chunkBufferToRawArray(this.decodeChunk(await cdata)), chunkSelection);
       }
-      // Decode chunk
-      const chunk = this.toNestedArray(this.decodeChunk(await cdata));
-      const tmp = chunk.get(chunkSelection);
-
-      if (dropAxes !== null) {
-        throw new Error("Drop axes is not supported yet");
-      }
-
-      out.set(outSelection, tmp as NestedArray<T>);
 
     } else { // Chunk isn't there, use fill value
       if (this.fillValue !== null) {
@@ -411,6 +447,22 @@ export class ZarrArray {
 
     // TODO filtering etc
     return byteChunkData.buffer;
+  }
+
+  private chunkBufferToRawArray(buffer: Buffer | ArrayBuffer) {
+    return new RawArray(buffer, this.chunks, this.dtype);
+  }
+
+  private async decodeDirectToRawArray({ chunkCoords }: ChunkProjection, outShape: number[], outSize: number): Promise<RawArray> {
+    const cKey = this.chunkKey(chunkCoords);
+    if (await this.chunkStore.containsItem(cKey)) {
+      const cdata = this.chunkStore.getItem(cKey);
+      // we use outShape here rather than this.chunks because strides will be computed for sqeezed dims
+      return new RawArray(this.decodeChunk(await cdata), outShape, this.dtype);
+    } else {
+      const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
+      return new RawArray(data.fill(this.fillValue as number), outShape);
+    }
   }
 
   public async set(selection: ArraySelection = null, value: any, opts: SetOptions = {}) {

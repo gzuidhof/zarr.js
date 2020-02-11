@@ -112,7 +112,7 @@ describe("GetBasicSelection1DSimple", () => {
     it("can select slices and single values, uses fill value", async () => {
         await setup("array_name_0");
         const z = await ZarrArray.create(store, "array_name_0");
-        expect((await z.getBasicSelection([slice(1, 3)])).data).toEqual(Int32Array.from([1, 2]));
+        expect((await z.getBasicSelection([slice(1, 3)]) as NestedArray<Int32Array>).data).toEqual(Int32Array.from([1, 2]));
         expect(await z.getBasicSelection(0)).toEqual(0);
         expect(await z.getBasicSelection(3)).toEqual(3);
 
@@ -176,6 +176,12 @@ describe("GetBasicSelections1D", () => {
         await z.set(null, nestedArr);
         await testGetBasicSelection(z, selection, nestedArr);
     });
+
+    test.each(basicSelections1D)(`%p`, async (selection) => {
+        const z = await create({ shape: nestedArr.shape, chunks: [100], dtype: nestedArr.dtype });
+        await z.set(null, nestedArr);
+        await testGetBasicSelectionRaw(z, selection, nestedArr);
+    });
 });
 
 describe("GetBasicSelections2D", () => {
@@ -228,6 +234,12 @@ describe("GetBasicSelections2D", () => {
         await z.set(null, nestedArr);
         await testGetBasicSelection(z, selection, nestedArr);
     });
+
+    test.each(basicSelections2D)(`%p`, async (selection) => {
+        const z = await create({ shape: nestedArr.shape, chunks: [400, 3], dtype: nestedArr.dtype });
+        await z.set(null, nestedArr);
+        await testGetBasicSelectionRaw(z, selection, nestedArr);
+    });
 });
 
 async function testGetBasicSelection(z: ZarrArray, selection: any, data: NestedArray<TypedArray>) {
@@ -239,5 +251,16 @@ async function testGetBasicSelection(z: ZarrArray, selection: any, data: NestedA
     else {
         expect((selectedFromZarrArray as NestedArray<any>).flatten())
             .toEqual((selectedFromSource as NestedArray<any>).flatten());
+    }
+}
+
+async function testGetBasicSelectionRaw(z: ZarrArray, selection: any, data: NestedArray<TypedArray>) {
+    const selectedFromZarrArray = await z.getBasicSelection(selection, true); // asRaw === true
+    const selectedFromSource = data.get(selection);
+    if (typeof selectedFromZarrArray === "number") {
+        expect(selectedFromZarrArray).toEqual(selectedFromSource);
+    }
+    else {
+        expect(selectedFromZarrArray.data).toEqual((selectedFromSource as NestedArray<any>).flatten());
     }
 }
