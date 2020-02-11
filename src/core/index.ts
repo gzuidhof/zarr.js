@@ -407,7 +407,7 @@ export class ZarrArray {
         Copies chunk by index directly into output. Doesn't matter if selection is contiguous
         since store/output are different shapes/strides.
         */
-        out.set(outSelection, this.toRawArray(this.decodeChunk(await cdata)), chunkSelection);
+        out.set(outSelection, this.chunkBufferToRawArray(this.decodeChunk(await cdata)), chunkSelection);
       }
 
     } else { // Chunk isn't there, use fill value
@@ -432,10 +432,6 @@ export class ZarrArray {
     return new DTYPE_TYPEDARRAY_MAPPING[this.dtype](buffer);
   }
 
-  private toRawArray(buffer: Buffer | ArrayBuffer) {
-    return new RawArray(buffer, this.chunks, this.dtype);
-  }
-
   private toNestedArray<T extends TypedArray>(data: ValidStoreType) {
     const buffer = this.ensureByteArray(data).buffer;
 
@@ -453,10 +449,15 @@ export class ZarrArray {
     return byteChunkData.buffer;
   }
 
+  private chunkBufferToRawArray(buffer: Buffer | ArrayBuffer) {
+    return new RawArray(buffer, this.chunks, this.dtype);
+  }
+
   private async decodeDirectToRawArray({ chunkCoords }: ChunkProjection, outShape: number[], outSize: number): Promise<RawArray> {
     const cKey = this.chunkKey(chunkCoords);
     if (await this.chunkStore.containsItem(cKey)) {
       const cdata = this.chunkStore.getItem(cKey);
+      // we use outShape here rather than this.chunks because strides will be computed for sqeezed dims
       return new RawArray(this.decodeChunk(await cdata), outShape, this.dtype);
     } else {
       const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
