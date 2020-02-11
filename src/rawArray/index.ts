@@ -4,7 +4,7 @@ import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE, getStrides } from '../util';
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
-import { setRawArrayDirect, setRawArrayToScalar } from './ops';
+import { setRawArrayFromChunkItem, setRawArrayToScalar, setRawArray } from './ops';
 
 export class RawArray {
     dtype: DtypeString;
@@ -72,7 +72,9 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection = null, value: RawArray | number, valueSelection?: ArraySelection) {
+    public set(selection: ArraySelection, value: RawArray | number): void;
+    public set(selection: ArraySelection, chunk: RawArray, chunkSelection: ArraySelection): void;
+    public set(selection: ArraySelection = null, value: RawArray | number, chunkSelection?: ArraySelection) {
         if (selection === null) {
             selection = [slice(null)];
         }
@@ -83,11 +85,12 @@ export class RawArray {
             } else {
                 setRawArrayToScalar(this.data, this.strides, this.shape, selection, value);
             }
-        } if (value instanceof RawArray && valueSelection) {
+        } else if (value instanceof RawArray && chunkSelection) {
             // Copy directly from decoded chunk to destination array
-            setRawArrayDirect(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, valueSelection);
+            setRawArrayFromChunkItem(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape, chunkSelection);
+        } else {
+            setRawArray(this.data, this.strides, this.shape, selection, value.data, value.strides, value.shape);
         }
-
     }
 }
 

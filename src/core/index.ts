@@ -309,10 +309,10 @@ export class ZarrArray {
     const outSize = indexer.shape.reduce((x, y) => x * y, 1);
 
     if (asRaw && (outSize === this.chunkSize)) {
-      // Optimization if output strided array _is_ chunk exactly
-      // Decode directly as new TypedArray and return
+      // Optimization: if output strided array _is_ chunk exactly,
+      // decode directly as new TypedArray and return
       const itr = indexer.iter();
-      const proj = itr.next(); // make sure there is only one projection
+      const proj = itr.next(); // ensure there is only one projection
       if (proj.done === false && itr.next().done === true) {
         const chunkProjection = proj.value as ChunkProjection;
         const out = await this.decodeDirectToRawArray(chunkProjection, outShape, outSize);

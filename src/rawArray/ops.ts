@@ -1,5 +1,6 @@
 import { ArraySelection, SliceIndices } from '../core/types';
 import { normalizeArraySelection, selectionToSliceIndices } from '../core/indexing';
+import { ValueError } from '../errors';
 import { TypedArray } from '../nestedArray/types';
 
 export function setRawArrayToScalar(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, value: number) {
@@ -10,7 +11,20 @@ export function setRawArrayToScalar(dstArr: TypedArray, dstStrides: number[], ds
     _setRawArrayToScalar(value, dstArr, dstStrides, sliceIndices as SliceIndices[]);
 }
 
-export function setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, sourceArr: TypedArray, sourceStrides: number[], sourceShape: number[], sourceSelection: number | ArraySelection) {
+export function setRawArray(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, sourceArr: TypedArray, sourceStrides: number[], sourceShape: number[]): void {
+    // This translates "...", ":", null, etc into a list of slices.
+    const normalizedDstSelection = normalizeArraySelection(dstSelection, dstShape, false);
+    const [dstSliceIndices, outShape] = selectionToSliceIndices(normalizedDstSelection, dstShape);
+
+    // TODO: replace with non stringify equality check
+    if (JSON.stringify(outShape) !== JSON.stringify(sourceShape)) {
+        throw new ValueError(`Shape mismatch in target and source RawArray: ${outShape} and ${sourceShape}`);
+    }
+
+    _setRawArray(dstArr, dstStrides, dstSliceIndices, sourceArr, sourceStrides);
+}
+
+export function setRawArrayFromChunkItem(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, sourceArr: TypedArray, sourceStrides: number[], sourceShape: number[], sourceSelection: number | ArraySelection) {
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedDstSelection = normalizeArraySelection(dstSelection, dstShape, true);
     // Above we force the results to be dstSliceIndices only, without integer selections making this cast is safe.
@@ -19,19 +33,96 @@ export function setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstS
     const normalizedSourceSelection = normalizeArraySelection(sourceSelection, sourceShape, false);
     const [sourceSliceIndicies] = selectionToSliceIndices(normalizedSourceSelection, sourceShape);
 
-    _setRawArrayDirect(dstArr, dstStrides, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, sourceSliceIndicies);
+    // TODO check to ensure chunk and dest selection are same shape?
+    // As is, this only gets called in ZarrArray.getRaw where this condition should be ensured, and check might hinder performance.
+
+    _setRawArrayFromChunkItem(dstArr, dstStrides, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, sourceSliceIndicies);
 }
 
-function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceSliceIndicies: (SliceIndices | number)[]) {
-    if (sourceSliceIndicies.length === 0) {
+function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[]) {
+    const [currentDstSlice, ...nextDstSliceIndices] = dstSliceIndices;
+    const [currentDstStride, ...nextDstStrides] = dstStrides;
+
+    const [from, _to, step, outputSize] = currentDstSlice;
+
+    if (dstStrides.length === 1) {
+        if (step === 1 && currentDstStride === 1) {
+            dstArr.fill(value, from, from + outputSize);
+        } else {
+            for (let i = 0; i < outputSize; i++) {
+                dstArr[currentDstStride * (from + (step * i))] = value;
+            }
+        }
+        return;
+    }
+
+    for (let i = 0; i < outputSize; i++) {
+        _setRawArrayToScalar(
+            value,
+            dstArr.subarray(currentDstStride * (from + (step * i))),
+            nextDstStrides,
+            nextDstSliceIndices,
+        );
+    }
+}
+
+function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: (number | SliceIndices)[], sourceArr: TypedArray, sourceStrides: number[]) {
+    if (dstSliceIndices.length === 0) {
+        dstArr.set(sourceArr);
+        return;
+    }
+
+    const [currentDstSlice, ...nextDstSliceIndices] = dstSliceIndices;
+    const [currentDstStride, ...nextDstStrides] = dstStrides;
+
+    // This dimension is squeezed.
+    if (typeof currentDstSlice === "number") {
+        _setRawArray(
+            dstArr.subarray(currentDstSlice * currentDstStride),
+            nextDstStrides,
+            nextDstSliceIndices,
+            sourceArr,
+            sourceStrides
+        );
+        return;
+    }
+
+    const [currentSourceStride, ...nextSourceStrides] = sourceStrides;
+    const [from, _to, step, outputSize] = currentDstSlice;
+
+    if (dstStrides.length === 1) {
+        if (step === 1 && currentDstStride === 1 && currentSourceStride === 1) {
+            dstArr.set(sourceArr.subarray(0, outputSize), from);
+        } else {
+            for (let i = 0; i < outputSize; i++) {
+                dstArr[currentDstStride * (from + (step * i))] = sourceArr[currentSourceStride * i];
+            }
+        }
+        return;
+    }
+
+    for (let i = 0; i < outputSize; i++) {
+        // Apply strides as above, using both destination and source-specific strides.
+        _setRawArray(
+            dstArr.subarray(currentDstStride * (from + (i * step))),
+            nextDstStrides,
+            nextDstSliceIndices,
+            sourceArr.subarray(currentSourceStride * i),
+            nextSourceStrides
+        );
+    }
+}
+
+function _setRawArrayFromChunkItem(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceSliceIndices: (SliceIndices | number)[]) {
+    if (sourceSliceIndices.length === 0) {
         // Case when last source dimension is squeezed
         dstArr.set(sourceArr);
         return;
     }
 
     // Get current indicies and strides for both destination and source arrays
-    const [currentDstSlice, ...nextDstSliceIndicies] = dstSliceIndices;
-    const [currentSourceSlice, ...nextSourceSliceIndicies] = sourceSliceIndicies;
+    const [currentDstSlice, ...nextDstSliceIndices] = dstSliceIndices;
+    const [currentSourceSlice, ...nextSourceSliceIndices] = sourceSliceIndices;
 
     const [currentDstStride, ...nextDstStrides] = dstStrides;
     const [currentSourceStride, ...nextSourceStrides] = sourceStrides;
@@ -47,12 +138,12 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstSliceIn
 
         Thus, subsequent squeezed dims are appended to the source offset.
         */
-        _setRawArrayDirect(
+        _setRawArrayFromChunkItem(
             // Don't update destination offset/slices, just source
             dstArr, dstStrides, dstSliceIndices,
             sourceArr.subarray(currentSourceStride * currentSourceSlice),
             nextSourceStrides,
-            nextSourceSliceIndicies,
+            nextSourceSliceIndices,
         );
         return;
     }
@@ -63,52 +154,23 @@ function _setRawArrayDirect(dstArr: TypedArray, dstStrides: number[], dstSliceIn
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
         if (step === 1 && currentDstStride === 1 && sstep === 1 && currentSourceStride === 1) {
             dstArr.set(sourceArr.subarray(sfrom, sfrom + outputSize), from);
-            return;
-        }
-
-        for (let i = 0; i < outputSize; i++) {
-            dstArr[currentDstStride * (from + (step * i))] = sourceArr[currentSourceStride * (sfrom + (sstep * i))];
+        } else {
+            for (let i = 0; i < outputSize; i++) {
+                dstArr[currentDstStride * (from + (step * i))] = sourceArr[currentSourceStride * (sfrom + (sstep * i))];
+            }
         }
         return;
     }
 
     for (let i = 0; i < outputSize; i++) {
         // Apply strides as above, using both destination and source-specific strides.
-        _setRawArrayDirect(
+        _setRawArrayFromChunkItem(
             dstArr.subarray(currentDstStride * (from + (i * step))),
             nextDstStrides,
-            nextDstSliceIndicies,
+            nextDstSliceIndices,
             sourceArr.subarray(currentSourceStride * (sfrom + (i * sstep))),
             nextSourceStrides,
-            nextSourceSliceIndicies,
-        );
-    }
-}
-
-function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[]) {
-    const [currentDstSlice, ...nextDstSliceIndicies] = dstSliceIndices;
-    const [currentDstStride, ...nextDstStrides] = dstStrides;
-
-    const [from, _to, step, outputSize] = currentDstSlice;
-
-    if (dstStrides.length === 1) {
-        if (step === 1 && currentDstStride === 1) {
-            dstArr.fill(value, from, from + outputSize);
-            return;
-        }
-
-        for (let i = 0; i < outputSize; i++) {
-            dstArr[currentDstStride * (from + (step * i))] = value;
-        }
-        return;
-    }
-
-    for (let i = 0; i < outputSize; i++) {
-        _setRawArrayToScalar(
-            value,
-            dstArr.subarray(currentDstStride * (from + (step * i))),
-            nextDstStrides,
-            nextDstSliceIndicies,
+            nextSourceSliceIndices,
         );
     }
 }

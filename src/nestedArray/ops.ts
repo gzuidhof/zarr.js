@@ -20,7 +20,7 @@ export function getNestedArrayConstructor<T extends TypedArray>(arr: any): Typed
  * Returns both the slice result and new output shape
  * @param arr NestedArray to slice
  * @param shape The shape of the NestedArray
- * @param selection 
+ * @param selection
  */
 export function sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: number[], selection: number | ArraySelection): [NestedArrayData | number, number[]] {
     // This translates "...", ":", null into a list of slices or integer selections
@@ -129,11 +129,10 @@ function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceAr
     if (shape.length === 1) {
         if (step === 1) {
             (dstArr as TypedArray).set(sourceArr as TypedArray, from);
-            return;
-        }
-
-        for (let i = 0; i < outputSize; i++) {
-            dstArr[from + i * step] = (sourceArr)[i];
+        } else {
+            for (let i = 0; i < outputSize; i++) {
+                dstArr[from + i * step] = (sourceArr)[i];
+            }
         }
         return;
     }
@@ -151,11 +150,10 @@ function _setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArrayData, 
     if (shape.length === 1) {
         if (step === 1) {
             (dstArr as TypedArray).fill(value, from, to);
-            return;
-        }
-
-        for (let i = 0; i < outputSize; i++) {
-            dstArr[from + i * step] = value;
+        } else {
+            for (let i = 0; i < outputSize; i++) {
+                dstArr[from + i * step] = value;
+            }
         }
         return;
     }
