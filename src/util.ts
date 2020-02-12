@@ -186,13 +186,14 @@ export function arrayEquals1D(a: ArrayLike<any>, b: ArrayLike<any>) {
  * Determines "C" order strides for a given shape array.
  * Strides provide integer steps in each dimention to traverse an ndarray.
  *
- * NOTE: These strides here are distinct from numpy.ndarray.strides, which describe actual byte steps.
+ * NOTE: - These strides here are distinct from numpy.ndarray.strides, which describe actual byte steps.
+ *       - Strides are assumed to be contiguous, so initial step is 1. Thus, output will always be [XX, XX, 1].
  */
 export function getStrides(shape: number[]): number[] {
     // adapted from https://github.com/scijs/ndarray/blob/master/ndarray.js#L326-L330
     const ndim = shape.length;
     const strides = Array(ndim);
-    let step = 1; // strides assumed to be contiguous, so init step is 1
+    let step = 1; // init step
     for (let i = ndim - 1; i >= 0; i--) {
         strides[i] = step;
         step *= shape[i];
