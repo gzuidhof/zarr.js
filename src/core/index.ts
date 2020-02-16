@@ -418,25 +418,20 @@ export class ZarrArray {
   }
 
   public async getRawChunk(chunkCoords: number[]): Promise<TypedArray> {
+    if (chunkCoords.length !== this.shape.length) {
+      throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
+    }
     const cKey = this.chunkKey(chunkCoords);
     const cdata = this.chunkStore.getItem(cKey);
     const buffer = this.decodeChunk(await cdata);
-
-    let outSize = 1;
     for (let i = 0; i < chunkCoords.length; i++) {
       const coordIndex = chunkCoords[i];
-      const chunkSize = this.chunks[i];
-      const dimSize = this.shape[i];
-      const maxCoordIndex = Math.ceil(dimSize / chunkSize) - 1;
-      if (coordIndex < maxCoordIndex) {
-        outSize *= chunkSize;
-      } else if (coordIndex === maxCoordIndex) {
-        outSize *= (dimSize - (coordIndex + 1) * chunkSize);
-      } else {
-        throw Error("Chunk with broken");
+      const maxCoordIndex = Math.ceil(this.shape[i] / this.chunks[i]) - 1;
+      if (coordIndex > maxCoordIndex) {
+        throw new Error(`Chunk index ${chunkCoords.join(".")} is out of bounds for store with shape: ${this.shape} and chunks ${this.chunks}`);
       }
     }
-    return this.toTypedArray(buffer).subarray(0, outSize);
+    return this.toTypedArray(buffer);
   }
 
   private chunkKey(chunkCoords: number[]) {
@@ -460,7 +455,7 @@ export class ZarrArray {
     return new NestedArray<T>(buffer, this.chunks, this.dtype);
   }
 
-  private decodeChunk(chunkData: ValidStoreType) {
+  public decodeChunk(chunkData: ValidStoreType) {
     const byteChunkData = this.ensureByteArray(chunkData);
 
     if (this.compressor !== null) {
