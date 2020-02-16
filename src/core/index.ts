@@ -417,13 +417,10 @@ export class ZarrArray {
     }
   }
 
-  public async getRawChunk(chunkCoords: number[]): Promise<TypedArray> {
+  public async getRawChunk(chunkCoords: number[]): Promise<RawArray> {
     if (chunkCoords.length !== this.shape.length) {
       throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
     }
-    const cKey = this.chunkKey(chunkCoords);
-    const cdata = this.chunkStore.getItem(cKey);
-    const buffer = this.decodeChunk(await cdata);
     for (let i = 0; i < chunkCoords.length; i++) {
       const coordIndex = chunkCoords[i];
       const maxCoordIndex = Math.ceil(this.shape[i] / this.chunks[i]) - 1;
@@ -431,7 +428,11 @@ export class ZarrArray {
         throw new Error(`Chunk index ${chunkCoords.join(".")} is out of bounds for store with shape: ${this.shape} and chunks ${this.chunks}`);
       }
     }
-    return this.toTypedArray(buffer);
+    const cKey = this.chunkKey(chunkCoords);
+    const cdata = this.chunkStore.getItem(cKey);
+    const buffer = this.decodeChunk(await cdata);
+    const outShape = this.chunks.filter(d => d !== 1); // squeeze chunk dim if 1
+    return new RawArray(buffer, outShape, this.dtype);
   }
 
   private chunkKey(chunkCoords: number[]) {

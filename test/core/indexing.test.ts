@@ -324,7 +324,7 @@ async function testGetRawChunk(z: ZarrArray, chunkCoords: number[], data: Nested
 
     if (padDim) {
         // raw chunks will be zero-padded so need to pad source selection
-        const zeroPadded = new Int32Array(decodedChunk.length);
+        const zeroPadded = new Int32Array(decodedChunk.data.length);
         if (padDim === 'x') {
             zeroPadded.set(flattened);
         } else if (padDim === 'y') {
@@ -335,9 +335,9 @@ async function testGetRawChunk(z: ZarrArray, chunkCoords: number[], data: Nested
                 zeroPadded.set(view, chunkStrides[0] * i);
             }
         }
-        expect(decodedChunk).toEqual(zeroPadded);
+        expect(decodedChunk.data).toEqual(zeroPadded);
     } else {
-        expect(decodedChunk).toEqual(flattened);
+        expect(decodedChunk.data).toEqual(flattened);
     }
 }
 
