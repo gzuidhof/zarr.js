@@ -264,3 +264,37 @@ async function testGetBasicSelectionRaw(z: ZarrArray, selection: any, data: Nest
         expect(selectedFromZarrArray.data).toEqual((selectedFromSource as NestedArray<any>).flatten());
     }
 }
+
+
+describe("GetRawChunk", () => {
+    const chunkCoords = [
+        // [[0, 0]],
+        // [[1, 1]],
+        // [[1, 2]],
+        // [[2, 2]],
+        // [[2, 1]],
+        [[0, 3]]
+    ];
+
+    const data = rangeTypedArray([1000, 10], Int32Array);
+    const nestedArr = new NestedArray(data, [1000, 10], "<i4");
+
+    test.each(chunkCoords)(`%p`, async (coords) => {
+        const z = await create({ shape: nestedArr.shape, chunks: [400, 3], dtype: nestedArr.dtype });
+        await z.set(null, nestedArr);
+        await testGetRawChunk(z, coords, nestedArr);
+    });
+});
+
+async function testGetRawChunk(z: ZarrArray, chunkCoords: number[], data: NestedArray<TypedArray>) {
+    const decodedChunk = await z.getRawChunk(chunkCoords);
+    const selection = [];
+    for (let i = 0; i < chunkCoords.length; i++) {
+        const dimChunkSize = z.chunks[i];
+        const coord = chunkCoords[i];
+        selection.push(slice(coord * dimChunkSize, dimChunkSize * (coord + 1)));
+    }
+    const selectedFromSource = (await data.get(selection)).flatten();
+    // expect((decodedChunk as TypedArray).subarray(0, selectedFromSource.length)).toEqual(selectedFromSource);
+    expect(decodedChunk as TypedArray).toEqual(selectedFromSource);
+}

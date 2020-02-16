@@ -417,6 +417,28 @@ export class ZarrArray {
     }
   }
 
+  public async getRawChunk(chunkCoords: number[]): Promise<TypedArray> {
+    const cKey = this.chunkKey(chunkCoords);
+    const cdata = this.chunkStore.getItem(cKey);
+    const buffer = this.decodeChunk(await cdata);
+
+    let outSize = 1;
+    for (let i = 0; i < chunkCoords.length; i++) {
+      const coordIndex = chunkCoords[i];
+      const chunkSize = this.chunks[i];
+      const dimSize = this.shape[i];
+      const maxCoordIndex = Math.ceil(dimSize / chunkSize) - 1;
+      if (coordIndex < maxCoordIndex) {
+        outSize *= chunkSize;
+      } else if (coordIndex === maxCoordIndex) {
+        outSize *= (dimSize - (coordIndex + 1) * chunkSize);
+      } else {
+        throw Error("Chunk with broken");
+      }
+    }
+    return this.toTypedArray(buffer).subarray(0, outSize);
+  }
+
   private chunkKey(chunkCoords: number[]) {
     return this.keyPrefix + chunkCoords.join(".");
   }
