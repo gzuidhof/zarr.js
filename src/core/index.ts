@@ -7,11 +7,11 @@ import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
 import { parseMetadata } from "../metadata";
 import { ArraySelection, DimensionSelection, Indexer, Slice, ChunkProjection } from "./types";
-import { BasicIndexer, isContiguousSelection } from './indexing';
+import { BasicIndexer, isContiguousSelection, normalizeIntegerSelection } from './indexing';
 import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
-import { ValueError, PermissionError, KeyError } from '../errors';
+import { ValueError, PermissionError, KeyError, BoundsCheckError } from '../errors';
 import { Codec } from "../compression/types";
 import { getCodec } from "../compression/creation";
 
@@ -415,6 +415,29 @@ export class ZarrArray {
         out.set(outSelection, this.fillValue);
       }
     }
+  }
+
+  public async getRawChunk(chunkCoords: number[]): Promise<RawArray> {
+    if (chunkCoords.length !== this.shape.length) {
+      throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
+    }
+    try {
+      for (let i = 0; i < chunkCoords.length; i++) {
+        const dimLength = Math.ceil(this.shape[i] / this.chunks[i]);
+        chunkCoords[i] = normalizeIntegerSelection(chunkCoords[i], dimLength);
+      }
+    } catch (error) {
+      if (error instanceof BoundsCheckError) {
+        throw new Error(`${error.name} : index ${chunkCoords.join(".")} is out of bounds for shape: ${this.shape} and chunks ${this.chunks}`);
+      } else {
+        throw new error;
+      }
+    }
+    const cKey = this.chunkKey(chunkCoords);
+    const cdata = this.chunkStore.getItem(cKey);
+    const buffer = this.decodeChunk(await cdata);
+    const outShape = this.chunks.filter(d => d !== 1); // squeeze chunk dim if 1
+    return new RawArray(buffer, outShape, this.dtype);
   }
 
   private chunkKey(chunkCoords: number[]) {

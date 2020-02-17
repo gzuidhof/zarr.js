@@ -7,6 +7,7 @@ import { NestedArray, rangeTypedArray } from '../../src/nestedArray/index';
 import { create } from '../../src/creation';
 import { TypedArray } from "../../src/nestedArray/types";
 import { MemoryStore } from "../../src/storage/memoryStore";
+import { getStrides } from "../../src/util";
 
 describe("normalizeIntegerSelection", () => {
     it("normalizes integer selections", () => {
@@ -264,3 +265,81 @@ async function testGetBasicSelectionRaw(z: ZarrArray, selection: any, data: Nest
         expect(selectedFromZarrArray.data).toEqual((selectedFromSource as NestedArray<any>).flatten());
     }
 }
+
+
+describe("GetRawChunk", () => {
+    const basicChunkCoords1D: any[] = [
+        [[0]], [[1]], [[2]], [[6]], [[7]], [[10]]
+    ];
+
+    const data = rangeTypedArray([1050], Int32Array);
+    const nestedArr = new NestedArray(data, [1050], "<i4");
+
+    test.each(basicChunkCoords1D)(`%p`, async (coords) => {
+        const z = await create({ shape: nestedArr.shape, chunks: [100], dtype: nestedArr.dtype });
+        await z.set(null, nestedArr);
+        await testGetRawChunk(z, coords, nestedArr, 'x');
+    });
+});
+
+describe("getRawChunk2D", () => {
+    interface TestCase {
+        chunkCoords: number[];
+        pad?: string;
+    }
+
+    const testCases: TestCase[] = [
+        { chunkCoords: [0, 0] },
+        { chunkCoords: [0, 1] },
+        { chunkCoords: [1, 1] },
+        { chunkCoords: [1, -2] },
+        { chunkCoords: [2, 1], pad: 'x' },
+        { chunkCoords: [2, 2], pad: 'x' },
+        { chunkCoords: [-1, 2], pad: 'x' },
+        { chunkCoords: [0, 3], pad: 'y' },
+        { chunkCoords: [1, 3], pad: 'y' },
+        { chunkCoords: [1, -1], pad: 'y' }
+    ];
+
+
+    const data = rangeTypedArray([1000, 10], Int32Array);
+    const nestedArr = new NestedArray(data, [1000, 10], "<i4");
+
+    test.each(testCases)(`%p`, async (t) => {
+        const z = await create({ shape: nestedArr.shape, chunks: [400, 3], dtype: nestedArr.dtype });
+        await z.set(null, nestedArr);
+        await testGetRawChunk(z, t.chunkCoords, nestedArr, t.pad);
+    });
+});
+
+async function testGetRawChunk(z: ZarrArray, chunkCoords: number[], data: NestedArray<TypedArray>, padDim?: string) {
+    const decodedChunk = await z.getRawChunk(chunkCoords);
+    const selection = [];
+    for (let i = 0; i < chunkCoords.length; i++) {
+        const dimChunkSize = z.chunks[i];
+        const coord = chunkCoords[i];
+        selection.push(slice(coord * dimChunkSize, dimChunkSize * (coord + 1)));
+    }
+
+    const selectedFromSource = await data.get(selection);
+    const flattened = selectedFromSource.flatten();
+
+    if (padDim) {
+        // raw chunks will be zero-padded so need to pad source selection
+        const zeroPadded = new Int32Array(decodedChunk.data.length);
+        if (padDim === 'x') {
+            zeroPadded.set(flattened);
+        } else if (padDim === 'y') {
+            const chunkStrides = getStrides(z.chunks);
+            const dataStrides = getStrides(selectedFromSource.shape);
+            for (let i = 0; i < selectedFromSource.shape[0]; i++) {
+                const view = flattened.subarray(dataStrides[0] * i, dataStrides[0] * i + selectedFromSource.shape[1]);
+                zeroPadded.set(view, chunkStrides[0] * i);
+            }
+        }
+        expect(decodedChunk.data).toEqual(zeroPadded);
+    } else {
+        expect(decodedChunk.data).toEqual(flattened);
+    }
+}
+
