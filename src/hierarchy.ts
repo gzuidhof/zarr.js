@@ -278,7 +278,7 @@ export async function group(store?: Store | string, path: string | null = null, 
  * @param chunkStore Store or path to directory in file system or name of zip file.
  * @param cacheAttrs If `true` (default), user attributes will be cached for attribute read operations
  *   If False, user attributes are reloaded from the store prior to all attribute read operations.
- * 
+ *
  */
 export async function openGroup(store?: Store | string, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: Store, cacheAttrs = true) {
     store = normalizeStoreArgument(store);

@@ -85,3 +85,10 @@ export class ValueError extends Error {
         Object.setPrototypeOf(this, ValueError.prototype);
     }
 }
+
+export class HTTPError extends Error {
+    constructor(code: string) {
+      super(code);
+      Object.setPrototypeOf(this, HTTPError.prototype);
+    }
+  }
