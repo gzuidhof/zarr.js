@@ -8,7 +8,6 @@ import { create } from '../../src/creation';
 import { TypedArray } from "../../src/nestedArray/types";
 import { MemoryStore } from "../../src/storage/memoryStore";
 import { getStrides } from "../../src/util";
-import { stringify } from "querystring";
 
 describe("normalizeIntegerSelection", () => {
     it("normalizes integer selections", () => {
@@ -293,10 +292,13 @@ describe("getRawChunk2D", () => {
         { chunkCoords: [0, 0] },
         { chunkCoords: [0, 1] },
         { chunkCoords: [1, 1] },
+        { chunkCoords: [1, -2] },
         { chunkCoords: [2, 1], pad: 'x' },
         { chunkCoords: [2, 2], pad: 'x' },
+        { chunkCoords: [-1, 2], pad: 'x' },
         { chunkCoords: [0, 3], pad: 'y' },
-        { chunkCoords: [1, 3], pad: 'y' }
+        { chunkCoords: [1, 3], pad: 'y' },
+        { chunkCoords: [1, -1], pad: 'y' }
     ];
 
 
