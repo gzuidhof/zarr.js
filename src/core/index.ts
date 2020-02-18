@@ -378,6 +378,8 @@ export class ZarrArray {
     const cKey = this.chunkKey(chunkCoords);
     try {
       const cdata = await this.chunkStore.getItem(cKey);
+      const decodedChunk = this.decodeChunk(cdata);
+
       if (out instanceof NestedArray) {
 
         if (isContiguousSelection(outSelection) && isTotalSlice(chunkSelection, this.chunks) && !this.meta.filters) {
@@ -387,12 +389,12 @@ export class ZarrArray {
 
           // TODO check order
           // TODO filters..
-          out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(cdata)));
+          out.set(outSelection, this.toNestedArray<T>(decodedChunk));
           return;
         }
 
         // Decode chunk
-        const chunk = this.toNestedArray(this.decodeChunk(cdata));
+        const chunk = this.toNestedArray(decodedChunk);
         const tmp = chunk.get(chunkSelection);
 
         if (dropAxes !== null) {
@@ -406,7 +408,7 @@ export class ZarrArray {
         Copies chunk by index directly into output. Doesn't matter if selection is contiguous
         since store/output are different shapes/strides.
         */
-        out.set(outSelection, this.chunkBufferToRawArray(this.decodeChunk(cdata)), chunkSelection);
+        out.set(outSelection, this.chunkBufferToRawArray(decodedChunk), chunkSelection);
       }
 
     } catch (error) {
