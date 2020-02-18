@@ -57,7 +57,6 @@
     "jest-config": "^23.0.0",
     "jest-dev-server": "^4.3.0",
     "jest-puppeteer": "^4.3.0",
-    "lodash.camelcase": "^4.3.0",
     "node-fetch": "^2.6.0",
     "prompt": "^1.0.0",
     "puppeteer": "^2.0.0",
