@@ -376,9 +376,9 @@ export class ZarrArray {
     }
 
     const cKey = this.chunkKey(chunkCoords);
-    // TODO may be better to ask for forgiveness instead
-    if (await this.chunkStore.containsItem(cKey)) {
-      const cdata = this.chunkStore.getItem(cKey);
+    try {
+      const cdata = await this.chunkStore.getItem(cKey);
+      const decodedChunk = this.decodeChunk(cdata);
 
       if (out instanceof NestedArray) {
 
@@ -389,12 +389,12 @@ export class ZarrArray {
 
           // TODO check order
           // TODO filters..
-          out.set(outSelection, this.toNestedArray<T>(this.decodeChunk(await cdata)));
+          out.set(outSelection, this.toNestedArray<T>(decodedChunk));
           return;
         }
 
         // Decode chunk
-        const chunk = this.toNestedArray(this.decodeChunk(await cdata));
+        const chunk = this.toNestedArray(decodedChunk);
         const tmp = chunk.get(chunkSelection);
 
         if (dropAxes !== null) {
@@ -402,17 +402,24 @@ export class ZarrArray {
         }
 
         out.set(outSelection, tmp as NestedArray<T>);
+
       } else {
         /* RawArray
         Copies chunk by index directly into output. Doesn't matter if selection is contiguous
         since store/output are different shapes/strides.
         */
-        out.set(outSelection, this.chunkBufferToRawArray(this.decodeChunk(await cdata)), chunkSelection);
+        out.set(outSelection, this.chunkBufferToRawArray(decodedChunk), chunkSelection);
       }
 
-    } else { // Chunk isn't there, use fill value
-      if (this.fillValue !== null) {
-        out.set(outSelection, this.fillValue);
+    } catch (error) {
+      if (error instanceof KeyError) {
+        // fill with scalar if cKey doesn't exist in store
+        if (this.fillValue !== null) {
+          out.set(outSelection, this.fillValue);
+        }
+      } else {
+        // Different type of error - rethrow
+        throw new error;
       }
     }
   }
@@ -478,13 +485,18 @@ export class ZarrArray {
 
   private async decodeDirectToRawArray({ chunkCoords }: ChunkProjection, outShape: number[], outSize: number): Promise<RawArray> {
     const cKey = this.chunkKey(chunkCoords);
-    if (await this.chunkStore.containsItem(cKey)) {
+    try {
       const cdata = this.chunkStore.getItem(cKey);
-      // we use outShape here rather than this.chunks because strides will be computed for sqeezed dims
       return new RawArray(this.decodeChunk(await cdata), outShape, this.dtype);
-    } else {
-      const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
-      return new RawArray(data.fill(this.fillValue as number), outShape);
+    } catch (error) {
+      if (error instanceof KeyError) {
+        // fill with scalar if item doesn't exist
+        const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
+        return new RawArray(data.fill(this.fillValue as number), outShape);
+      } else {
+        // Different type of error - rethrow
+        throw new error;
+      }
     }
   }
 

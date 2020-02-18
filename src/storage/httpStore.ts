@@ -1,5 +1,6 @@
 import { ValidStoreType, AsyncStore } from './types';
 import { IS_NODE } from '../util';
+import { KeyError, HTTPError } from '../errors';
 
 export class HTTPStore implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
@@ -20,6 +21,14 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     async getItem(item: string) {
         const url = new URL(item, this.url).href;
         const value = await fetch(url);
+
+        if (value.status === 404) {
+            // Item is not found
+            throw new KeyError(item);
+        } else if (value.status !== 200) {
+            throw new HTTPError(String(value.status));
+        }
+        // only decode if 200
         if (IS_NODE) {
             // Node
             return Buffer.from(await value.arrayBuffer());
