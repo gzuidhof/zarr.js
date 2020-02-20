@@ -1,6 +1,6 @@
 # Raw Arrays
 
-Currently there is not a `numpy`-like standard for multi-dimentional arrays in Javascript. This might change in the future, but for now we offer the option to retrieve data from a zarr store as a RawArray. RawArrays include a *single* TypeArray which represents the underlying multi-dimensional using *C* order (row-major) *strides*.
+Currently there is not a `numpy`-like standard for multi-dimensional arrays in Javascript. This might change in the future, but for now we offer the option to retrieve data from a zarr store as a RawArray. RawArrays include a *single* TypeArray which represents the underlying multi-dimensional using *C* order (row-major) *strides*.
 
 ## Example
 
