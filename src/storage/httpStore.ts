@@ -1,5 +1,5 @@
 import { ValidStoreType, AsyncStore } from './types';
-import { IS_NODE } from '../util';
+import { IS_NODE, joinUrlParts } from '../util';
 import { KeyError, HTTPError } from '../errors';
 
 export class HTTPStore implements AsyncStore<ArrayBuffer> {
@@ -19,7 +19,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async getItem(item: string) {
-        const url = new URL(item, this.url).href;
+        const url = joinUrlParts(this.url, item);
         const value = await fetch(url);
 
         if (value.status === 404) {
@@ -28,12 +28,13 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         } else if (value.status !== 200) {
             throw new HTTPError(String(value.status));
         }
+
         // only decode if 200
         if (IS_NODE) {
-            // Node
             return Buffer.from(await value.arrayBuffer());
+        } else {
+            return value.arrayBuffer(); // Browser
         }
-        return value.arrayBuffer(); // Browser
     }
 
     async setItem(item: string, value: ValidStoreType): Promise<boolean> {
@@ -48,7 +49,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         throw new Error('Method not implemented.');
     }
     async containsItem(item: string): Promise<boolean> {
-        const url = new URL(item, this.url).href;
+        const url = joinUrlParts(this.url, item);
         const value = await fetch(url);
 
         return value.status === 200;

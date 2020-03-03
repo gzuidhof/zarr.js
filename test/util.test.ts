@@ -75,3 +75,15 @@ describe("ArrayEquals1D works", () => {
         expect(util.arrayEquals1D(arrA, arrB)).toBeFalsy();
     });
 });
+
+describe("URL joining works", () => {
+    test.each([
+        [["https://example.com", "bla"], "https://example.com/bla"],
+        [["https://example.com/my-store", "arr.zarr"], "https://example.com/my-store/arr.zarr"],
+        [["https://example.com/", "arr.zarr"], "https://example.com/arr.zarr"],
+        [["https://example.com/", "", "arr.zarr"], "https://example.com/arr.zarr"],
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    ])("joins parts as expected: output %s, expected %p", (parts: string[] | String, expected: string) => {
+        expect(util.joinUrlParts(...parts)).toEqual(expected);
+    });
+});
