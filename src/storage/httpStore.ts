@@ -38,10 +38,11 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async setItem(item: string, value: ValidStoreType): Promise<boolean> {
+        const url = joinUrlParts(this.url, item);
         if (typeof value === 'string') {
             value = new TextEncoder().encode(value).buffer;
         }
-        const set = await fetch(item, { method: 'PUT' });
+        const set = await fetch(url, { method: 'PUT', body: value});
         return set.status.toString()[0] === '2';
     }
 
