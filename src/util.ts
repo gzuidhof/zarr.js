@@ -204,7 +204,7 @@ export function getStrides(shape: number[]): number[] {
 /**
  * Preserves (double) slashes earlier in the path, so this works better
  * for URLs. From https://stackoverflow.com/a/46427607/4178400
- * @param args 
+ * @param args parts of a path or URL to join.
  */
 export function joinUrlParts(...args: string[]) {
     return args.map((part, i) => {
