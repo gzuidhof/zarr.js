@@ -181,17 +181,3 @@ NumPy-like [broadcasting](https://docs.scipy.org/doc/numpy/user/basics.broadcast
 ## Known issues
 
 * Open ended slicing with negative indices seems to have a bug. For example slice `x.get(slice(-5))` does not give the same results as `x[-5:]` in NumPy. *(contributions are welcome!)*
-* Reading data from a remote store should be possible like this:
-    ```javascript
-    const z = await openArray({
-        store: "http://localhost:8000/dummy_dataset.zarr",
-    });
-    ```
-    But because of the way we do URL concatenation this doesn't work.. should be an easy fix in the HTTPStore file.  
-    The workaround for now:
-    ```javascript
-    const z = await openArray({
-        store: "http://localhost:8000/",
-        path: "dummy_dataset.zarr",
-    });
-    ```
