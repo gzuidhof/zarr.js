@@ -59,8 +59,8 @@ export class TooManyIndicesError extends RangeError {
 }
 
 export class BoundsCheckError extends RangeError {
-    constructor(dimLength: number) {
-        super(`index out of bounds for dimension with length ${dimLength}`);
+    constructor(message: string) {
+        super(message);
         Object.setPrototypeOf(this, BoundsCheckError.prototype);
     }
 }

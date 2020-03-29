@@ -435,7 +435,7 @@ export class ZarrArray {
       }
     } catch (error) {
       if (error instanceof BoundsCheckError) {
-        throw new Error(`${error.name} : index ${chunkCoords.join(".")} is out of bounds for shape: ${this.shape} and chunks ${this.chunks}`);
+        throw new BoundsCheckError(`index ${chunkCoords.join(".")} is out of bounds for shape: ${this.shape} and chunks ${this.chunks}`);
       } else {
         throw new error;
       }

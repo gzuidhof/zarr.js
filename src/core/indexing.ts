@@ -117,7 +117,7 @@ export function normalizeIntegerSelection(dimSelection: number, dimLength: numbe
 
     // handle out of bounds
     if (dimSelection >= dimLength || dimSelection < 0) {
-        throw new BoundsCheckError(dimLength);
+        throw new BoundsCheckError(`index out of bounds for dimension with length ${dimLength}`);
     }
 
     return dimSelection;
