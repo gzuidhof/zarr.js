@@ -12,9 +12,9 @@ import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError, BoundsCheckError } from '../errors';
-import { Codec } from "../compression/types";
-import { getCodec } from "../compression/creation";
+import { getCodec } from "../compression/registry";
 
+import type { Codec } from 'numcodecs';
 import PQueue from 'p-queue';
 
 export interface GetOptions {
@@ -378,7 +378,7 @@ export class ZarrArray {
     const cKey = this.chunkKey(chunkCoords);
     try {
       const cdata = await this.chunkStore.getItem(cKey);
-      const decodedChunk = this.decodeChunk(cdata);
+      const decodedChunk = await this.decodeChunk(cdata);
 
       if (out instanceof NestedArray) {
 
@@ -442,7 +442,7 @@ export class ZarrArray {
     }
     const cKey = this.chunkKey(chunkCoords);
     const cdata = this.chunkStore.getItem(cKey);
-    const buffer = this.decodeChunk(await cdata);
+    const buffer = await this.decodeChunk(await cdata);
     const outShape = this.chunks.filter(d => d !== 1); // squeeze chunk dim if 1
     return new RawArray(buffer, outShape, this.dtype);
   }
@@ -468,11 +468,12 @@ export class ZarrArray {
     return new NestedArray<T>(buffer, this.chunks, this.dtype);
   }
 
-  private decodeChunk(chunkData: ValidStoreType) {
+  private async decodeChunk(chunkData: ValidStoreType) {
     const byteChunkData = this.ensureByteArray(chunkData);
 
     if (this.compressor !== null) {
-      return this.compressor.decode(byteChunkData as any);
+      const dBytes = await this.compressor.decode(byteChunkData);
+      return dBytes.buffer;
     }
 
     // TODO filtering etc
@@ -486,8 +487,8 @@ export class ZarrArray {
   private async decodeDirectToRawArray({ chunkCoords }: ChunkProjection, outShape: number[], outSize: number): Promise<RawArray> {
     const cKey = this.chunkKey(chunkCoords);
     try {
-      const cdata = this.chunkStore.getItem(cKey);
-      return new RawArray(this.decodeChunk(await cdata), outShape, this.dtype);
+      const cdata = await this.chunkStore.getItem(cKey);
+      return new RawArray(await this.decodeChunk(cdata), outShape, this.dtype);
     } catch (error) {
       if (error instanceof KeyError) {
         // fill with scalar if item doesn't exist
@@ -631,8 +632,9 @@ export class ZarrArray {
 
       try {
         // Chunk is initialized if this does not error
-        const chunkStoreData = this.chunkStore.getItem(chunkKey);
-        chunkData = this.toTypedArray(this.decodeChunk(await chunkStoreData));
+        const chunkStoreData = await this.chunkStore.getItem(chunkKey);
+        const dBytes = await this.decodeChunk(chunkStoreData);
+        chunkData = this.toTypedArray(dBytes);
       } catch (error) {
         if (error instanceof KeyError) {
           // Chunk is not initialized
@@ -655,14 +657,16 @@ export class ZarrArray {
       chunkNestedArray.set(chunkSelection, value);
       chunk = chunkNestedArray.flatten();
     }
-    const chunkData = this.encodeChunk(chunk);
+    const chunkData = await this.encodeChunk(chunk);
     this.chunkStore.setItem(chunkKey, chunkData);
   }
 
-  private encodeChunk(chunk: TypedArray) {
+  private async encodeChunk(chunk: TypedArray) {
 
     if (this.compressor !== null) {
-      return this.compressor.encode(new Uint8Array(chunk.buffer));
+      const bytes = new Uint8Array(chunk.buffer);
+      const cbytes = await this.compressor.encode(bytes);
+      return cbytes.buffer;
     }
     // TODO: filters, etc
     return chunk.buffer;
