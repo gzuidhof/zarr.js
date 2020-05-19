@@ -1,7 +1,7 @@
 import { Store, ValidStoreType } from "../storage/types";
 
 import { pathToPrefix } from '../storage/index';
-import { normalizeStoragePath, isTotalSlice, arrayEquals1D } from '../util';
+import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap } from '../util';
 import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
@@ -469,14 +469,19 @@ export class ZarrArray {
   }
 
   private decodeChunk(chunkData: ValidStoreType) {
-    const byteChunkData = this.ensureByteArray(chunkData);
+    let bytes = this.ensureByteArray(chunkData);
 
     if (this.compressor !== null) {
-      return this.compressor.decode(byteChunkData as any);
+      bytes = this.compressor.decode(bytes);
+    }
+
+    if (this.dtype.includes('>')) {
+      // Need to flip bytes for Javascript typed arrays
+      byteSwap(this.toTypedArray(bytes.buffer));
     }
 
     // TODO filtering etc
-    return byteChunkData.buffer;
+    return bytes.buffer;
   }
 
   private chunkBufferToRawArray(buffer: Buffer | ArrayBuffer) {
@@ -660,10 +665,16 @@ export class ZarrArray {
   }
 
   private encodeChunk(chunk: TypedArray) {
+    if (this.dtype.includes('>')) {
+      // If big endian, flip bytes before applying compression and setting store
+      byteSwap(chunk);
+    }
 
     if (this.compressor !== null) {
-      return this.compressor.encode(new Uint8Array(chunk.buffer));
+      const bytes = new Uint8Array(chunk.buffer);
+      return this.compressor.encode(bytes);
     }
+
     // TODO: filters, etc
     return chunk.buffer;
   }

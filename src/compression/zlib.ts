@@ -16,18 +16,18 @@ export class Zlib implements Codec {
         this.level = level as ValidZlibLevelSetting;
     }
 
-    encode(data: Uint8Array): ArrayBuffer {
+    encode(data: Uint8Array): Uint8Array {
         const gzipped = pako.deflate(data, { level: this.level });
-        return gzipped.buffer;
+        return gzipped;
     }
 
-    decode(data: Uint8Array, out?: Buffer): ArrayBuffer {
+    decode(data: Uint8Array, out?: Uint8Array): Uint8Array {
         const uncompressed = pako.inflate(data);
         if (out !== undefined) {
             out.set(uncompressed);
             return out;
         }
 
-        return uncompressed.buffer;
+        return uncompressed;
     }
 }

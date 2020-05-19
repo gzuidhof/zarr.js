@@ -16,16 +16,22 @@ export type Order = 'C' | 'F';
  * Currently supported dtypes are listed here only.
  */
 export type DtypeString =
-  | '<u1'
-  | '<i1'
+  | '|u1'
+  | '|i1'
+  | '|b'
+  | '|B'
   | '<u2'
   | '<i2'
   | '<u4'
   | '<i4'
   | '<f4'
   | '<f8'
-  | '<b'
-  | '<B';
+  | '>u2'
+  | '>i2'
+  | '>u4'
+  | '>i4'
+  | '>f4'
+  | '>f8';
 
 /**
  * User interface for chunking.
