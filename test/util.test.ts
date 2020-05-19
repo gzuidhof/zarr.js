@@ -87,3 +87,17 @@ describe("URL joining works", () => {
         expect(util.joinUrlParts(...parts)).toEqual(expected);
     });
 });
+
+describe("Byte swapping works", () => {
+  test.each([
+    [new Uint32Array([1, 2, 3, 4, 5]), new Uint32Array([1, 2, 3, 4, 5])],
+    [new Float64Array([20, 3333, 444.4, 222, 3123]), new Float64Array([20, 3333, 444.4, 222, 3123])],
+    [new Float32Array([1, 2, 3, 42, 5]), new Float32Array([1, 2, 3, 42, 5])],
+    [new Uint8Array([1, 2, 3, 4]), new Uint8Array([1, 2, 3, 4])],
+    [new Int8Array([-3, 2, 3, 10]), new Int8Array([-3, 2, 3, 10])],
+  ])('ensure twice flipped %p is same as %p', (arr, expected) => {
+    util.byteSwap(arr); // flip endiness inplace
+    util.byteSwap(arr); // flip again
+    expect(arr).toEqual(expected);
+  });
+});

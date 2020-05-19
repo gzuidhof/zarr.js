@@ -17,7 +17,7 @@ def generate_fixtures():
         compressor=None,
     )
 
-    for codec, filename_postfix in ([None, ""], ["gzip", "_gzip"], ["zlib", "_zlib"]):
+    for codec, filename_postfix in ([None, "_LE"], ["gzip", "_gzip_LE"], ["zlib", "_zlib_LE"]):
         simple_path = os.path.join(
             FIXTURES_FOLDER, "simple{}.zarr".format(filename_postfix)
         )
@@ -26,6 +26,23 @@ def generate_fixtures():
             shape=(8, 8),
             chunks=(2, None),
             dtype="<i4",
+            fill_value=0,
+            mode="w",
+            compression=codec,
+        )
+        simple_zarr_array[0, 0] = 1
+        simple_zarr_array[0, 1] = 2
+        simple_zarr_array[7, 7] = 3
+
+    for codec, filename_postfix in ([None, "_BE"], ["gzip", "_gzip_BE"], ["zlib", "_zlib_BE"]):
+        simple_path = os.path.join(
+            FIXTURES_FOLDER, "simple{}.zarr".format(filename_postfix)
+        )
+        simple_zarr_array = zarr.open(
+            simple_path,
+            shape=(8, 8),
+            chunks=(2, None),
+            dtype=">i4",
             fill_value=0,
             mode="w",
             compression=codec,
