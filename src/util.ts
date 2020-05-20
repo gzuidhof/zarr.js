@@ -223,7 +223,7 @@ export function joinUrlParts(...args: string[]) {
  * Used to flip endian-ness when getting/setting chunks from/to zarr store.
  * @param src TypedArray
  */
-export function byteSwap(src: TypedArray): void {
+export function byteSwapInplace(src: TypedArray): void {
   const b = src.BYTES_PER_ELEMENT;
   if (b === 1) return; // no swapping needed
   if (IS_NODE) {
@@ -248,3 +248,14 @@ export function byteSwap(src: TypedArray): void {
     }
   }
 }
+
+/**
+ * Creates a copy of a TypedArray and swaps bytes.
+ * Used to flip endian-ness when getting/setting chunks from/to zarr store.
+ * @param src TypedArray
+ */
+export function byteSwap(src: TypedArray): TypedArray {
+    const copy = src.slice();
+    byteSwapInplace(copy);
+    return copy;
+  }

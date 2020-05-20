@@ -1,7 +1,7 @@
 import { Store, ValidStoreType } from "../storage/types";
 
 import { pathToPrefix } from '../storage/index';
-import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap } from '../util';
+import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap, byteSwapInplace } from '../util';
 import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
@@ -476,8 +476,9 @@ export class ZarrArray {
     }
 
     if (this.dtype.includes('>')) {
-      // Need to flip bytes for Javascript typed arrays
-      byteSwap(this.toTypedArray(bytes.buffer));
+      // Need to flip bytes for Javascript TypedArrays
+      // We flip bytes in-place to avoid creating an extra copy of the decoded buffer.
+      byteSwapInplace(this.toTypedArray(bytes.buffer));
     }
 
     // TODO filtering etc
@@ -666,8 +667,13 @@ export class ZarrArray {
 
   private encodeChunk(chunk: TypedArray) {
     if (this.dtype.includes('>')) {
-      // If big endian, flip bytes before applying compression and setting store
-      byteSwap(chunk);
+      /*
+       * If big endian, flip bytes before applying compression and setting store.
+       *
+       * Here we create a copy (not in-place byteswapping) to avoid flipping the
+       * bytes in the buffers of user-created Raw- and NestedArrays.
+      */
+      chunk = byteSwap(chunk);
     }
 
     if (this.compressor !== null) {
