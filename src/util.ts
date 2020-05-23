@@ -4,6 +4,7 @@ import { createCheckers } from "ts-interface-checker";
 import typesTI from "../src/types-ti";
 import { DimensionSelection, Slice } from "./core/types";
 import { isSlice } from "./core/indexing";
+import { TypedArray } from "./nestedArray/types";
 
 const TypeCheckSuite = createCheckers(typesTI);
 
@@ -215,3 +216,46 @@ export function joinUrlParts(...args: string[]) {
         }
       }).filter(x=>x.length).join('/');
 }
+
+
+/**
+ * Swaps byte order in-place for a given TypedArray.
+ * Used to flip endian-ness when getting/setting chunks from/to zarr store.
+ * @param src TypedArray
+ */
+export function byteSwapInplace(src: TypedArray): void {
+  const b = src.BYTES_PER_ELEMENT;
+  if (b === 1) return; // no swapping needed
+  if (IS_NODE) {
+    // Use builtin methods for swapping if in Node environment
+    const bytes = Buffer.from(src.buffer, src.byteOffset, src.length * b);
+    if (b === 2) bytes.swap16();
+    if (b === 4) bytes.swap32();
+    if (b === 8) bytes.swap64();
+    return;
+  }
+  // In browser, need to flip manually
+  // Adapted from https://github.com/zbjornson/node-bswap/blob/master/bswap.js
+  const flipper = new Uint8Array(src.buffer, src.byteOffset, src.length * b);
+  const numFlips = b / 2;
+  const endByteIndex = b - 1;
+  let t: number;
+  for (let i = 0; i < flipper.length; i += b) {
+    for (let j = 0; j < numFlips; j++) {
+      t = flipper[i + j];
+      flipper[i + j] = flipper[i + endByteIndex - j];
+      flipper[i + endByteIndex - j] = t;
+    }
+  }
+}
+
+/**
+ * Creates a copy of a TypedArray and swaps bytes.
+ * Used to flip endian-ness when getting/setting chunks from/to zarr store.
+ * @param src TypedArray
+ */
+export function byteSwap(src: TypedArray): TypedArray {
+    const copy = src.slice();
+    byteSwapInplace(copy);
+    return copy;
+  }

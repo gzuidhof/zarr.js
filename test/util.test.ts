@@ -87,3 +87,30 @@ describe("URL joining works", () => {
         expect(util.joinUrlParts(...parts)).toEqual(expected);
     });
 });
+
+describe("Inplace byte swapping works", () => {
+  test.each([
+    [new Uint32Array([1, 2, 3, 4, 5]), new Uint32Array([1, 2, 3, 4, 5])],
+    [new Float64Array([20, 3333, 444.4, 222, 3123]), new Float64Array([20, 3333, 444.4, 222, 3123])],
+    [new Float32Array([1, 2, 3, 42, 5]), new Float32Array([1, 2, 3, 42, 5])],
+    [new Uint8Array([1, 2, 3, 4]), new Uint8Array([1, 2, 3, 4])],
+    [new Int8Array([-3, 2, 3, 10]), new Int8Array([-3, 2, 3, 10])],
+  ])('ensure twice flipped %p is same as %p', (arr, expected) => {
+    util.byteSwapInplace(arr); // flip endiness inplace
+    util.byteSwapInplace(arr); // flip again
+    expect(arr).toEqual(expected);
+  });
+});
+
+describe("Byte swapping does not mutate in input buffer", () => {
+  test.each([
+    [new Uint32Array([1, 2, 3, 4, 5]), 3, 4, 6, new Uint32Array([1, 2, 3, 6, 5])],
+    [new Float64Array([-3, 2, 3, 10]), 0, -3, 200, new Float64Array([200, 2, 3, 10])],
+  ])('ensure twice flipped %p is same as %p', (arr, index, origVal, newVal, expected) => {
+    const copy1 = util.byteSwap(arr);
+    const copy2 = util.byteSwap(copy1);
+    copy2[index] = newVal;
+    expect(copy2).toEqual(expected);
+    expect(arr[index]).toEqual(origVal);
+  });
+});
