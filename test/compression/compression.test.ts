@@ -3,13 +3,12 @@
 import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
 import { NestedArray } from "../../src/nestedArray";
-import { getCodec } from "../../src/compression/registry";
 
 describe("Test MemoryStore", () => {
     const hStore = new HTTPStore("http://localhost:7357/");
 
-    it("Can open the simple fixture with gzip compressor", async () => {
-        const z = await openArray({ store: hStore, path: "simple_gzip.zarr" });
+    it("Can open the simple fixture with gzip compressor (little endian)", async () => {
+        const z = await openArray({ store: hStore, path: "simple_gzip_LE.zarr" });
         expect(z.shape).toEqual([8, 8]);
         expect(await z.get([0, 0])).toEqual(1);
         expect(await z.get([0, 1])).toEqual(2);
@@ -17,14 +16,32 @@ describe("Test MemoryStore", () => {
         expect(await z.get([4, 4])).toEqual(0);
     });
 
-    it("Can open the simple fixture with zlib compressor", async () => {
-        const z = await openArray({ store: hStore, path: "simple_zlib.zarr" });
+    it("Can open the simple fixture with zlib compressor (little endian)", async () => {
+        const z = await openArray({ store: hStore, path: "simple_zlib_LE.zarr" });
         expect(z.shape).toEqual([8, 8]);
         expect(await z.get([0, 0])).toEqual(1);
         expect(await z.get([0, 1])).toEqual(2);
         expect(await z.get([7, 7])).toEqual(3);
         expect(await z.get([4, 4])).toEqual(0);
     });
+
+    it("Can open the simple fixture with gzip compressor (big endian)", async () => {
+      const z = await openArray({ store: hStore, path: "simple_gzip_BE.zarr" });
+      expect(z.shape).toEqual([8, 8]);
+      expect(await z.get([0, 0])).toEqual(1);
+      expect(await z.get([0, 1])).toEqual(2);
+      expect(await z.get([7, 7])).toEqual(3);
+      expect(await z.get([4, 4])).toEqual(0);
+  });
+
+  it("Can open the simple fixture with zlib compressor (big endian)", async () => {
+      const z = await openArray({ store: hStore, path: "simple_zlib_BE.zarr" });
+      expect(z.shape).toEqual([8, 8]);
+      expect(await z.get([0, 0])).toEqual(1);
+      expect(await z.get([0, 1])).toEqual(2);
+      expect(await z.get([7, 7])).toEqual(3);
+      expect(await z.get([4, 4])).toEqual(0);
+  });
 
     const compressionConfigs = [
         { id: "gzip", level: 0},
