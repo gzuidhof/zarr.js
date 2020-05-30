@@ -91,8 +91,8 @@ ZarrArray {
 ```
 
 > **Notes:**
-  * The `HTTPStore` uses `fetch` to make requests. If you are running in Node you may need to install a package like `node-fetch` and expose it on the `global` object.  
-  *  We open the array with the `"r"` persistence mode, so the array will be *read only*. The python http server we are using does not support `PUT` method to upload or overwrite data.  
+  * The `HTTPStore` uses `fetch` to make requests. If you are running in Node you may need to install a package like `node-fetch` and expose it on the `global` object.
+  *  We open the array with the `"r"` persistence mode, so the array will be *read only*. The python http server we are using does not support `PUT` method to upload or overwrite data.
 
 ----
 
@@ -132,7 +132,7 @@ Index 2: NestedArray {
      0.42365479469299316 ] }
 ```
 
-Looks like it worked 🎉.  
+Looks like it worked 🎉.
 Slicing across chunks is also not a problem, the next slice requires reading all 6 chunks:
 
 ```javascript
@@ -161,21 +161,21 @@ NestedArray {
 ## Good to know
 Zarr.js is an early-stage project, use this in production at your own risk. Some notes on supported operations:
 
-* #### Setting data on remote stores  
+* #### Setting data on remote stores
   The current `HTTPStore` implementation for setting data is experimental and untested. *(contributions are welcome!)*
 It uses `PUT`.
 
 * #### Support for compressors and filters
-Only `zlib` and `gzip` compressors are supported at this point. No other compressors or filters are supported yet - they just need to be implemented *(contributions are welcome)*.
+Only `zlib`, `gzip`, and `blosc` compressors are supported at this point. No other compressors or filters are supported yet - they just need to be implemented in [`numcodecs.js`](https://github.com/manzt/numcodecs.js) *(contributions are welcome)*.
 
 * #### int64 support
   int64 support in browsers is tricky. Because all numbers are internally represented as floating point numbers, whole numbers larger than `2^53-1` can not be reliably represented. `BigInt` and `BigInt64Array` solve this, but they are [not supported in every modern browser](https://caniuse.com/#search=BigInt64Array) yet (in particular Edge and Safari). For maximum compatability save yourself some hassle and try to avoid int64/uint64 zarr arrays.
 
-* #### Endianness and order
-Only `C` order arrays and little endian arrays (=default for numpy/zarr) are supported right now. NestedArrays are always little endian and C-ordered. *(contributions are welcome!)*
+* #### Ordering
+Only `C` order zarr arrays (default for numpy/zarr) are supported right now. NestedArrays will be C-ordered and little-endian (regardless of the store endianness). *(contributions are welcome!)*
 
 * #### Broadcasting and complex indexing
-NumPy-like [broadcasting](https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html) is not supported.  
+NumPy-like [broadcasting](https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html) is not supported.
   Indexing with binary masks or arrays of integers is also not supported (e.g. `x[[1,3,4]]` or `x[[False, True, False, True, True]]`).
 
 ## Known issues
