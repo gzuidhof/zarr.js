@@ -3,7 +3,6 @@
 import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
 import { NestedArray } from "../../src/nestedArray";
-import { getCodec } from "../../src/compression/creation";
 
 describe("Test MemoryStore", () => {
     const hStore = new HTTPStore("http://localhost:7357/");
@@ -48,7 +47,9 @@ describe("Test MemoryStore", () => {
         { id: "gzip", level: 0},
         { id: "gzip", level: 9},
         { id: "zlib", level: -1},
-        { id: "zlib", level: 9}
+        { id: "zlib", level: 9},
+        { id: "blosc", clevel: 5, shuffle: 1, blocksize: 0, cname: "lz4"},
+        { id: "blosc", clevel: 4, shuffle: 2, blocksize: 0, cname: "blosclz" }
     ];
 
     for (const config of compressionConfigs) {
@@ -59,11 +60,5 @@ describe("Test MemoryStore", () => {
             const retrievedData = await z.get(null);
             expect(retrievedData).toEqual(data);
         });
-    }
-
-    it("Rejects invalid compression configs", () => {
-        expect(() => getCodec({id: "gzip", level: -1})).toThrow();
-        expect(() => getCodec({id: "zlib", level: -2})).toThrow();
-    });
-
+      }
 });
