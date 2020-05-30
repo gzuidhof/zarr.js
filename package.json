@@ -1,6 +1,6 @@
 {
   "name": "zarr",
-  "version": "0.3.0-beta.0",
+  "version": "0.3.0",
   "description": "Javascript implementation of Zarr",
   "keywords": [
     "ndarray",
