@@ -54,7 +54,7 @@ Serving HTTP on 0.0.0.0 port 8000 ...
 
 ### Using Zarr.js to access the data
 ```javascript
-import { slice, openArray } from "../dist/zarr.es5.js";
+import { slice, openArray } from "zarr";
 
 const z = await openArray({
     store: "http://localhost:8000/",
