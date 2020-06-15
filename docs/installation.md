@@ -43,19 +43,19 @@ Importing as an ES module is the more modern and preferred approach. If you are 
 
 ```js
 // Import invidual classes and functions.
-import { HTTPStore, openArray, slice } from "https://unpkg.com/zarr/dist/zarr.es5.js";
+import { HTTPStore, openArray, slice } from "https://unpkg.com/zarr/dist/zarr.es6.js";
 
 // Or import everything in one go
-import * as zarr from "https://unpkg.com/zarr/dist/zarr.es5.js"
+import * as zarr from "https://unpkg.com/zarr/dist/zarr.es6.js"
 ```
 
 **Example**
 ```html
 <!-- ES import -->
 <script type="module">
-    import { ObjectStore, ones, slice, NestedArray } from "https://unpkg.com/zarr/dist/zarr.es5.js";
+    import { ObjectStore, ones, slice, NestedArray } from "https://unpkg.com/zarr/dist/zarr.es6.js";
 
-    async function exampleES5() {
+    async function exampleES6() {
         const store = new ObjectStore();
 
         const myZarrArray = await ones([3, 4], { store, chunks: [1, 2] });
@@ -66,7 +66,7 @@ import * as zarr from "https://unpkg.com/zarr/dist/zarr.es5.js"
         console.log(arr.shape); // [2, 4]
     }
 
-    exampleES5();
+    exampleES6();
 </script>
 ```
 
@@ -102,4 +102,4 @@ Clone the [Zarr.js github repository](https://github.com/gzuidhof/zarr.js), and 
 npm run build
 ```
 
-The built files are now available as `dist/zarr.es5.js` and `dist/zarr.umd.js`.
+The built files are now available as `dist/zarr.es6.js` and `dist/zarr.umd.js`.
