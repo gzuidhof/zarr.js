@@ -14,8 +14,9 @@ export function parseMetadata(
         if (IS_NODE && Buffer.isBuffer(s)) {
             return JSON.parse(s.toString());
         } else if (s instanceof ArrayBuffer) {
-            // Note, could use a TextDecoder here if we drop support for Edge (much faster)
-            return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(s) as any));
+            const utf8Decoder = new TextDecoder();
+            const bytes = new Uint8Array(s);
+            return JSON.parse(utf8Decoder.decode(bytes));
         } else {
             return s;
         }
