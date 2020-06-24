@@ -49,10 +49,11 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     deleteItem(_item: string): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
+
     async containsItem(item: string): Promise<boolean> {
         const url = joinUrlParts(this.url, item);
-        const value = await fetch(url);
-
+        // Use HEAD method just to get headers
+        const value = await fetch(url, { method: 'HEAD' });
         return value.status === 200;
     }
 }
