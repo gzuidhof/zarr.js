@@ -1,10 +1,9 @@
-import { GZip, Zlib, Blosc } from 'numcodecs';
-import type { Codec, CompressorConfig } from 'numcodecs';
+import { Codec, CompressorConfig } from 'numcodecs';
 
-const registry = new Map()
-  .set(Zlib.codecId, Zlib)
-  .set(GZip.codecId, GZip)
-  .set(Blosc.codecId, Blosc);
+type CodecConstructor = { fromConfig(config: Options & CompressorConfig): Codec };
+type CodecImporter = () => CodecConstructor | Promise<CodecConstructor>;
+
+const registry: Map<string, CodecImporter> = new Map();
 
 interface Options {
   level?: number;
@@ -14,10 +13,14 @@ interface Options {
   shuffle?: number;
 }
 
-export function getCodec<T extends Codec>(config: Options & CompressorConfig): T {
+export function addCodec(id: string, importFn: CodecImporter) {
+  registry.set(id, importFn);
+}
+
+export async function getCodec<T extends Codec>(config: Options & CompressorConfig): Promise<T> {
   if (!registry.has(config.id)) {
     throw new Error(`Compression codec ${config.id} is not supported by Zarr.js yet.`);
   }
-  const codec = registry.get(config.id);
+  const codec = await (registry.get(config.id) as CodecImporter)();
   return codec.fromConfig(config) as T;
 }

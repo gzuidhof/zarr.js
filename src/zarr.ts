@@ -1,17 +1,8 @@
-export { createProxy } from "./mutableMapping";
-export * from "./creation";
-export * from "./errors";
-export * from "./hierarchy";
+import { Zlib, GZip, Blosc } from 'numcodecs';
+import { addCodec } from './zarr-core';
 
-// export * from "./types";
+addCodec(Zlib.codecId, () => Zlib);
+addCodec(GZip.codecId, () => GZip);
+addCodec(Blosc.codecId, () => Blosc);
 
-export { ZarrArray } from "./core";
-export { slice, sliceIndices } from "./core/slice";
-// export * from "./core/types";
-
-export { NestedArray, rangeTypedArray } from "./nestedArray";
-export * from "./nestedArray/types";
-
-export * from "./storage/memoryStore";
-export * from "./storage/objectStore";
-export * from "./storage/httpStore";
+export * from './zarr-core';

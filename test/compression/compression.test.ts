@@ -4,6 +4,13 @@ import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
 import { NestedArray } from "../../src/nestedArray";
 
+import { Zlib, GZip, Blosc } from 'numcodecs';
+import { addCodec } from '../../src/compression/registry';
+
+addCodec(Zlib.codecId, () => Zlib);
+addCodec(GZip.codecId, () => GZip);
+addCodec(Blosc.codecId, () => Blosc);
+
 describe("Test MemoryStore", () => {
     const hStore = new HTTPStore("http://localhost:7357/");
 

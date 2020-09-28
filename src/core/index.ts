@@ -229,11 +229,7 @@ export class ZarrArray {
     this.cacheMetadata = cacheMetadata;
     this.cacheAttrs = cacheAttrs;
     this.meta = metadata;
-    if (this.meta.compressor !== null) {
-      this.compressor = getCodec(this.meta.compressor);
-    } else {
-      this.compressor = null;
-    }
+    this.compressor = null;
 
 
     const attrKey = this.keyPrefix + ATTRS_META_KEY;
@@ -256,9 +252,12 @@ export class ZarrArray {
     }
   }
 
-  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
+  public async get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public async get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public async get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
+    if (this.meta.compressor !== null) {
+      this.compressor = await getCodec(this.meta.compressor);
+    }
     return this.getBasicSelection(selection, false, opts);
   }
 
@@ -507,6 +506,9 @@ export class ZarrArray {
   }
 
   public async set(selection: ArraySelection = null, value: any, opts: SetOptions = {}) {
+    if (this.meta.compressor !== null) {
+      this.compressor = await getCodec(this.meta.compressor);
+    }
     await this.setBasicSelection(selection, value, opts);
   }
 

@@ -12,6 +12,9 @@
   "main": "dist/zarr.umd.js",
   "module": "dist/zarr.es6.js",
   "typings": "dist/types/zarr.d.ts",
+  "exports": {
+    "./core": "dist/zarr-core.es6.js"
+  },
   "files": [
     "dist"
   ],
