@@ -36,7 +36,7 @@ export interface SetOptions {
 export class ZarrArray {
 
   public store: Store;
-  private compressor: Codec | null;
+  private compressor: Promise<Codec> | null;
 
   private _chunkStore: Store | null;
   /**
@@ -229,7 +229,11 @@ export class ZarrArray {
     this.cacheMetadata = cacheMetadata;
     this.cacheAttrs = cacheAttrs;
     this.meta = metadata;
-    this.compressor = null;
+    if (this.meta.compressor !== null) {
+      this.compressor = getCodec(this.meta.compressor);
+    } else {
+      this.compressor = null;
+    }
 
 
     const attrKey = this.keyPrefix + ATTRS_META_KEY;
@@ -252,12 +256,9 @@ export class ZarrArray {
     }
   }
 
-  public async get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public async get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public async get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
-    if (this.meta.compressor !== null) {
-      this.compressor = await getCodec(this.meta.compressor);
-    }
+  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
     return this.getBasicSelection(selection, false, opts);
   }
 
@@ -471,7 +472,7 @@ export class ZarrArray {
     let bytes = this.ensureByteArray(chunkData);
 
     if (this.compressor !== null) {
-      bytes = await this.compressor.decode(bytes);
+      bytes = await (await this.compressor).decode(bytes);
     }
 
     if (this.dtype.includes('>')) {
@@ -506,9 +507,6 @@ export class ZarrArray {
   }
 
   public async set(selection: ArraySelection = null, value: any, opts: SetOptions = {}) {
-    if (this.meta.compressor !== null) {
-      this.compressor = await getCodec(this.meta.compressor);
-    }
     await this.setBasicSelection(selection, value, opts);
   }
 
@@ -681,7 +679,7 @@ export class ZarrArray {
 
     if (this.compressor !== null) {
       const bytes = new Uint8Array(chunk.buffer);
-      const cbytes = await this.compressor.encode(bytes);
+      const cbytes = await (await this.compressor).encode(bytes);
       return cbytes.buffer;
     }
 
