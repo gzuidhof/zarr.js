@@ -10,20 +10,12 @@ export default [
       zarr: 'src/zarr.ts',
       core: 'src/zarr-core.ts',
     },
-    output: [
-      {
-        dir: 'dist/',
-        format: 'es',
-        entryFileNames: '[name].mjs',
-        sourcemap: true,
-      },
-      {
-        dir: 'dist/',
-        format: 'cjs',
-        entryFileNames: '[name].cjs',
-        sourcemap: true,
-      },
-    ],
+    output: {
+      dir: 'dist/',
+      format: 'es',
+      entryFileNames: '[name].mjs',
+      sourcemap: true,
+    },
     watch: {
       include: 'src/**',
     },
@@ -31,6 +23,16 @@ export default [
       typescript({ useTsconfigDeclarationDir: true }),
       commonjs(),
       resolve(),
+    ],
+  },
+  {
+    input: 'src/zarr.ts',
+    output: { file: 'dist/zarr.cjs', format: 'cjs', sourcemap: true },
+    plugins: [
+      typescript({ useTsconfigDeclarationDir: true }),
+      commonjs(),
+      resolve(),
+      bundleSize(),
     ],
   },
   {

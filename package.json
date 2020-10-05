@@ -14,8 +14,6 @@
     "types/*",
     "core.mjs",
     "core.mjs.map",
-    "core.cjs",
-    "core.cjs.map",
     "zarr.mjs",
     "zarr.mjs.map",
     "zarr.cjs",
@@ -23,14 +21,19 @@
     "zarr.umd.js",
     "zarr.umd.js.map"
   ],
+  "sideEffects": false,
   "main": "zarr.cjs",
   "module": "zarr.mjs",
-  "umd": "zarr.umd.js",
+  "umd:main": "zarr.umd.js",
   "typings": "types/zarr.d.ts",
   "exports": {
+    ".": {
+      "umd": "./zarr.umd.js",
+      "import": "./zarr.mjs",
+      "require": "./zarr.cjs"
+    },
     "./core": {
-      "import": "./core.mjs",
-      "require": "./core.cjs"
+      "import": "./core.mjs"
     }
   },
   "author": "Guido Zuidhof <me@guido.io>",

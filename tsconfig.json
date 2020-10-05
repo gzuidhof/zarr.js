@@ -2,8 +2,8 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "downlevelIteration": true,
-    "target": "es6",
-    "module": "es2015",
+    "target": "ESNext",
+    "module": "ESNext",
     "lib": [
       "es2015",
       "es2016",
