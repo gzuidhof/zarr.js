@@ -27,6 +27,12 @@
   "module": "zarr.mjs",
   "umd": "zarr.umd.js",
   "typings": "types/zarr.d.ts",
+  "exports": {
+    "./core": {
+      "import": "./core.mjs",
+      "require": "./core.cjs"
+    }
+  },
   "author": "Guido Zuidhof <me@guido.io>",
   "repository": {
     "type": "git",
