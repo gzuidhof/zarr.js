@@ -9,15 +9,24 @@
     "utility",
     "async"
   ],
-  "main": "dist/zarr.umd.js",
-  "module": "dist/zarr.es6.js",
-  "typings": "dist/types/zarr.d.ts",
-  "exports": {
-    "./core": "dist/zarr-core.es6.js"
-  },
   "files": [
-    "dist"
+    "lib/*",
+    "types/*",
+    "core.mjs",
+    "core.mjs.map",
+    "core.cjs",
+    "core.cjs.map",
+    "zarr.mjs",
+    "zarr.mjs.map",
+    "zarr.cjs",
+    "zarr.cjs.map",
+    "zarr.umd.js",
+    "zarr.umd.js.map"
   ],
+  "main": "zarr.cjs",
+  "module": "zarr.mjs",
+  "umd": "zarr.umd.js",
+  "typings": "types/zarr.d.ts",
   "author": "Guido Zuidhof <me@guido.io>",
   "repository": {
     "type": "git",
@@ -37,7 +46,9 @@
     "test:watch": "jest --coverage --watch",
     "test:prod": "npm run lint && npm run test -- --no-cache && jest --config=jest-browser.config.js --no-cache",
     "generate-typedocs": "typedoc --out docs/typedocs --target es6 --theme minimal --readme none --mode file src",
-    "report-coverage": "cat ./coverage/lcov.info | coveralls"
+    "report-coverage": "cat ./coverage/lcov.info | coveralls",
+    "prepublishOnly": "npm run build && cp -r ./dist/* .",
+    "postpublish": "git clean -fd"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.0.2",
@@ -65,7 +76,9 @@
     "replace-in-file": "^3.4.2",
     "rimraf": "^2.6.2",
     "rollup": "^1.32.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-sourcemaps": "^0.4.2",
+    "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.24.3",
     "serve-static": "^1.14.1",
     "ts-interface-builder": "^0.2.1",
