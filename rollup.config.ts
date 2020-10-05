@@ -26,7 +26,11 @@ export default [
   },
   {
     input: 'src/zarr.ts',
-    output: { file: 'dist/zarr.cjs', format: 'cjs', sourcemap: true },
+    output: {
+      file: 'dist/zarr.cjs',
+      format: 'cjs',
+      sourcemap: true
+    },
     plugins: [
       typescript({ useTsconfigDeclarationDir: true }),
       commonjs(),
