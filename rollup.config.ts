@@ -1,7 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
-import bundleSize from 'rollup-plugin-bundle-size';
 import { terser } from 'rollup-plugin-terser';
 
 export default [
@@ -32,7 +31,6 @@ export default [
       typescript({ useTsconfigDeclarationDir: true }),
       commonjs(),
       resolve(),
-      bundleSize(),
     ],
   },
   {
@@ -53,7 +51,6 @@ export default [
       commonjs(),
       resolve(),
       terser(),
-      bundleSize(),
     ],
   }
 ];
