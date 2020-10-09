@@ -9,12 +9,12 @@ Zarr abstracts over different backend stores where the data lives.
 
 The `HTTPStore` uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) internally
 to get and set chunks via HTTP requests. To have more granular control over these requests
-(e.g. setting headers, etc), you request options may be supplied when initializing the store.
-These options are forwarded to each fetch request made internally by the store. 
+(e.g. setting headers, etc), request options may be supplied when initializing the store.
+These options are forwarded to each `fetch` call made internally by the store. 
 
-Additionally, you may supply `supportedMethods` which defines which HTTP methods a given store supports.
-If `HEAD` is listed (default), the store will use `HEAD` requests to check for items rather than checking
-the response status for a full `GET` request.
+Additionally, `supportedMethods` specifies which HTTP methods a given store supports.
+If `HEAD` is listed (default), the store will use `HEAD` requests to check for items rather than 
+making a full `GET` request and inspecting the response status.
 
 ```javascript
 const fetchOptions = { redirect: 'follow', headers: { 'custom-header': 'value' } };
