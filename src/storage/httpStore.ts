@@ -2,6 +2,19 @@ import { ValidStoreType, AsyncStore } from './types';
 import { IS_NODE, joinUrlParts } from '../util';
 import { KeyError, HTTPError } from '../errors';
 
+enum HTTPMethod {
+  HEAD = 'HEAD',
+  GET = 'GET',
+  PUT = 'PUT',
+}
+
+const DEFAULT_METHODS = [HTTPMethod.HEAD, HTTPMethod.GET, HTTPMethod.PUT];
+
+interface HTTPStoreOptions {
+    fetchOptions?: RequestInit;
+    supportedMethods?: HTTPMethod[];
+}
+
 export class HTTPStore implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
     rmDir?: undefined;
@@ -9,9 +22,14 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     rename?: undefined;
 
     public url: string;
+    public fetchOptions: RequestInit;
+    private supportedMethods: Set<HTTPMethod>;
 
-    constructor(url: string) {
+    constructor(url: string, options: HTTPStoreOptions = {}) {
         this.url = url;
+        const { fetchOptions = {}, supportedMethods = DEFAULT_METHODS } = options;
+        this.fetchOptions = fetchOptions;
+        this.supportedMethods = new Set(supportedMethods);
     }
 
     keys(): Promise<string[]> {
@@ -20,7 +38,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
 
     async getItem(item: string) {
         const url = joinUrlParts(this.url, item);
-        const value = await fetch(url);
+        const value = await fetch(url, this.fetchOptions);
 
         if (value.status === 404) {
             // Item is not found
@@ -38,21 +56,26 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async setItem(item: string, value: ValidStoreType): Promise<boolean> {
+        if (!this.supportedMethods.has(HTTPMethod.PUT)) {
+          throw new Error('HTTP PUT no a supported method for store.');
+        }
         const url = joinUrlParts(this.url, item);
         if (typeof value === 'string') {
             value = new TextEncoder().encode(value).buffer;
         }
-        const set = await fetch(url, { method: 'PUT', body: value});
+        const set = await fetch(url, { ...this.fetchOptions, method: HTTPMethod.PUT, body: value });
         return set.status.toString()[0] === '2';
     }
 
     deleteItem(_item: string): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
+
     async containsItem(item: string): Promise<boolean> {
         const url = joinUrlParts(this.url, item);
-        const value = await fetch(url);
-
+        // Just check headers if HEAD method supported
+        const method = this.supportedMethods.has(HTTPMethod.HEAD) ? HTTPMethod.HEAD : HTTPMethod.GET;
+        const value = await fetch(url, { ...this.fetchOptions, method });
         return value.status === 200;
     }
 }
