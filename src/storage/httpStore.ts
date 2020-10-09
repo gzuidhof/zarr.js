@@ -21,17 +21,15 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     getSize?: undefined;
     rename?: undefined;
 
-    private _supportedMethods: Map<HTTPMethod, boolean>;
     public url: string;
     public fetchOptions: RequestInit;
+    private supportedMethods: Set<HTTPMethod>;
 
     constructor(url: string, options: HTTPStoreOptions = {}) {
         this.url = url;
         const { fetchOptions = {}, supportedMethods = DEFAULT_METHODS } = options;
         this.fetchOptions = fetchOptions;
-        const methods = new Map();
-        supportedMethods.map(m => methods.set(m, true));
-        this._supportedMethods = methods;
+        this.supportedMethods = new Set(supportedMethods);
     }
 
     keys(): Promise<string[]> {
@@ -58,7 +56,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async setItem(item: string, value: ValidStoreType): Promise<boolean> {
-        if (!this._supportedMethods.has(HTTPMethod.PUT)) {
+        if (!this.supportedMethods.has(HTTPMethod.PUT)) {
           throw new Error('HTTP PUT no a supported method for store.');
         }
         const url = joinUrlParts(this.url, item);
@@ -76,7 +74,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     async containsItem(item: string): Promise<boolean> {
         const url = joinUrlParts(this.url, item);
         // Just check headers if HEAD method supported
-        const method = this._supportedMethods.has(HTTPMethod.HEAD) ? HTTPMethod.HEAD : HTTPMethod.GET;
+        const method = this.supportedMethods.has(HTTPMethod.HEAD) ? HTTPMethod.HEAD : HTTPMethod.GET;
         const value = await fetch(url, { ...this.fetchOptions, method });
         return value.status === 200;
     }
