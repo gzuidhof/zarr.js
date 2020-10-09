@@ -79,4 +79,3 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         return value.status === 200;
     }
 }
-
