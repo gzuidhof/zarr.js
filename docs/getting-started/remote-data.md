@@ -8,8 +8,8 @@ Zarr abstracts over different backend stores where the data lives.
 * `HTTPStore`: Data is stored at some remote prefix (e.g. `localhost:1234/my_dataset.zarr`). This would also work for zarr datasets stored in public buckets.
 
 The `HTTPStore` uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) internally
-to get and set chunks via HTTP requests. To have more granular control over over these requests
-(e.g. setting headers, etc), you can specify request options when initializing the store.
+to get and set chunks via HTTP requests. To have more granular control over these requests
+(e.g. setting headers, etc), you request options may be supplied when initializing the store.
 These options are forwarded to each fetch request made internally by the store. 
 
 Additionally, you may supply `supportedMethods` which defines which HTTP methods a given store supports.
