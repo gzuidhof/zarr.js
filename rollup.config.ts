@@ -5,10 +5,7 @@ import { terser } from 'rollup-plugin-terser';
 
 export default [
   {
-    input: {
-      zarr: 'src/zarr.ts',
-      core: 'src/zarr-core.ts',
-    },
+    input: { zarr: 'src/zarr.ts', core: 'src/zarr-core.ts' },
     output: {
       dir: 'dist/',
       format: 'es',
@@ -18,34 +15,21 @@ export default [
     watch: {
       include: 'src/**',
     },
-    plugins: [
-      typescript({ useTsconfigDeclarationDir: true }),
-      commonjs(),
-      resolve(),
-    ],
+    plugins: [typescript({ useTsconfigDeclarationDir: true }), commonjs(), resolve()],
   },
   {
     input: 'src/zarr.ts',
-    output: {
-      file: 'dist/zarr.cjs',
-      format: 'cjs',
-      sourcemap: true
-    },
-    plugins: [
-      typescript({ useTsconfigDeclarationDir: true }),
-      commonjs(),
-      resolve(),
+    output: [
+      { file: 'dist/zarr.cjs', format: 'cjs', sourcemap: true },
+      {
+        file: 'dist/zarr.umd.js',
+        name: 'zarr',
+        format: 'umd',
+        sourcemap: true,
+        esModule: false,
+        plugins: [terser()],
+      },
     ],
-  },
-  {
-    input: 'src/zarr.ts',
-    output: {
-      file: 'dist/zarr.umd.js',
-      name: 'zarr',
-      format: 'umd',
-      sourcemap: true,
-      esModule: false,
-    },
     plugins: [
       typescript({
         useTsconfigDeclarationDir: true,
@@ -54,7 +38,6 @@ export default [
       }),
       commonjs(),
       resolve(),
-      terser(),
     ],
-  }
+  },
 ];
