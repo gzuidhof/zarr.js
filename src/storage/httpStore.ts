@@ -63,7 +63,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         if (typeof value === 'string') {
             value = new TextEncoder().encode(value).buffer;
         }
-        const set = await fetch(url, {...this.fetchOptions, method: HTTPMethod.PUT, body: value });
+        const set = await fetch(url, { ...this.fetchOptions, method: HTTPMethod.PUT, body: value });
         return set.status.toString()[0] === '2';
     }
 
