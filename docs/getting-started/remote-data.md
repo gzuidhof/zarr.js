@@ -7,6 +7,21 @@ Zarr abstracts over different backend stores where the data lives.
 * `MemoryStore`: Data is stored in a nested in-memory Javascript object.
 * `HTTPStore`: Data is stored at some remote prefix (e.g. `localhost:1234/my_dataset.zarr`). This would also work for zarr datasets stored in public buckets.
 
+The `HTTPStore` uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) internally
+to get and set chunks via HTTP requests. To have more granular control over over these requests
+(e.g. setting headers, etc), you can specify request options when initializing the store.
+These options are forwarded to each fetch request made internally by the store. 
+
+Additionally, you may supply `supportedMethods` which defines which HTTP methods a given store supports.
+If `HEAD` is listed (default), the store will use `HEAD` requests to check for items rather than checking
+the response status for a full `GET` request.
+
+```javascript
+const fetchOptions = { redirect: 'follow', headers: { 'custom-header': 'value' } };
+const supportedMethods = ['GET', 'PUT', 'HEAD']; // defaults
+const store = new HTTPStore('http://localhost:8000', { fetchOptions, supportedMethods });
+```
+
 # Remote datasets {docsify-ignore}
 
 Most likely when you are using Zarr.js your ZarrArray data will actually live on a remote server in the zarr format, this is exactly the use-case that Zarr.js was created for :).
