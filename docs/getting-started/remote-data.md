@@ -17,6 +17,7 @@ If `HEAD` is listed (default), the store will use `HEAD` requests to check for i
 making a full `GET` request and inspecting the response status.
 
 ```javascript
+import { HTTPStore } from 'zarr';
 const fetchOptions = { redirect: 'follow', headers: { 'custom-header': 'value' } };
 const supportedMethods = ['GET', 'PUT', 'HEAD']; // defaults
 const store = new HTTPStore('http://localhost:8000', { fetchOptions, supportedMethods });
