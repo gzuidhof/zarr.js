@@ -419,7 +419,7 @@ export class ZarrArray {
         }
       } else {
         // Different type of error - rethrow
-        throw new error;
+        throw error;
       }
     }
   }
@@ -437,7 +437,7 @@ export class ZarrArray {
       if (error instanceof BoundsCheckError) {
         throw new BoundsCheckError(`index ${chunkCoords.join(".")} is out of bounds for shape: ${this.shape} and chunks ${this.chunks}`);
       } else {
-        throw new error;
+        throw error;
       }
     }
     const cKey = this.chunkKey(chunkCoords);
@@ -501,7 +501,7 @@ export class ZarrArray {
         return new RawArray(data.fill(this.fillValue as number), outShape);
       } else {
         // Different type of error - rethrow
-        throw new error;
+        throw error;
       }
     }
   }
