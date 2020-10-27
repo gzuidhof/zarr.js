@@ -43,17 +43,17 @@ Importing as an ES module is the more modern and preferred approach. If you are 
 
 ```js
 // Import invidual classes and functions.
-import { HTTPStore, openArray, slice } from "https://unpkg.com/zarr/dist/zarr.es6.js";
+import { HTTPStore, openArray, slice } from "https://cdn/skypack.dev/zarr";
 
 // Or import everything in one go
-import * as zarr from "https://unpkg.com/zarr/dist/zarr.es6.js"
+import * as zarr from "https://cdn.skypack.dev/zarr";
 ```
 
 **Example**
 ```html
 <!-- ES import -->
 <script type="module">
-    import { ObjectStore, ones, slice, NestedArray } from "https://unpkg.com/zarr/dist/zarr.es6.js";
+    import { ObjectStore, ones, slice, NestedArray } from "https://cdn.skypack.dev/zarr";
 
     async function exampleES6() {
         const store = new ObjectStore();
@@ -74,7 +74,7 @@ import * as zarr from "https://unpkg.com/zarr/dist/zarr.es6.js"
 
 ```html
 <!-- Import as UMD in HTML -->
-<script src="https://unpkg.com/zarr/dist/zarr.umd.js"></script>
+<script src="https://unpkg.com/zarr/zarr.umd.js"></script>
 ```
 **Example**
 ```html
@@ -102,4 +102,51 @@ Clone the [Zarr.js github repository](https://github.com/gzuidhof/zarr.js), and 
 npm run build
 ```
 
-The built files are now available as `dist/zarr.es6.js` and `dist/zarr.umd.js`.
+The built files are now available as `dist/zarr.mjs`, `dist/zarr.cjs`, and `dist/zarr.umd.js`.
+
+## Zarr.js `core` export
+The top-level `esm`, `cjs` and `umd` exports of `zarr.js` bundle a _complete_ registry
+of all compressors provided by `numcodecs.js`. This makes it easy for developers to
+get started with `zarr.js`, but leads to larger bundle sizes than are necessary for
+many applications. 
+
+We provide a `core` package export for `zarr.js` which bundles _zero_ codecs and
+offers the flexibilty to define a custom registry. This is useful for use cases where
+array compression is known before runtime or users want more granular control over how 
+codec modules are imported (e.g. code-split, dynamic imports).
+
+Use `addCodec` to supply an `id` (e.g. `gzip`, `zlib`, `blosc`) and a custom function
+that returns the corresponding `Codec | Promise<Codec>` for your application. Here
+is an example using the `core` export from an ES module CDN: 
+
+```javascript
+import { addCodec, openArray } from "https://cdn.skypack.dev/zarr/core";
+
+openArray({ store: "https://localhost:8000/data.zarr" });
+// ^ This will error unless compressor === null. No codecs are included in the core export.
+
+// Define custom registry
+
+// Top-level, non-dynamic import (default in zarr.js)
+import Zlib from "https://cdn.skypack.dev/numcodecs/zlib"; 
+addCodec(Zlib.codecId, () => Zlib);
+
+// Dynamic import 
+addCodec("blosc", async () => (await import("https://cdn.skypack.dev/numcodecs/blosc")).default);
+
+const z = await openArray({ store: "https://localhost:8000/data.zarr" });
+// ^ Imports necessary codec as defined above
+```
+
+Usage with a bundler will likely look as follows:
+
+```javascript
+import { openArray, addCodec } from "zarr/core";
+
+// All codecs will be code-split and dynamically imported at runtime
+addCodec("gzip", async () => (await import("numcodecs/gzip")).default);
+addCodec("zlib", async () => (await import("numcodecs/zlib")).default);
+addCodec("blosc", async () => (await import("numcodecs/blosc")).default);
+
+const z = await openArray({ store: "https://localhost:8000/data.zarr" });
+```
