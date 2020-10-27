@@ -43,7 +43,7 @@ Importing as an ES module is the more modern and preferred approach. If you are 
 
 ```js
 // Import invidual classes and functions.
-import { HTTPStore, openArray, slice } from "https://cdn/skypack.dev/zarr";
+import { HTTPStore, openArray, slice } from "https://cdn.skypack.dev/zarr";
 
 // Or import everything in one go
 import * as zarr from "https://cdn.skypack.dev/zarr";
