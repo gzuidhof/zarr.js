@@ -1,10 +1,8 @@
-import { Codec, CompressorConfig } from 'numcodecs';
+import type { Codec, CompressorConfig } from 'numcodecs';
 
-type CodecConstructor = { fromConfig(config: Options & CompressorConfig): Codec };
-type CodecImporter = () => CodecConstructor | Promise<CodecConstructor>;
-
-const registry: Map<string, CodecImporter> = new Map();
-
+// TODO: This interface is tied to compressors in numcodecs..
+// might be better to just use 'any' or have numcodecs export complete 
+// (optional) config? 
 interface Options {
   level?: number;
   cname?: string;
@@ -12,6 +10,11 @@ interface Options {
   clevel?: number;
   shuffle?: number;
 }
+
+type CodecConstructor = { fromConfig(config: Options & CompressorConfig): Codec };
+type CodecImporter = () => CodecConstructor | Promise<CodecConstructor>;
+
+const registry: Map<string, CodecImporter> = new Map();
 
 export function addCodec(id: string, importFn: CodecImporter) {
   registry.set(id, importFn);
