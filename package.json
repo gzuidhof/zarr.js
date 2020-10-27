@@ -37,6 +37,9 @@
     }
   },
   "author": "Guido Zuidhof <me@guido.io>",
+  "contributors": [
+    "Trevor Manz <trevor.j.manz@gmail.com>"
+  ],
   "repository": {
     "type": "git",
     "url": "github.com/gzuidhof/zarr.js"
