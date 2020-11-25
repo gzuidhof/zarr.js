@@ -36,7 +36,7 @@ export interface SetOptions {
 export class ZarrArray {
 
   public store: Store;
-  private compressor: Codec | null;
+  private compressor: Promise<Codec> | null;
 
   private _chunkStore: Store | null;
   /**
@@ -472,7 +472,7 @@ export class ZarrArray {
     let bytes = this.ensureByteArray(chunkData);
 
     if (this.compressor !== null) {
-      bytes = await this.compressor.decode(bytes);
+      bytes = await (await this.compressor).decode(bytes);
     }
 
     if (this.dtype.includes('>')) {
@@ -679,7 +679,7 @@ export class ZarrArray {
 
     if (this.compressor !== null) {
       const bytes = new Uint8Array(chunk.buffer);
-      const cbytes = await this.compressor.encode(bytes);
+      const cbytes = await (await this.compressor).encode(bytes);
       return cbytes.buffer;
     }
 
