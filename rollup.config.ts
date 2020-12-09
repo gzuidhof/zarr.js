@@ -2,20 +2,32 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
+import visualizer from 'rollup-plugin-visualizer';
+
+const commonPlugins = () => [typescript({ useTsconfigDeclarationDir: true, objectHashIgnoreUnknownHack: true, }), commonjs(), resolve()]; 
+
 
 export default [
   {
     input: { zarr: 'src/zarr.ts', core: 'src/zarr-core.ts' },
-    output: {
+    output: [{
       dir: 'dist/',
       format: 'es',
       entryFileNames: '[name].mjs',
       sourcemap: true,
     },
+    {
+      dir: 'dist/',
+      format: 'es',
+      entryFileNames: '[name].min.mjs',
+      sourcemap: true,
+      plugins: [terser()]
+    },
+  ],
     watch: {
       include: 'src/**',
     },
-    plugins: [typescript({ useTsconfigDeclarationDir: true }), commonjs(), resolve()],
+    plugins: [...commonPlugins(), visualizer({filename: "stats.html"}), visualizer({filename: "stats.min.html", sourcemap: true})],
   },
   {
     input: 'src/zarr.ts',
@@ -31,13 +43,7 @@ export default [
       },
     ],
     plugins: [
-      typescript({
-        useTsconfigDeclarationDir: true,
-        // https://github.com/ezolenko/rollup-plugin-typescript2/issues/105
-        objectHashIgnoreUnknownHack: true,
-      }),
-      commonjs(),
-      resolve(),
+      ...commonPlugins()
     ],
   },
 ];
