@@ -1,12 +1,8 @@
 import { Order, FillType, ChunksArgument, DtypeString } from "./types";
 
-import { createCheckers } from "ts-interface-checker";
-import typesTI from "../src/types-ti";
 import { DimensionSelection, Slice } from "./core/types";
 import { isSlice } from "./core/indexing";
 import { TypedArray } from "./nestedArray/types";
-
-const TypeCheckSuite = createCheckers(typesTI);
 
 /**
  * This should be true only if this javascript is getting executed in Node.
@@ -79,8 +75,6 @@ export function normalizeShape(shape: number | number[]): number[] {
 export function normalizeChunks(chunks: ChunksArgument, shape: number[]): number[] {
     // Assume shape is already normalized
 
-    TypeCheckSuite.ChunksArgument.check(chunks);
-
     if (chunks === null || chunks === true) {
         throw new Error("Chunk guessing is not supported yet");
     }
@@ -111,18 +105,14 @@ export function normalizeChunks(chunks: ChunksArgument, shape: number[]): number
 
 export function normalizeOrder(order: string): Order {
     order = order.toUpperCase();
-
-    TypeCheckSuite.Order.check(order);
     return order as Order;
 }
 
 export function normalizeDtype(dtype: DtypeString): DtypeString {
-    TypeCheckSuite.DtypeString.check(dtype);
     return dtype;
 }
 
 export function normalizeFillValue(fillValue: FillType): FillType {
-    TypeCheckSuite.FillType.check(fillValue);
     return fillValue;
 }
 
@@ -258,4 +248,4 @@ export function byteSwap(src: TypedArray): TypedArray {
     const copy = src.slice();
     byteSwapInplace(copy);
     return copy;
-  }
+}

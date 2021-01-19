@@ -62,3 +62,5 @@ typings/
 
 dist/
 typedocs/
+.DS_store
+stats*.html
