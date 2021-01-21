@@ -36,9 +36,9 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         throw new Error('Method not implemented.');
     }
 
-    async getItem(item: string) {
+    async getItem(item: string, opts?: RequestInit) {
         const url = joinUrlParts(this.url, item);
-        const value = await fetch(url, this.fetchOptions);
+        const value = await fetch(url, { ...this.fetchOptions, ...opts });
 
         if (value.status === 404) {
             // Item is not found
