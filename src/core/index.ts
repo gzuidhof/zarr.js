@@ -14,6 +14,7 @@ import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
 import { ValueError, PermissionError, KeyError, BoundsCheckError } from '../errors';
 import { getCodec } from "../compression/registry";
 
+
 import type { Codec } from 'numcodecs';
 import PQueue from 'p-queue';
 
@@ -31,6 +32,10 @@ export interface SetOptions {
     progress: number;
     queueSize: number;
   }) => void;
+}
+
+export interface GetRawChunkOptions<O> {
+  storeOptions: O,
 }
 
 export class ZarrArray {
@@ -424,7 +429,7 @@ export class ZarrArray {
     }
   }
 
-  public async getRawChunk(chunkCoords: number[]): Promise<RawArray> {
+  public async getRawChunk<O>(chunkCoords: number[], opts?: GetRawChunkOptions<O>): Promise<RawArray> {
     if (chunkCoords.length !== this.shape.length) {
       throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
     }
@@ -441,7 +446,7 @@ export class ZarrArray {
       }
     }
     const cKey = this.chunkKey(chunkCoords);
-    const cdata = this.chunkStore.getItem(cKey);
+    const cdata = this.chunkStore.getItem(cKey, opts?.storeOptions)
     const buffer = await this.decodeChunk(await cdata);
     const outShape = this.chunks.filter(d => d !== 1); // squeeze chunk dim if 1
     return new RawArray(buffer, outShape, this.dtype);

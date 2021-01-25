@@ -73,8 +73,7 @@ export class MemoryStore<T extends ValidStoreType> implements SyncStore<T> {
         // TODO: more sane implementation
         try {
             return this.getItem(item) !== undefined;
-        }
-        catch {
+        } catch (e) {
             return false;
         }
     }

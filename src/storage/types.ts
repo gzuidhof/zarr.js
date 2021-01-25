@@ -20,7 +20,7 @@ export type Store = SyncStore<ValidStoreType> | AsyncStore<ValidStoreType>;
  * Store classes may also optionally implement a `rename` method (rename all members under a given
  * path) and a `getSize` method (return the size in bytes of a given value).
  */
-export interface SyncStore<T extends ValidStoreType> extends MutableMapping<T> {
+export interface SyncStore<T extends ValidStoreType, O=any> extends MutableMapping<T, O> {
     listDir?: (path?: string) => string[];
     rmDir?: (path?: string) => boolean;
     getSize?: (path?: string) => number;
@@ -31,7 +31,7 @@ export interface SyncStore<T extends ValidStoreType> extends MutableMapping<T> {
 /**
  * Async version of Store
  */
-export interface AsyncStore<T extends ValidStoreType> extends AsyncMutableMapping<T> {
+export interface AsyncStore<T extends ValidStoreType, O=any> extends AsyncMutableMapping<T, O> {
     listDir?: (path?: string) => Promise<string[]>;
     rmDir?: (path?: string) => Promise<boolean>;
     getSize?: (path?: string) => Promise<number>;
