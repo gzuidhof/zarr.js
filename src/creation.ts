@@ -151,9 +151,10 @@ export async function openArray(
     path = normalizeStoragePath(path);
 
     if (mode === "r" || mode === "r+") {
-        if (await containsGroup(store, path)) {
-            throw new ContainsGroupError(path);
-        } else if (!await containsArray(store, path)) {
+        if (!await containsArray(store, path)) {
+            if (await containsGroup(store, path)) {
+                throw new ContainsGroupError(path);
+            }
             throw new ArrayNotFoundError(path);
         }
     } else if (mode === "w") {
@@ -164,9 +165,10 @@ export async function openArray(
         await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
 
     } else if (mode === "a") {
-        if (await containsGroup(store, path)) {
-            throw new ContainsGroupError(path);
-        } else if (!await containsArray(store, path)) {
+        if (!await containsArray(store, path)) {
+            if (await containsGroup(store, path)) {
+                throw new ContainsGroupError(path);
+            }
             if (shape === undefined) {
                 throw new ValueError("Shape can not be undefined when creating a new array");
             }

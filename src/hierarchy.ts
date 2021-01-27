@@ -288,21 +288,21 @@ export async function openGroup(store?: Store | string, path: string | null = nu
     path = normalizeStoragePath(path);
 
     if (mode === "r" || mode === "r+") {
-        if (await containsArray(store, path)) {
-            throw new ContainsArrayError(path);
-        } else if (!await containsGroup(store, path)) {
+        if (!await containsGroup(store, path)) {
+            if (await containsArray(store, path)) {
+                throw new ContainsArrayError(path);
+            }
             throw new GroupNotFoundError(path);
         }
     } else if (mode === "w") {
         await initGroup(store, path, chunkStore, true);
     } else if (mode === "a") {
-
-        if (await containsArray(store, path)) {
-            throw new ContainsArrayError(path);
-        } else if (!await containsGroup(store, path)) {
+        if (!await containsGroup(store, path)) {
+            if (await containsArray(store, path)) {
+                throw new ContainsArrayError(path);
+            }
             await initGroup(store, path, chunkStore);
         }
-
     } else if (mode === "w-" || (mode as any) === "x") {
         if (await containsArray(store, path)) {
             throw new ContainsArrayError(path);
