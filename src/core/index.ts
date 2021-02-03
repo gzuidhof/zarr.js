@@ -1,6 +1,6 @@
 import { Store, ValidStoreType } from "../storage/types";
 
-import { pathToPrefix } from '../storage/index';
+import { containsGroup, pathToPrefix } from '../storage/index';
 import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap, byteSwapInplace } from '../util';
 import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
@@ -11,7 +11,7 @@ import { BasicIndexer, isContiguousSelection, normalizeIntegerSelection } from '
 import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
-import { ValueError, PermissionError, KeyError, BoundsCheckError } from '../errors';
+import { ValueError, PermissionError, KeyError, BoundsCheckError, ContainsGroupError } from '../errors';
 import { getCodec } from "../compression/registry";
 
 
@@ -204,8 +204,10 @@ export class ZarrArray {
       const keyPrefix = pathToPrefix(path);
       const metaStoreValue = await store.getItem(keyPrefix + ARRAY_META_KEY);
       return parseMetadata(metaStoreValue);
-    }
-    catch (error) {
+    } catch (error) {
+      if (await containsGroup(store, path)) {
+        throw new ContainsGroupError(path ?? '');
+      }
       throw new Error("Failed to load metadata for ZarrArray:" + error.toString());
     }
   }

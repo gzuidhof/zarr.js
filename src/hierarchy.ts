@@ -74,17 +74,14 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
 
     private static async loadMetadataForConstructor(store: Store, path: null | string) {
         path = normalizeStoragePath(path);
-
-        if (await containsArray(store, path)) {
-            throw new ContainsArrayError(path);
-        }
-
         const keyPrefix = pathToPrefix(path);
         try {
             const metaStoreValue = await store.getItem(keyPrefix + GROUP_META_KEY);
             return parseMetadata(metaStoreValue);
-        }
-        catch (error) {
+        } catch (error) {
+            if (await containsArray(store, path)) {
+                throw new ContainsArrayError(path);
+            }
             throw new GroupNotFoundError(path);
         }
     }
@@ -220,7 +217,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     async getItem(item: string) {
         const path = this.itemPath(item);
         if (await containsArray(this.store, path)) {
-            return ZarrArray.create(this.store, this.path, this.readOnly, this.chunkStore, undefined, this.attrs.cache);
+            return ZarrArray.create(this.store, path, this.readOnly, this.chunkStore, undefined, this.attrs.cache);
         } else if (await containsGroup(this.store, path)) {
             return Group.create(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
         }
@@ -288,21 +285,21 @@ export async function openGroup(store?: Store | string, path: string | null = nu
     path = normalizeStoragePath(path);
 
     if (mode === "r" || mode === "r+") {
-        if (await containsArray(store, path)) {
-            throw new ContainsArrayError(path);
-        } else if (!await containsGroup(store, path)) {
+        if (!await containsGroup(store, path)) {
+            if (await containsArray(store, path)) {
+                throw new ContainsArrayError(path);
+            }
             throw new GroupNotFoundError(path);
         }
     } else if (mode === "w") {
         await initGroup(store, path, chunkStore, true);
     } else if (mode === "a") {
-
-        if (await containsArray(store, path)) {
-            throw new ContainsArrayError(path);
-        } else if (!await containsGroup(store, path)) {
+        if (!await containsGroup(store, path)) {
+            if (await containsArray(store, path)) {
+                throw new ContainsArrayError(path);
+            }
             await initGroup(store, path, chunkStore);
         }
-
     } else if (mode === "w-" || (mode as any) === "x") {
         if (await containsArray(store, path)) {
             throw new ContainsArrayError(path);
