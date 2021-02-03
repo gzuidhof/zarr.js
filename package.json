@@ -21,7 +21,9 @@
     "zarr.umd.js",
     "zarr.umd.js.map"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./zarr.mjs"
+  ],
   "main": "zarr.cjs",
   "module": "zarr.mjs",
   "umd:main": "zarr.umd.js",
