@@ -74,7 +74,7 @@ import * as zarr from "https://cdn.skypack.dev/zarr";
 
 ```html
 <!-- Import as UMD in HTML -->
-<script src="https://unpkg.com/zarr/dist/zarr.umd.js"></script>
+<script src="https://unpkg.com/zarr/zarr.umd.js"></script>
 ```
 **Example**
 ```html

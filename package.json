@@ -1,6 +1,6 @@
 {
   "name": "zarr",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Javascript implementation of Zarr",
   "keywords": [
     "ndarray",
@@ -21,7 +21,9 @@
     "zarr.umd.js",
     "zarr.umd.js.map"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./zarr.mjs"
+  ],
   "main": "zarr.cjs",
   "module": "zarr.mjs",
   "umd:main": "zarr.umd.js",
