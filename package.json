@@ -99,7 +99,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "numcodecs": "^0.1.0",
+    "numcodecs": "^0.2.0",
     "p-queue": "6.2.0"
   }
 }
