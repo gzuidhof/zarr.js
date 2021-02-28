@@ -1,6 +1,3 @@
-// Custom error messages, note we have to patch the prototype of the
-// errors to fix `instanceof` calls, see:
-// https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
 export interface ZarrError {
     __zarr__: string;
 }
@@ -13,6 +10,9 @@ export function isKeyError(o: unknown) {
     return isZarrError(o) && o.__zarr__ === 'KeyError';
 }
 
+// Custom error messages, note we have to patch the prototype of the
+// errors to fix `instanceof` calls, see:
+// https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
 export class ContainsArrayError extends Error implements ZarrError {
     __zarr__ = 'ContainsArrayError';
     constructor(path: string) {
