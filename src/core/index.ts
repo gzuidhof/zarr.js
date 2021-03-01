@@ -11,7 +11,7 @@ import { BasicIndexer, isContiguousSelection, normalizeIntegerSelection } from '
 import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
 import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
-import { ValueError, PermissionError, KeyError, BoundsCheckError, ContainsGroupError } from '../errors';
+import { ValueError, PermissionError, BoundsCheckError, ContainsGroupError, isKeyError } from '../errors';
 import { getCodec } from "../compression/registry";
 
 
@@ -35,7 +35,7 @@ export interface SetOptions {
 }
 
 export interface GetRawChunkOptions<O> {
-  storeOptions: O,
+  storeOptions: O;
 }
 
 export class ZarrArray {
@@ -419,7 +419,7 @@ export class ZarrArray {
       }
 
     } catch (error) {
-      if (error instanceof KeyError) {
+      if (isKeyError(error)) {
         // fill with scalar if cKey doesn't exist in store
         if (this.fillValue !== null) {
           out.set(outSelection, this.fillValue);
@@ -448,7 +448,7 @@ export class ZarrArray {
       }
     }
     const cKey = this.chunkKey(chunkCoords);
-    const cdata = this.chunkStore.getItem(cKey, opts?.storeOptions)
+    const cdata = this.chunkStore.getItem(cKey, opts?.storeOptions);
     const buffer = await this.decodeChunk(await cdata);
     const outShape = this.chunks.filter(d => d !== 1); // squeeze chunk dim if 1
     return new RawArray(buffer, outShape, this.dtype);
@@ -502,7 +502,7 @@ export class ZarrArray {
       const cdata = await this.chunkStore.getItem(cKey);
       return new RawArray(await this.decodeChunk(cdata), outShape, this.dtype);
     } catch (error) {
-      if (error instanceof KeyError) {
+      if (isKeyError(error)) {
         // fill with scalar if item doesn't exist
         const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
         return new RawArray(data.fill(this.fillValue as number), outShape);
@@ -648,14 +648,13 @@ export class ZarrArray {
         const dBytes = await this.decodeChunk(chunkStoreData);
         chunkData = this.toTypedArray(dBytes);
       } catch (error) {
-        if (error instanceof KeyError) {
+        if (isKeyError(error)) {
           // Chunk is not initialized
           chunkData = new dtypeConstr(chunkSize);
           if (this.fillValue !== null) {
             chunkData.fill(this.fillValue);
           }
-        }
-        else {
+        } else {
           // Different type of error - rethrow
           throw error;
         }
