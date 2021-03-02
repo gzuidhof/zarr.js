@@ -1,7 +1,6 @@
 module.exports = {
     "env": {
         "browser": true,
-        "es6": true,
         "node": true
     },
     "parser": "@typescript-eslint/parser",
@@ -40,10 +39,12 @@ module.exports = {
                 "varsIgnorePattern": "^_"
             }
         ],
-        "@typescript-eslint/camelcase": [
+        "@typescript-eslint/naming-convention": [
             "error",
             {
-                "allow": ["zarr_format", "fill_value"]
+                "selector": "variableLike",
+                "format": ["camelCase", "UPPER_CASE"],
+                "leadingUnderscore": "allow"
             }
         ]
     },
