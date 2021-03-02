@@ -18,7 +18,7 @@ export async function containsArray(store: Store, path: string | null = null) {
 /**
  * Return true if the store contains a group at the given logical path.
  */
-export async function containsGroup<T>(store: Store, path: string | null = null) {
+export async function containsGroup(store: Store, path: string | null = null) {
     path = normalizeStoragePath(path);
     const prefix = pathToPrefix(path);
     const key = prefix + GROUP_META_KEY;
@@ -83,7 +83,7 @@ export async function listDir(store: Store, path: string | null = null) {
     }
 }
 
-async function initGroupMetadata(store: Store, path: string | null = null,overwrite = false) {
+async function initGroupMetadata(store: Store, path: string | null = null, overwrite = false) {
     path = normalizeStoragePath(path);
 
     // Guard conditions
