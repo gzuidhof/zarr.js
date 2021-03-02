@@ -14,12 +14,14 @@ export default [
       dir: 'dist/',
       format: 'es',
       entryFileNames: '[name].mjs',
+      chunkFileNames: '[name]-[hash].mjs',
       sourcemap: true,
     },
     {
       dir: 'dist/',
       format: 'es',
       entryFileNames: '[name].min.mjs',
+      chunkFileNames: '[name]-[hash].min.mjs',
       sourcemap: true,
       plugins: [terser()]
     },
