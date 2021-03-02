@@ -23,6 +23,7 @@ describe("normalizeIntegerSelection", () => {
 });
 
 describe("Ellipsis Selection", () => {
+    const ellipsis = "..." as const;
     test.each([
         // expected, selection, shape
 
@@ -30,12 +31,12 @@ describe("Ellipsis Selection", () => {
         [[0], 0, [100]],
 
         // 1D
-        [[null], "...", [100]],
+        [[null], ellipsis, [100]],
         [[null], [null], [100]],
         [[[null, 100]], [[null, 100]], [100]],
         [[[0, null]], [[0, null]], [100]],
-        [[null], [null, "..."], [100]],
-        [[null], ["...", null], [100]],
+        [[null], [null, ellipsis], [100]],
+        [[null], [ellipsis, null], [100]],
         [[slice(0, 5)], slice(0, 5), [100]],
         [[slice(null)], slice(":"), [100]],
         [[slice(null)], slice(":", ":"), [100]],
@@ -50,15 +51,15 @@ describe("Ellipsis Selection", () => {
         [[null, 0], [null, 0], [100, 100]],
 
         // 2D
-        [[null, null], "...", [100, 100]],
+        [[null, null], ellipsis, [100, 100]],
         [[null, null], [null], [100, 100]],
         [[null, null], [null, null], [100, 100]],
-        [[null, null], ["...", null], [100, 100]],
-        [[null, null], [null, "..."], [100, 100]],
-        [[null, slice(null)], ["...", slice(null)], [100, 100]],
-        [[null, null], ["...", null, null], [100, 100]],
-        [[null, null], [null, "...", null], [100, 100]],
-        [[null, null], [null, null, "..."], [100, 100]],
+        [[null, null], [ellipsis, null], [100, 100]],
+        [[null, null], [null, ellipsis], [100, 100]],
+        [[null, slice(null)], [ellipsis, slice(null)], [100, 100]],
+        [[null, null], [ellipsis, null, null], [100, 100]],
+        [[null, null], [null, ellipsis, null], [100, 100]],
+        [[null, null], [null, null, ellipsis], [100, 100]],
 
 
     ])("replaceEllipsis(%p, %p)", (expected, selection, shape) => {
