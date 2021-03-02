@@ -4,7 +4,7 @@ import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
 import visualizer from 'rollup-plugin-visualizer';
 
-const commonPlugins = () => [typescript({ useTsconfigDeclarationDir: true, objectHashIgnoreUnknownHack: true, }), commonjs(), resolve()]; 
+const commonPlugins = () => [typescript({ useTsconfigDeclarationDir: true }), commonjs(), resolve()];
 
 
 export default [
@@ -23,11 +23,11 @@ export default [
       sourcemap: true,
       plugins: [terser()]
     },
-  ],
+    ],
     watch: {
       include: 'src/**',
     },
-    plugins: [...commonPlugins(), visualizer({filename: "stats.html"}), visualizer({filename: "stats.min.html", sourcemap: true})],
+    plugins: [...commonPlugins(), visualizer({ filename: "stats.html" }), visualizer({ filename: "stats.min.html", sourcemap: true })],
   },
   {
     input: 'src/zarr.ts',
