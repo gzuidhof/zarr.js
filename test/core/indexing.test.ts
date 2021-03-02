@@ -33,8 +33,6 @@ describe("Ellipsis Selection", () => {
         // 1D
         [[null], ellipsis, [100]],
         [[null], [null], [100]],
-        [[[null, 100]], [[null, 100]], [100]],
-        [[[0, null]], [[0, null]], [100]],
         [[null], [null, ellipsis], [100]],
         [[null], [ellipsis, null], [100]],
         [[slice(0, 5)], slice(0, 5), [100]],
