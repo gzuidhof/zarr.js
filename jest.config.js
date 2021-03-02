@@ -3,14 +3,10 @@ module.exports = {
     "globalTeardown": "<rootDir>/test/globalTeardown.js",
     "testEnvironment": "node",
     "transform": {
-        ".(ts|tsx)": "ts-jest"
+        ".ts": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-        "ts",
-        "tsx",
-        "js"
-    ],
+    "moduleFileExtensions": ["ts", "js"],
     "coveragePathIgnorePatterns": [
         "/node_modules/",
         "/test/"
