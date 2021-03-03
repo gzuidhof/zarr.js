@@ -22,7 +22,7 @@ export function getNestedArrayConstructor<T extends TypedArray>(arr: any): Typed
  * @param shape The shape of the NestedArray
  * @param selection
  */
-export function sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: number[], selection: number | ArraySelection): [NestedArrayData | number, number[]] {
+export function sliceNestedArray(arr: NestedArrayData, shape: number[], selection: number | ArraySelection): [NestedArrayData | number, number[]] {
     // This translates "...", ":", null into a list of slices or integer selections
     const normalizedSelection = normalizeArraySelection(selection, shape);
     const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, shape);
@@ -86,7 +86,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: nu
 
 
 
-export function setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArrayData, value: number, destShape: number[], selection: number | ArraySelection) {
+export function setNestedArrayToScalar(dstArr: NestedArrayData, value: number, destShape: number[], selection: number | ArraySelection) {
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedSelection = normalizeArraySelection(selection, destShape, true);
 
@@ -95,7 +95,7 @@ export function setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArray
     _setNestedArrayToScalar(dstArr, value, destShape, sliceIndices);
 }
 
-export function setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData, destShape: number[], sourceShape: number[], selection: number | ArraySelection) {
+export function setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayData, destShape: number[], sourceShape: number[], selection: number | ArraySelection) {
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedSelection = normalizeArraySelection(selection, destShape, false);
     const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, destShape);
@@ -109,7 +109,7 @@ export function setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, so
 }
 
 
-function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
+function _setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
 
     const currentSlice = selection[0];
 
@@ -142,7 +142,7 @@ function _setNestedArray<T extends TypedArray>(dstArr: NestedArrayData, sourceAr
     }
 }
 
-function _setNestedArrayToScalar<T extends TypedArray>(dstArr: NestedArrayData, value: number, shape: number[], selection: SliceIndices[]) {
+function _setNestedArrayToScalar(dstArr: NestedArrayData, value: number, shape: number[], selection: SliceIndices[]) {
     const currentSlice = selection[0];
 
     const [from, to, step, outputSize] = currentSlice;

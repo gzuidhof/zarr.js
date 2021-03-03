@@ -1,7 +1,6 @@
 module.exports = {
     "env": {
         "browser": true,
-        "es6": true,
         "node": true
     },
     "parser": "@typescript-eslint/parser",
@@ -30,6 +29,7 @@ module.exports = {
             "error",
             "always"
         ],
+        "@typescript-eslint/explicit-module-boundary-types": "off",
         "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/no-explicit-any": "off",
@@ -40,10 +40,12 @@ module.exports = {
                 "varsIgnorePattern": "^_"
             }
         ],
-        "@typescript-eslint/camelcase": [
+        "@typescript-eslint/naming-convention": [
             "error",
             {
-                "allow": ["zarr_format", "fill_value"]
+                "selector": "variableLike",
+                "format": ["camelCase", "UPPER_CASE"],
+                "leadingUnderscore": "allow"
             }
         ]
     },

@@ -613,7 +613,7 @@ export class ZarrArray {
     await queue.onIdle();
   }
 
-  private async chunkSetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+  private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
     // Obtain key for chunk storage
     const chunkKey = this.chunkKey(chunkCoords);
 
