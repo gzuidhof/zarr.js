@@ -1,6 +1,6 @@
 ![Zarr.js Logo](logo.png)
 
-[![Actions Status](https://github.com/gzuidhof/zarr.js/workflows/test/badge.svg)](https://github.com/gzuidhof/zarr.js/actions)
+[![Actions Status](https://github.com/gzuidhof/zarr.js/actions/workflows/test.yml/badge.svg)](https://github.com/gzuidhof/zarr.js/actions)
 ![Top Language Badge](https://img.shields.io/github/languages/top/gzuidhof/zarr.js)
 [![NPM badge](https://img.shields.io/npm/v/zarr)](https://www.npmjs.com/package/zarr)
 [![Documentation](https://img.shields.io/badge/Read%20the-documentation-1abc9c.svg)](http://guido.io/zarr.js)
