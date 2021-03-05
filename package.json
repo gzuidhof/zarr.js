@@ -48,7 +48,7 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=12"
   },
   "scripts": {
     "lint": "eslint src/**/*.ts test/**/*.ts test/**/*.js",
