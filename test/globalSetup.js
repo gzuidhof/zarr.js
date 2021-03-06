@@ -1,10 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { setup: setupDevServer } = require('jest-dev-server');
+const express = require("express");
 
-module.exports = async function globalSetup() {
-  await setupDevServer({
-    command: 'node fixtures-server.js',
-    port: 7357,
-    debug: true,
-  });
+const app = express();
+app.use(express.static("fixtures", { dotfiles: 'allow' }));
+const server = app.listen(3000);
+
+module.exports = async () => {
+    global.__SERVER__ = server;
 };

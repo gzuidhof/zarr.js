@@ -5,7 +5,7 @@ import { openArray } from "../../src/creation";
 
 describe("Test MemoryStore", () => {
 
-    const simpleFixtureStoreLE = new HTTPStore("http://localhost:7357/simple_LE.zarr");
+    const simpleFixtureStoreLE = new HTTPStore("http://localhost:3000/simple_LE.zarr");
     it("Can open simple fixture", async () => {
         const z = await openArray({ store: simpleFixtureStoreLE });
         expect(z.shape).toEqual([8, 8]);
@@ -15,7 +15,7 @@ describe("Test MemoryStore", () => {
         expect(await z.get([4, 4])).toEqual(0);
     });
 
-    const simpleFixtureStoreBE = new HTTPStore("http://localhost:7357/simple_BE.zarr");
+    const simpleFixtureStoreBE = new HTTPStore("http://localhost:3000/simple_BE.zarr");
     it("Can open simple fixture", async () => {
         const z = await openArray({ store: simpleFixtureStoreBE });
         expect(z.shape).toEqual([8, 8]);
@@ -25,7 +25,7 @@ describe("Test MemoryStore", () => {
         expect(await z.get([4, 4])).toEqual(0);
     });
 
-    const emptyFixtureStore = new HTTPStore("http://localhost:7357/empty.zarr");
+    const emptyFixtureStore = new HTTPStore("http://localhost:3000/empty.zarr");
     it("Can open empty fixture", async () => {
         const z = await openArray({ store: emptyFixtureStore });
         expect(z.shape).toEqual([8, 8]);
@@ -35,9 +35,9 @@ describe("Test MemoryStore", () => {
         expect(await z.get([4, 4])).toEqual(0);
     });
 
-    const baseUrlStore = new HTTPStore("http://localhost:7357");
-    it("Can open by path", async() => {
-        const z = await openArray({ store: baseUrlStore, path: "simple_LE.zarr"});
+    const baseUrlStore = new HTTPStore("http://localhost:3000");
+    it("Can open by path", async () => {
+        const z = await openArray({ store: baseUrlStore, path: "simple_LE.zarr" });
         expect(z.shape).toEqual([8, 8]);
     });
 });

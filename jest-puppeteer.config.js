@@ -1,10 +1,9 @@
 module.exports = {
-    launch: {
-        headless: true,
-    },
-    server: {
-        command: 'node fixtures-server.js',
-        port: 7357,
-        debug: true,
-    },
-};
+  launch: {
+    headless: true,
+  },
+  server: {
+    command: 'node test/globalSetup.js',
+    port: 3000,
+  },
+}

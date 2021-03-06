@@ -1,25 +1,25 @@
+function baseConfig() {
+  if (process.env.TEST_ENV === 'browser') {
+    console.log('Running tests in browser env.');
+    return { preset: 'jest-puppeteer' }
+  }
+  console.log('Running tests in Node env.');
+  return {
+    globalSetup: '<rootDir>/test/globalSetup.js',
+    globalTeardown: '<rootDir>/test/globalTeardown.js'
+  }
+}
+
+
 module.exports = {
-    "globalSetup": "<rootDir>/test/globalSetup.js",
-    "globalTeardown": "<rootDir>/test/globalTeardown.js",
-    "testEnvironment": "node",
-    "transform": {
-        ".ts": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": ["ts", "js"],
-    "coveragePathIgnorePatterns": [
-        "/node_modules/",
-        "/test/"
-    ],
-    "coverageThreshold": {
-        "global": {
-            "branches": 40,
-            "functions": 55,
-            "lines": 55,
-            "statements": 55
-        }
-    },
-    "collectCoverageFrom": [
-        "src/**/*.{js,ts}"
-    ]
+  ...baseConfig(),
+  coverageThreshold: {
+    global: {
+      branches: 40,
+      functions: 55,
+      lines: 55,
+      statements: 55
+    }
+  },
+  collectCoverageFrom: ["src/**/*.ts"]
 }
