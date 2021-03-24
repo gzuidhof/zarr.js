@@ -57,7 +57,7 @@ const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<Type
 };
 
 
-export function getTypedArray(dtype: DtypeString) {
+export function getTypedArrayCtr(dtype: DtypeString) {
   const ctr = DTYPE_TYPEDARRAY_MAPPING[dtype];
   if (!ctr) {
     throw Error(`Dtype not recognized or not supported in zarr.js, got ${dtype}.`);

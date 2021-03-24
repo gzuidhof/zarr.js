@@ -1,5 +1,5 @@
 import { DtypeString } from '../types';
-import { NestedArrayData, TypedArray, TypedArrayConstructor, getTypedArray, getTypedArrayDtypeString } from './types';
+import { NestedArrayData, TypedArray, TypedArrayConstructor, getTypedArrayCtr, getTypedArrayDtypeString } from './types';
 import { ArraySelection, Slice } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
@@ -40,7 +40,7 @@ export class NestedArray<T extends TypedArray> {
 
         // Zero dimension array.. they are a bit weirdly represented now, they will only ever occur internally
         if (this.shape.length === 0) {
-            this.data = new (getTypedArray(dtype))(1);
+            this.data = new (getTypedArrayCtr(dtype))(1);
         }
         else if (
             // tslint:disable-next-line: strict-type-predicates
@@ -60,7 +60,7 @@ export class NestedArray<T extends TypedArray> {
             if (numShapeElements !== numDataElements) {
                 throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
             }
-            const typeConstructor: TypedArrayConstructor<TypedArray> = getTypedArray(dtype);
+            const typeConstructor: TypedArrayConstructor<TypedArray> = getTypedArrayCtr(dtype);
             this.data = createNestedArray((data as ArrayBuffer), typeConstructor, shape);
         } else {
             this.data = data;
@@ -98,14 +98,14 @@ export class NestedArray<T extends TypedArray> {
         if (this.shape.length === 1) {
             return this.data as T;
         }
-        return flattenNestedArray(this.data, this.shape, getTypedArray(this.dtype)) as T;
+        return flattenNestedArray(this.data, this.shape, getTypedArrayCtr(this.dtype)) as T;
     }
 
     /**
      * Currently only supports a single integer as the size, TODO: support start, stop, step.
      */
     public static arange(size: number, dtype: DtypeString = "<i4"): NestedArray<TypedArray> {
-        const constr = getTypedArray(dtype);
+        const constr = getTypedArrayCtr(dtype);
         const data = rangeTypedArray([size], constr);
         return new NestedArray(data, [size], dtype);
     }
