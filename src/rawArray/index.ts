@@ -3,7 +3,7 @@ import { ArraySelection } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE, getStrides } from '../util';
-import { TypedArray, DTYPE_TYPEDARRAY_MAPPING, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
+import { TypedArray, getTypedArray, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
 import { setRawArrayFromChunkItem, setRawArrayToScalar, setRawArray } from './ops';
 
 export class RawArray {
@@ -46,7 +46,7 @@ export class RawArray {
 
         // Zero dimension array.. they are a bit weirdly represented now, they will only ever occur internally
         if (this.shape.length === 0) {
-            this.data = new DTYPE_TYPEDARRAY_MAPPING[dtype](1);
+            this.data = new (getTypedArray(dtype))(1);
         } else if (
             // tslint:disable-next-line: strict-type-predicates
             (IS_NODE && Buffer.isBuffer(data))
@@ -65,7 +65,7 @@ export class RawArray {
             if (numShapeElements !== numDataElements) {
                 throw new Error(`Buffer has ${numDataElements} of dtype ${dtype}, shape is too large or small ${shape} (flat=${numShapeElements})`);
             }
-            const typeConstructor: TypedArrayConstructor<TypedArray> = DTYPE_TYPEDARRAY_MAPPING[dtype];
+            const typeConstructor: TypedArrayConstructor<TypedArray> = getTypedArray(dtype);
             this.data = new typeConstructor(data as ArrayBuffer);
         } else {
             this.data = data;
