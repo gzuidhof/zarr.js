@@ -1,5 +1,5 @@
 export type ZarrMetadataType = ZarrArrayMetadata | ZarrGroupMetadata;
-export type UserAttributes = object;
+export type UserAttributes = Record<string, any>;
 
 /**
  * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
@@ -84,11 +84,7 @@ export interface ZarrArrayMetadata {
   /**
    * A JSON object identifying the primary compression codec and providing configuration parameters, or null if no compressor is to be used. The object MUST contain an "id" key identifying the codec to be used.
    */
-  compressor:
-    | null
-    | ({
-        id: string;
-      } & any);
+  compressor: null | CompressorConfig & Record<string, any>;
 
   /**
    * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
