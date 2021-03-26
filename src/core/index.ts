@@ -10,7 +10,7 @@ import { ArraySelection, DimensionSelection, Indexer, Slice, ChunkProjection } f
 import { BasicIndexer, isContiguousSelection, normalizeIntegerSelection } from './indexing';
 import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
-import { TypedArray, DTYPE_TYPEDARRAY_MAPPING } from '../nestedArray/types';
+import { TypedArray, getTypedArrayCtr } from '../nestedArray/types';
 import { ValueError, PermissionError, BoundsCheckError, ContainsGroupError, isKeyError } from '../errors';
 import { getCodec } from "../compression/registry";
 
@@ -466,7 +466,7 @@ export class ZarrArray {
   }
 
   private toTypedArray(buffer: Buffer | ArrayBuffer) {
-    return new DTYPE_TYPEDARRAY_MAPPING[this.dtype](buffer);
+    return new (getTypedArrayCtr(this.dtype))(buffer);
   }
 
   private toNestedArray<T extends TypedArray>(data: ValidStoreType) {
@@ -504,7 +504,7 @@ export class ZarrArray {
     } catch (error) {
       if (isKeyError(error)) {
         // fill with scalar if item doesn't exist
-        const data = new DTYPE_TYPEDARRAY_MAPPING[this.dtype](outSize);
+        const data = new (getTypedArrayCtr(this.dtype))(outSize);
         return new RawArray(data.fill(this.fillValue as number), outShape);
       } else {
         // Different type of error - rethrow
@@ -619,7 +619,7 @@ export class ZarrArray {
 
     let chunk: null | TypedArray = null;
 
-    const dtypeConstr = DTYPE_TYPEDARRAY_MAPPING[this.dtype];
+    const dtypeConstr = getTypedArrayCtr(this.dtype);
     const chunkSize = this.chunkSize;
 
     if (isTotalSlice(chunkSelection, this.chunks)) {

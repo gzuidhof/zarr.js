@@ -20,24 +20,16 @@ export type TypedArray =
   | Float32Array
   | Float64Array;
 
-// ArrayLike<any> & {
-//     BYTES_PER_ELEMENT: number;
-//     set(array: ArrayLike<number>, offset?: number): void;
-//     slice(start?: number, end?: number): TypedArray;
-//     subarray(start?: number, end?: number): TypedArray;
-//     buffer: Buffer | ArrayBuffer;
-//     constructor: TypedArrayConstructor<TypedArray>;
-// };
-export type TypedArrayConstructor<TypedArray> = {
-  new(): TypedArray;
+export type TypedArrayConstructor<T extends TypedArray> = {
+  new(): T;
   // tslint:disable-next-line: unified-signatures
-  new(size: number): TypedArray;
+  new(size: number): T;
   // tslint:disable-next-line: unified-signatures
-  new(buffer: ArrayBuffer): TypedArray;
+  new(buffer: ArrayBuffer): T;
   BYTES_PER_ELEMENT: number;
 };
 
-export const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
+const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
   '|b': Int8Array,
   '|B': Uint8Array,
   '|u1': Uint8Array,
@@ -63,6 +55,15 @@ export const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstruct
   '>f4': Float32Array,
   '>f8': Float64Array
 };
+
+
+export function getTypedArrayCtr(dtype: DtypeString) {
+  const ctr = DTYPE_TYPEDARRAY_MAPPING[dtype];
+  if (!ctr) {
+    throw Error(`Dtype not recognized or not supported in zarr.js, got ${dtype}.`);
+  }
+  return ctr;
+}
 
 /*
  * Called by NestedArray and RawArray constructors only.
