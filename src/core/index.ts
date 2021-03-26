@@ -462,7 +462,7 @@ export class ZarrArray {
   }
 
   private chunkKey(chunkCoords: number[]) {
-    const delimiter = this.nested ? "/" : "."
+    const delimiter = this.nested ? "/" : ".";
     return this.keyPrefix + chunkCoords.join(delimiter);
   }
 
