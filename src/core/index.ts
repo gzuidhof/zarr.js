@@ -116,6 +116,13 @@ export class ZarrArray {
   }
 
   /**
+   *  Boolean. True if chunks are stored in a nested directory tree.
+   */
+  public get nested() {
+    return this.meta.nested;
+  }
+
+  /**
    *  A value used for uninitialized portions of the array.
    */
   public get fillValue(): FillType {
@@ -455,7 +462,8 @@ export class ZarrArray {
   }
 
   private chunkKey(chunkCoords: number[]) {
-    return this.keyPrefix + chunkCoords.join(".");
+    const delimiter = this.nested ? "/" : "."
+    return this.keyPrefix + chunkCoords.join(delimiter);
   }
 
   private ensureByteArray(chunkData: ValidStoreType): Uint8Array {

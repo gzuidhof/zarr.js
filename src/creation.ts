@@ -43,6 +43,7 @@ export type CreateArrayOptions = {
     cacheMetadata?: boolean;
     cacheAttrs?: boolean;
     readOnly?: boolean;
+    nested?: false;
 };
 
 /**
@@ -71,12 +72,12 @@ export type CreateArrayOptions = {
  * @param readOnly `true` if array should be protected against modification, defaults to `false`.
  */
 export async function create(
-    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false }: CreateArrayOptions,
+    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, nested = false }: CreateArrayOptions,
 ): Promise<ZarrArray> {
 
     store = normalizeStoreArgument(store);
 
-    await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+    await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, nested);
     const z = await ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
 
     return z;
@@ -142,7 +143,7 @@ export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>
 }
 
 export async function openArray(
-    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: CompressorConfig | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean } = {},
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, nested = false }: { shape?: number | number[]; mode?: PersistenceMode; chunks?: ChunksArgument; dtype?: DtypeString; compressor?: CompressorConfig | null; fillValue?: FillType; order?: Order; store?: Store; overwrite?: boolean; path?: string | null; chunkStore?: Store; filters?: Filter[]; cacheMetadata?: boolean; cacheAttrs?: boolean; nested?: boolean } = {},
 ) {
     store = normalizeStoreArgument(store);
     if (chunkStore === undefined) {
@@ -162,7 +163,7 @@ export async function openArray(
         if (shape === undefined) {
             throw new ValueError("Shape can not be undefined when creating a new array");
         }
-        await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+        await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, nested);
 
     } else if (mode === "a") {
         if (!await containsArray(store, path)) {
@@ -172,7 +173,7 @@ export async function openArray(
             if (shape === undefined) {
                 throw new ValueError("Shape can not be undefined when creating a new array");
             }
-            await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+            await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, nested);
         }
     } else if (mode === "w-" || (mode as any) === "x") {
         if (await containsArray(store, path)) {
@@ -183,7 +184,7 @@ export async function openArray(
             if (shape === undefined) {
                 throw new ValueError("Shape can not be undefined when creating a new array");
             }
-            await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+            await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, nested);
         }
     } else {
         throw new ValueError(`Invalid mode argument: ${mode}`);

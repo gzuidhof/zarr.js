@@ -104,6 +104,11 @@ export interface ZarrArrayMetadata {
    * A list of JSON objects providing codec configurations, or `null` if no filters are to be applied. Each codec configuration object MUST contain a `"id"` key identifying the codec to be used.
    */
   filters: null | Filter[];
+
+  /**
+   * A boolean to specify if chunks are stored in a nested directory tree
+   */
+  nested: null | boolean;
 }
 
 export interface ZarrGroupMetadata {

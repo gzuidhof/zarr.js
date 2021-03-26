@@ -120,7 +120,8 @@ async function initArrayMetadata(
     order: Order,
     overwrite: boolean,
     chunkStore: null | Store,
-    filters: null | Filter[]
+    filters: null | Filter[],
+    nested: null | boolean
 ) {
     // Guard conditions
     if (overwrite) {
@@ -163,6 +164,7 @@ async function initArrayMetadata(
         order: order,
         compressor: compressor,
         filters: filters,
+        nested: nested,
     };
     const metaKey = pathToPrefix(path) + ARRAY_META_KEY;
     await store.setItem(metaKey, JSON.stringify(metadata));
@@ -184,10 +186,11 @@ export async function initArray(
     order: Order = "C",
     overwrite = false,
     chunkStore: null | Store = null,
-    filters: null | Filter[] = null
+    filters: null | Filter[] = null,
+    nested: null | boolean
 ) {
 
     path = normalizeStoragePath(path);
     await requireParentGroup(store, path, chunkStore, overwrite);
-    await initArrayMetadata(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+    await initArrayMetadata(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, nested);
 }
