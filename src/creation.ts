@@ -53,25 +53,11 @@ export type CreateArrayOptions = {
  * @param readOnly `true` if array should be protected against modification, defaults to `false`.
  * @param dimensionSeparator if specified, defines an alternate string separator placed between the dimension chunks.
  */
-export async function create(opts: CreateArrayOptions): Promise<ZarrArray> {
-    const {
-        shape,
-        path,
-        chunkStore,
-        filters,
-        dimensionSeparator,
-        chunks = true,
-        dtype = "<i4",
-        compressor = null,
-        fillValue = null,
-        order = "C",
-        overwrite = false,
-        cacheMetadata = true,
-        cacheAttrs = true,
-        readOnly = false,
-    } = opts;
+export async function create(
+    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, dimensionSeparator }: CreateArrayOptions,
+): Promise<ZarrArray> {
 
-    const store = normalizeStoreArgument(opts.store);
+    store = normalizeStoreArgument(store);
 
     await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, dimensionSeparator);
     const z = await ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
