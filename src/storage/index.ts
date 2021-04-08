@@ -120,7 +120,8 @@ async function initArrayMetadata(
     order: Order,
     overwrite: boolean,
     chunkStore: null | Store,
-    filters: null | Filter[]
+    filters: null | Filter[],
+    dimensionSeparator?: string,
 ) {
     // Guard conditions
     if (overwrite) {
@@ -154,16 +155,17 @@ async function initArrayMetadata(
 
     const metadata: ZarrArrayMetadata = {
         zarr_format: 2,
-
         shape: shape,
         chunks: chunks as number[],
-
         dtype: dtype,
         fill_value: serializedFillValue,
         order: order,
         compressor: compressor,
         filters: filters,
     };
+    if (dimensionSeparator) {
+        metadata.dimension_separator = dimensionSeparator;
+    }
     const metaKey = pathToPrefix(path) + ARRAY_META_KEY;
     await store.setItem(metaKey, JSON.stringify(metadata));
 }
@@ -184,10 +186,11 @@ export async function initArray(
     order: Order = "C",
     overwrite = false,
     chunkStore: null | Store = null,
-    filters: null | Filter[] = null
+    filters: null | Filter[] = null,
+    dimensionSeparator?: string
 ) {
 
     path = normalizeStoragePath(path);
     await requireParentGroup(store, path, chunkStore, overwrite);
-    await initArrayMetadata(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters);
+    await initArrayMetadata(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, dimensionSeparator);
 }

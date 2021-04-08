@@ -100,10 +100,16 @@ export interface ZarrArrayMetadata {
    * A list of JSON objects providing codec configurations, or `null` if no filters are to be applied. Each codec configuration object MUST contain a `"id"` key identifying the codec to be used.
    */
   filters: null | Filter[];
+
+
+  /**
+   * Defines the separator placed between the dimension of a chunk. If not set, it is assumed to be ".", leading to chunks of the form "0.0".
+   */
+  dimension_separator?: string;
 }
 
 export interface ZarrGroupMetadata {
-  /**
+  /**A
    * An integer defining the version of the storage specification to which the array store adheres.
    */
   zarr_format: 1 | 2;
