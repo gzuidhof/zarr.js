@@ -7,7 +7,7 @@ import { ZarrGroupMetadata, UserAttributes, PersistenceMode } from './types';
 import { GROUP_META_KEY, ATTRS_META_KEY } from './names';
 import { parseMetadata } from './metadata';
 import { Attributes } from './attributes';
-import { array, empty, zeros, ones, full, create, normalizeStoreArgument, CreateArrayOptionsWithoutShape } from './creation';
+import { array, empty, zeros, ones, full, create, normalizeStoreArgument, CreateArrayOptions } from './creation';
 import { NestedArray } from './nestedArray';
 import { TypedArray } from './nestedArray/types';
 import { ZarrArray } from './core';
@@ -135,7 +135,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return Group.create(this.store, path, this.readOnly, this._chunkStore, this.attrs.cache);
     }
 
-    private getOptsForArrayCreation(name: string, opts: CreateArrayOptionsWithoutShape = {}) {
+    private getOptsForArrayCreation(name: string, opts: Omit<CreateArrayOptions, 'shape'> = {}) {
         const path = this.itemPath(name);
         opts.path = path;
 
@@ -150,7 +150,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     /**
      * Creates an array
      */
-    public array(name: string, data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptionsWithoutShape, overwrite?: boolean) {
+    public array(name: string, data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: Omit<CreateArrayOptions, 'shape'>, overwrite?: boolean) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -160,7 +160,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return array(data, opts);
     }
 
-    public empty(name: string, shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
+    public empty(name: string, shape: number | number[], opts: Omit<CreateArrayOptions, 'shape'>= {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -169,7 +169,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return empty(shape, opts);
     }
 
-    public zeros(name: string, shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
+    public zeros(name: string, shape: number | number[], opts: Omit<CreateArrayOptions, 'shape'>= {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -178,7 +178,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return zeros(shape, opts);
     }
 
-    public ones(name: string, shape: number | number[], opts: CreateArrayOptionsWithoutShape = {}) {
+    public ones(name: string, shape: number | number[], opts: Omit<CreateArrayOptions, 'shape'>= {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -187,7 +187,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return ones(shape, opts);
     }
 
-    public full(name: string, shape: number | number[], fillValue: number | null, opts: CreateArrayOptionsWithoutShape = {}) {
+    public full(name: string, shape: number | number[], fillValue: number | null, opts: Omit<CreateArrayOptions, 'shape'> = {}) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
@@ -196,7 +196,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return full(shape, fillValue, opts);
     }
 
-    public createDataset(name: string, shape?: number | number[], data?: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: CreateArrayOptionsWithoutShape) {
+    public createDataset(name: string, shape?: number | number[], data?: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts?: Omit<CreateArrayOptions, 'shape'>) {
         if (this.readOnly) {
             throw new PermissionError("group is read only");
         }
