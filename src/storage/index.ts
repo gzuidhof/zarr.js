@@ -121,7 +121,7 @@ async function initArrayMetadata(
     overwrite: boolean,
     chunkStore: null | Store,
     filters: null | Filter[],
-    dimensionSeparator?: string,
+    dimensionSeparator?: '.' | '/',
 ) {
     // Guard conditions
     if (overwrite) {
@@ -187,7 +187,7 @@ export async function initArray(
     overwrite = false,
     chunkStore: null | Store = null,
     filters: null | Filter[] = null,
-    dimensionSeparator?: string
+    dimensionSeparator?: '.' | '/',
 ) {
 
     path = normalizeStoragePath(path);

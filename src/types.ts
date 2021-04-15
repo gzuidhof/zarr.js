@@ -103,9 +103,9 @@ export interface ZarrArrayMetadata {
 
 
   /**
-   * Defines the separator placed between the dimension of a chunk. If not set, it is assumed to be ".", leading to chunks of the form "0.0".
+   * Separator placed between the dimensions of a chunk.
    */
-  dimension_separator?: string;
+  dimension_separator?: '.' | '/';
 }
 
 export interface ZarrGroupMetadata {

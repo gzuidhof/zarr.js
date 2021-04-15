@@ -24,7 +24,7 @@ export type CreateArrayOptions = {
     cacheMetadata?: boolean;
     cacheAttrs?: boolean;
     readOnly?: boolean;
-    dimensionSeparator?: string;
+    dimensionSeparator?: '.' | '/';
 };
 
 /**

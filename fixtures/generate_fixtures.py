@@ -55,6 +55,7 @@ def generate_fixtures():
         simple_zarr_array[7, 7] = 3
 
     # nested
+    # TODO: Use latest zarr-python once https://github.com/zarr-developers/zarr-python/pull/716 is merged
     store = dict()
     nested = zarr.open(
         store,
