@@ -1,16 +1,15 @@
 import os
 
 import zarr  # 2.7
-from zarr.convenience import copy_store
-from zarr.storage import DirectoryStore
 from zarr.util import json_dumps, json_loads
 
 FIXTURES_FOLDER = "./"
 
+
 def generate_fixtures():
 
     empty_path = os.path.join(FIXTURES_FOLDER, "empty.zarr")
-    empty_zarr_array = zarr.open(
+    zarr.open(
         empty_path,
         shape=(8, 8),
         chunks=(2, None),
@@ -20,9 +19,10 @@ def generate_fixtures():
         compressor=None,
     )
 
-    for codec, filename_postfix in ([None, "_LE"], ["gzip", "_gzip_LE"], ["zlib", "_zlib_LE"]):
+    # little endian
+    for codec in (None, "gzip", "zlib"):
         simple_path = os.path.join(
-            FIXTURES_FOLDER, "simple{}.zarr".format(filename_postfix)
+            FIXTURES_FOLDER, "simple{}_LE.zarr".format(f"_{codec}" if codec else "")
         )
         simple_zarr_array = zarr.open(
             simple_path,
@@ -37,9 +37,10 @@ def generate_fixtures():
         simple_zarr_array[0, 1] = 2
         simple_zarr_array[7, 7] = 3
 
-    for codec, filename_postfix in ([None, "_BE"], ["gzip", "_gzip_BE"], ["zlib", "_zlib_BE"]):
+    # big endian
+    for codec in (None, "gzip", "zlib"):
         simple_path = os.path.join(
-            FIXTURES_FOLDER, "simple{}.zarr".format(filename_postfix)
+            FIXTURES_FOLDER, "simple{}_BE.zarr".format(f"_{codec}" if codec else "")
         )
         simple_zarr_array = zarr.open(
             simple_path,
@@ -56,7 +57,12 @@ def generate_fixtures():
 
     # nested
     # TODO: Use latest zarr-python once https://github.com/zarr-developers/zarr-python/pull/716 is merged
-    store = dict()
+    store = zarr.storage.FSStore(
+        os.path.join(FIXTURES_FOLDER, "simple_nested.zarr"),
+        key_separator="/",
+        auto_mkdir=True,
+    )
+
     nested = zarr.open(
         store,
         shape=(8, 8),
@@ -69,21 +75,9 @@ def generate_fixtures():
     nested[0, 1] = 2
     nested[7, 7] = 3
 
-    # manually convert store
-    nested_store = dict()
-    for key, value in store.items():
-        if key == ".zarray":
-            # add missing field to .zarry metadata
-            value = json_loads(value)
-            value['dimension_separator'] = '/'
-            value = json_dumps(value)
-        else:
-            # map keys from "Y.X" -> "Y/X"
-            key = key.replace(".", "/")
-        nested_store[key] = value
-
-    # copy dict to directory
-    copy_store(nested_store, DirectoryStore(os.path.join(FIXTURES_FOLDER, 'simple_nested.zarr')))
+    meta = json_loads(store[".zarray"])
+    meta["dimension_separator"] = "/"
+    store[".zarray"] = json_dumps(meta)
 
 
 if __name__ == "__main__":
