@@ -75,6 +75,7 @@ def generate_fixtures():
     nested[0, 1] = 2
     nested[7, 7] = 3
 
+    # Manually add dimension separator to array meta
     meta = json_loads(store[".zarray"])
     meta["dimension_separator"] = "/"
     store[".zarray"] = json_dumps(meta)
