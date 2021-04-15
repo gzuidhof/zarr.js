@@ -109,7 +109,7 @@ export interface ZarrArrayMetadata {
 }
 
 export interface ZarrGroupMetadata {
-  /**A
+  /**
    * An integer defining the version of the storage specification to which the array store adheres.
    */
   zarr_format: 1 | 2;
