@@ -455,7 +455,8 @@ export class ZarrArray {
   }
 
   private chunkKey(chunkCoords: number[]) {
-    return this.keyPrefix + chunkCoords.join(".");
+    const sep = this.meta.dimension_separator ?? ".";
+    return this.keyPrefix + chunkCoords.join(sep);
   }
 
   private ensureByteArray(chunkData: ValidStoreType): Uint8Array {
