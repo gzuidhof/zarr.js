@@ -38,7 +38,7 @@ export interface GetRawChunkOptions<Store extends ZarrStore> {
   storeOptions: Parameters<Store['getItem']>[1];
 }
 
-export class ZarrArray<Store extends ZarrStore, ChunkStore extends ZarrStore=Store> {
+export class ZarrArray<Store extends ZarrStore=ZarrStore, ChunkStore extends ZarrStore=Store> {
 
   public store: Store;
   public chunkStore: ChunkStore;
