@@ -1,5 +1,5 @@
 import { ChunksArgument, DtypeString, CompressorConfig, Order, Filter, FillType, PersistenceMode } from './types';
-import { Store } from './storage/types';
+import { Store as ZarrStore, ValidStoreType } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
 import { initArray, containsArray, containsGroup } from './storage/index';
@@ -9,23 +9,36 @@ import { normalizeStoragePath } from './util';
 import { ContainsArrayError, ValueError, ArrayNotFoundError, ContainsGroupError } from './errors';
 import { HTTPStore } from './storage/httpStore';
 
-export type CreateArrayOptions = {
+export type CreateArrayOptions<
+    StoreOption extends ZarrStore | string=ZarrStore,
+    ChunkStoreOption extends ZarrStore=ZarrStore,
+>= {
     shape: number | number[];
     chunks?: ChunksArgument;
     dtype?: DtypeString;
     compressor?: CompressorConfig | null;
     fillValue?: FillType;
     order?: Order;
-    store?: Store;
+    store?: StoreOption;
     overwrite?: boolean;
     path?: string | null;
-    chunkStore?: Store;
+    chunkStore?: ChunkStoreOption;
     filters?: Filter[];
     cacheMetadata?: boolean;
     cacheAttrs?: boolean;
     readOnly?: boolean;
     dimensionSeparator?: '.' | '/';
 };
+
+export type Normalize<S> = S extends string ? HTTPStore: S extends undefined ? MemoryStore<ValidStoreType> : S extends ZarrStore ? S : never;
+export function normalizeStoreArgument<S>(store?: S): Normalize<S> {
+    if (store === undefined) {
+        return new MemoryStore() as Normalize<S>
+    } else if (typeof store === "string") {
+        return new HTTPStore(store) as Normalize<S>;
+    }
+    return store as Normalize<S>;
+}
 
 /**
  * 
@@ -53,15 +66,15 @@ export type CreateArrayOptions = {
  * @param readOnly `true` if array should be protected against modification, defaults to `false`.
  * @param dimensionSeparator if specified, defines an alternate string separator placed between the dimension chunks.
  */
-export async function create(
-    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, dimensionSeparator }: CreateArrayOptions,
-): Promise<ZarrArray> {
-
-    store = normalizeStoreArgument(store);
-
-    await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, dimensionSeparator);
-    const z = await ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
-
+export async function create<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(
+    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, dimensionSeparator }: CreateArrayOptions<StoreOption, ChunkStoreOption>,
+) {
+    const normedStore = normalizeStoreArgument(store);
+    await initArray(normedStore, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, dimensionSeparator);
+    const z = await ZarrArray.create(normedStore, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
     return z;
 }
 
@@ -69,7 +82,10 @@ export async function create(
 /**
  * Create an empty array.
  */
-export async function empty(shape: number | number[], opts: Omit<CreateArrayOptions, 'shape'> = {}) {
+export async function empty<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(shape: number | number[], opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = null;
     return create({ shape, ...opts });
 }
@@ -78,7 +94,10 @@ export async function empty(shape: number | number[], opts: Omit<CreateArrayOpti
  * Create an array, with zero being used as the default value for
  * uninitialized portions of the array.
  */
-export async function zeros(shape: number | number[], opts: Omit<CreateArrayOptions, 'shape'> = {}) {
+export async function zeros<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(shape: number | number[], opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = 0;
     return create({ shape, ...opts });
 }
@@ -87,7 +106,10 @@ export async function zeros(shape: number | number[], opts: Omit<CreateArrayOpti
  * Create an array, with one being used as the default value for
  * uninitialized portions of the array.
  */
-export async function ones(shape: number | number[], opts: Omit<CreateArrayOptions, 'shape'> = {}) {
+export async function ones<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(shape: number | number[], opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = 1;
     return create({ shape, ...opts });
 }
@@ -96,12 +118,18 @@ export async function ones(shape: number | number[], opts: Omit<CreateArrayOptio
  * Create an array, with `fill_value` being used as the default value for
  * uninitialized portions of the array
  */
-export async function full(shape: number | number[], fillValue: FillType, opts: Omit<CreateArrayOptions, 'shape'> = {}) {
+export async function full<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(shape: number | number[], fillValue: FillType, opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = fillValue;
     return create({ shape, ...opts });
 }
 
-export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: Omit<CreateArrayOptions, 'shape'> = {}) {
+export async function array<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     // TODO: infer chunks?
 
     let shape = null;
@@ -124,15 +152,15 @@ export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>
     return z;
 }
 
-type OpenArrayOptions = Partial<CreateArrayOptions & { mode: PersistenceMode }>;
+type OpenArrayOptions<StoreOption extends ZarrStore | string, ChunkStoreOption extends ZarrStore>= Partial<CreateArrayOptions<StoreOption, ChunkStoreOption> & { mode: PersistenceMode }>;
 
-export async function openArray(
-    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, dimensionSeparator }: OpenArrayOptions = {},
+export async function openArray<
+    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
+>(
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store: storeOption, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, dimensionSeparator }: OpenArrayOptions<StoreOption, ChunkStoreOption> = {},
 ) {
-    store = normalizeStoreArgument(store);
-    if (chunkStore === undefined) {
-        chunkStore = normalizeStoreArgument(store);
-    }
+    const store = normalizeStoreArgument(storeOption);
     path = normalizeStoragePath(path);
 
     if (mode === "r" || mode === "r+") {
@@ -176,14 +204,4 @@ export async function openArray(
 
     const readOnly = mode === "r";
     return ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
-}
-
-
-export function normalizeStoreArgument(store?: Store | string): Store {
-    if (store === undefined) {
-        return new MemoryStore();
-    } else if (typeof store === "string") {
-        return new HTTPStore(store);
-    }
-    return store;
 }

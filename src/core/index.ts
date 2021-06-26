@@ -1,4 +1,4 @@
-import { Store as _Store, ValidStoreType } from "../storage/types";
+import { Store as ZarrStore, ValidStoreType } from "../storage/types";
 
 import { containsGroup, pathToPrefix } from '../storage/index';
 import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap, byteSwapInplace } from '../util';
@@ -34,11 +34,11 @@ export interface SetOptions {
   }) => void;
 }
 
-export interface GetRawChunkOptions<O> {
-  storeOptions: O;
+export interface GetRawChunkOptions<Store extends ZarrStore> {
+  storeOptions: Parameters<Store['getItem']>[1];
 }
 
-export class ZarrArray<Store extends _Store, ChunkStore extends _Store=Store> {
+export class ZarrArray<Store extends ZarrStore, ChunkStore extends ZarrStore=Store> {
 
   public store: Store;
   public chunkStore: ChunkStore;
@@ -184,12 +184,12 @@ export class ZarrArray<Store extends _Store, ChunkStore extends _Store=Store> {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  public static async create<Store extends _Store, ChunkStore extends _Store=Store>(store: Store, path: null | string = null, readOnly = false, chunkStore: ChunkStore | null = null, cacheMetadata = true, cacheAttrs = true) {
+  public static async create<Store extends ZarrStore, ChunkStore extends ZarrStore=Store>(store: Store, path: null | string = null, readOnly = false, chunkStore: ChunkStore | null = null, cacheMetadata = true, cacheAttrs = true) {
     const metadata = await this.loadMetadataForConstructor(store, path);
     return new ZarrArray(store, path, metadata as ZarrArrayMetadata, readOnly, chunkStore, cacheMetadata, cacheAttrs);
   }
 
-  private static async loadMetadataForConstructor(store: _Store, path: null | string) {
+  private static async loadMetadataForConstructor(store: ZarrStore, path: null | string) {
     try {
       path = normalizeStoragePath(path);
       const keyPrefix = pathToPrefix(path);
@@ -422,7 +422,7 @@ export class ZarrArray<Store extends _Store, ChunkStore extends _Store=Store> {
     }
   }
 
-  public async getRawChunk<O>(chunkCoords: number[], opts?: GetRawChunkOptions<O>): Promise<RawArray> {
+  public async getRawChunk(chunkCoords: number[], opts?: GetRawChunkOptions<Store>): Promise<RawArray> {
     if (chunkCoords.length !== this.shape.length) {
       throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
     }
