@@ -30,7 +30,7 @@ export type CreateArrayOptions<
     dimensionSeparator?: '.' | '/';
 };
 
-export type Normalize<S> = S extends string ? HTTPStore: S extends undefined ? MemoryStore<ValidStoreType> : S extends ZarrStore ? S : never;
+export type Normalize<S> = S extends string ? HTTPStore: S extends undefined ? MemoryStore : S extends ZarrStore ? S : never;
 export function normalizeStoreArgument<S>(store?: S): Normalize<S> {
     if (store === undefined) {
         return new MemoryStore() as Normalize<S>
@@ -67,7 +67,7 @@ export function normalizeStoreArgument<S>(store?: S): Normalize<S> {
  * @param dimensionSeparator if specified, defines an alternate string separator placed between the dimension chunks.
  */
 export async function create<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(
     { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, dimensionSeparator }: CreateArrayOptions<StoreOption, ChunkStoreOption>,
@@ -83,7 +83,7 @@ export async function create<
  * Create an empty array.
  */
 export async function empty<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(shape: number | number[], opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = null;
@@ -95,7 +95,7 @@ export async function empty<
  * uninitialized portions of the array.
  */
 export async function zeros<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(shape: number | number[], opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = 0;
@@ -107,7 +107,7 @@ export async function zeros<
  * uninitialized portions of the array.
  */
 export async function ones<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(shape: number | number[], opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = 1;
@@ -119,7 +119,7 @@ export async function ones<
  * uninitialized portions of the array
  */
 export async function full<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(shape: number | number[], fillValue: FillType, opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     opts.fillValue = fillValue;
@@ -127,7 +127,7 @@ export async function full<
 }
 
 export async function array<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(data: Buffer | ArrayBuffer | NestedArray<TypedArray>, opts: Omit<CreateArrayOptions<StoreOption, ChunkStoreOption>, 'shape'> = {}) {
     // TODO: infer chunks?
@@ -155,7 +155,7 @@ export async function array<
 type OpenArrayOptions<StoreOption extends ZarrStore | string, ChunkStoreOption extends ZarrStore>= Partial<CreateArrayOptions<StoreOption, ChunkStoreOption> & { mode: PersistenceMode }>;
 
 export async function openArray<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStoreOption extends ZarrStore=Normalize<StoreOption>,
 >(
     { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store: storeOption, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, dimensionSeparator }: OpenArrayOptions<StoreOption, ChunkStoreOption> = {},

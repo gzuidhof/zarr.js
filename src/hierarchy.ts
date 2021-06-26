@@ -247,7 +247,7 @@ export class Group<
  *   If `false`, user attributes are reloaded from the store prior to all attribute read operations.
  */
 export async function group<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStore extends ZarrStore=Normalize<StoreOption>,
 >(storeOption?: StoreOption, path: string | null = null, chunkStore?: ChunkStore, overwrite = false, cacheAttrs = true) {
     const store = normalizeStoreArgument(storeOption);
@@ -271,7 +271,7 @@ export async function group<
  *
  */
 export async function openGroup<
-    StoreOption extends ZarrStore | string=MemoryStore<ValidStoreType>,
+    StoreOption extends ZarrStore | string=MemoryStore,
     ChunkStore extends ZarrStore=Normalize<StoreOption>,
 >(storeOption?: StoreOption, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: ChunkStore, cacheAttrs = true) {
     const store = normalizeStoreArgument(storeOption);
