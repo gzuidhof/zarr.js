@@ -11,7 +11,7 @@ import { BasicIndexer, isContiguousSelection, normalizeIntegerSelection } from '
 import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
 import { TypedArray, getTypedArrayCtr } from '../nestedArray/types';
-import { ValueError, PermissionError, BoundsCheckError, ContainsGroupError, isKeyError, HTTPError } from '../errors';
+import { ValueError, PermissionError, BoundsCheckError, ContainsGroupError, isKeyError } from '../errors';
 import { getCodec } from "../compression/registry";
 
 
