@@ -2,7 +2,7 @@ import { SyncStore, ValidStoreType } from "./types";
 import { createProxy, MutableMappingProxy } from "../mutableMapping";
 import { KeyError } from "../errors";
 
-export class MemoryStore<T extends ValidStoreType> implements SyncStore<T> {
+export class MemoryStore<T extends ValidStoreType=ValidStoreType> implements SyncStore<T> {
     listDir?: undefined;
     rmDir?: undefined;
     getSize?: undefined;
