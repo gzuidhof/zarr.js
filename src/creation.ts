@@ -1,5 +1,5 @@
 import { ChunksArgument, DtypeString, CompressorConfig, Order, Filter, FillType, PersistenceMode } from './types';
-import { Store as ZarrStore, ValidStoreType } from './storage/types';
+import { Store as ZarrStore } from './storage/types';
 import { ZarrArray } from './core/index';
 import { MemoryStore } from './storage/memoryStore';
 import { initArray, containsArray, containsGroup } from './storage/index';
