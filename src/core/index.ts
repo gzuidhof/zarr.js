@@ -422,7 +422,7 @@ export class ZarrArray<Store extends ZarrStore=ZarrStore, ChunkStore extends Zar
     }
   }
 
-  public async getRawChunk(chunkCoords: number[], opts?: GetRawChunkOptions<Store>): Promise<RawArray> {
+  public async getRawChunk(chunkCoords: number[], opts?: GetRawChunkOptions<ChunkStore>): Promise<RawArray> {
     if (chunkCoords.length !== this.shape.length) {
       throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
     }
