@@ -12,7 +12,7 @@ import { HTTPStore } from './storage/httpStore';
 export type CreateArrayOptions<
     StoreOption extends ZarrStore | string=ZarrStore,
     ChunkStoreOption extends ZarrStore=ZarrStore,
->= {
+> = {
     shape: number | number[];
     chunks?: ChunksArgument;
     dtype?: DtypeString;
