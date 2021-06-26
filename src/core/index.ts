@@ -1,4 +1,4 @@
-import { Store, ValidStoreType } from "../storage/types";
+import { Store as _Store, ValidStoreType } from "../storage/types";
 
 import { containsGroup, pathToPrefix } from '../storage/index';
 import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap, byteSwapInplace } from '../util';
@@ -11,7 +11,7 @@ import { BasicIndexer, isContiguousSelection, normalizeIntegerSelection } from '
 import { NestedArray } from "../nestedArray";
 import { RawArray } from "../rawArray";
 import { TypedArray, getTypedArrayCtr } from '../nestedArray/types';
-import { ValueError, PermissionError, BoundsCheckError, ContainsGroupError, isKeyError } from '../errors';
+import { ValueError, PermissionError, BoundsCheckError, ContainsGroupError, isKeyError, HTTPError } from '../errors';
 import { getCodec } from "../compression/registry";
 
 
@@ -38,21 +38,12 @@ export interface GetRawChunkOptions<O> {
   storeOptions: O;
 }
 
-export class ZarrArray {
+export class ZarrArray<Store extends _Store, ChunkStore extends _Store=Store> {
 
   public store: Store;
+  public chunkStore: ChunkStore;
   private compressor: Promise<Codec> | null;
 
-  private _chunkStore: Store | null;
-  /**
-   * A `Store` providing the underlying storage for array chunks.
-   */
-  public get chunkStore(): Store {
-    if (this._chunkStore) {
-      return this._chunkStore;
-    }
-    return this.store;
-  }
   public path: string;
   public keyPrefix: string;
   public readOnly: boolean;
@@ -193,12 +184,12 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  public static async create(store: Store, path: null | string = null, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  public static async create<Store extends _Store, ChunkStore extends _Store=Store>(store: Store, path: null | string = null, readOnly = false, chunkStore: ChunkStore | null = null, cacheMetadata = true, cacheAttrs = true) {
     const metadata = await this.loadMetadataForConstructor(store, path);
     return new ZarrArray(store, path, metadata as ZarrArrayMetadata, readOnly, chunkStore, cacheMetadata, cacheAttrs);
   }
 
-  private static async loadMetadataForConstructor(store: Store, path: null | string) {
+  private static async loadMetadataForConstructor(store: _Store, path: null | string) {
     try {
       path = normalizeStoragePath(path);
       const keyPrefix = pathToPrefix(path);
@@ -224,12 +215,12 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  private constructor(store: Store, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  private constructor(store: Store, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: ChunkStore | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 
     this.store = store;
-    this._chunkStore = chunkStore;
+    this.chunkStore = (chunkStore ?? store) as ChunkStore;
     this.path = normalizeStoragePath(path);
     this.keyPrefix = pathToPrefix(this.path);
     this.readOnly = readOnly;
