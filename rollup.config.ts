@@ -15,6 +15,7 @@ export default [
       entryFileNames: '[name].mjs',
       chunkFileNames: '[name].mjs',
       manualChunks: { core: ['src/zarr-core.ts'] },
+      minifyInternalExports: false,
       sourcemap: true,
     },
     {
@@ -23,6 +24,7 @@ export default [
       entryFileNames: '[name].min.mjs',
       chunkFileNames: '[name].min.mjs',
       manualChunks: { core: ['src/zarr-core.ts'] },
+      minifyInternalExports: false,
       sourcemap: true,
       plugins: [terser()]
     },
