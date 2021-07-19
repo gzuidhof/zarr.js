@@ -1,8 +1,7 @@
 import type { Codec, CodecConstructor } from 'numcodecs';
 
-type Promisify<T> = T | Promise<T>;
 type Config = Record<string, unknown>;
-type CodecImporter = () => Promisify<CodecConstructor<Config>>;
+type CodecImporter = () => CodecConstructor<Config> | Promise<CodecConstructor<Config>>;
 
 const registry: Map<string, CodecImporter> = new Map();
 
