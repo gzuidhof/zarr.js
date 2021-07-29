@@ -77,14 +77,16 @@ describe("ArrayEquals1D works", () => {
 });
 
 describe("URL joining works", () => {
-    test.each([
+    test.each<[[string, string | undefined], string]>([
         [["https://example.com", "bla"], "https://example.com/bla"],
         [["https://example.com/my-store", "arr.zarr"], "https://example.com/my-store/arr.zarr"],
         [["https://example.com/", "arr.zarr"], "https://example.com/arr.zarr"],
-        [["https://example.com/", "", "arr.zarr"], "https://example.com/arr.zarr"],
-        // eslint-disable-next-line @typescript-eslint/ban-types
-    ])("joins parts as expected: output %s, expected %p", (parts: string[] | String, expected: string) => {
-        expect(util.joinUrlParts(...parts)).toEqual(expected);
+        [["https://example.com/?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
+        [["https://example.com?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
+        [["https://example.com/arr.zarr", undefined], "https://example.com/arr.zarr/"],
+        [["https://example.com/arr.zarr/my-store/", ".zarray"], "https://example.com/arr.zarr/my-store/.zarray"],
+    ])("joins parts as expected: output %s, expected %p", ([root, path]: [string, string], expected: string) => {
+        expect(util.createUrlResolver(root)(path)).toEqual(expected);
     });
 });
 

@@ -40,6 +40,7 @@ export function normalizeStoragePath(path: string | String | null): string {
 
     // convert backslash to forward slash
     path = path.replace(/\\/g, "/");
+
     // ensure no leading slash
     while (path.length > 0 && path[0] === '/') {
         path = path.slice(1);
@@ -192,21 +193,21 @@ export function getStrides(shape: number[]): number[] {
     return strides;
 }
 
-/**
- * Preserves (double) slashes earlier in the path, so this works better
- * for URLs. From https://stackoverflow.com/a/46427607/4178400
- * @param args parts of a path or URL to join.
- */
-export function joinUrlParts(...args: string[]) {
-    return args.map((part, i) => {
-        if (i === 0) {
-          return part.trim().replace(/[\/]*$/g, '');
-        } else {
-          return part.trim().replace(/(^[\/]*|[\/]*$)/g, '');
-        }
-      }).filter(x=>x.length).join('/');
+export function createUrlResolver(url: string | URL): (path?: string) => string {
+    const base = typeof url === 'string' ? new URL(url) : url;
+    if (!base.pathname.endsWith('/')) {
+        // ensure trailing slash
+        base.pathname += '/';
+    }
+    return (path?: string) => {
+        if (!path) return base.href;
+        // add trailing slash to resolve path relative to base _directory_
+        const fileUrl = new URL(path, base);
+        // copy search params to new URL
+        fileUrl.search = base.search;
+        return fileUrl.href;
+    }
 }
-
 
 /**
  * Swaps byte order in-place for a given TypedArray.
