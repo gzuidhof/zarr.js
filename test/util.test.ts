@@ -84,6 +84,7 @@ describe("URL resolution works", () => {
         [["https://example.com/?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
         [["https://example.com?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
         [["https://example.com/arr.zarr/my-store/", ".zarray"], "https://example.com/arr.zarr/my-store/.zarray"],
+        [["https://example.com/data.zarr/nested/group", "../.zgroup"], "https://example.com/data.zarr/nested/.zgroup"],
         [[(() => {
             const root = new URL("https://example.com/arr.zarr/my-store/");
             root.searchParams.set("hello", "world");
