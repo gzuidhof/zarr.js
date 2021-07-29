@@ -79,11 +79,12 @@ describe("ArrayEquals1D works", () => {
 describe("URL resolution works", () => {
     test.each<[[string | URL, string], string]>([
         [["https://example.com", "bla"], "https://example.com/bla"],
-        [["https://example.com/my-store", "arr.zarr"], "https://example.com/my-store/arr.zarr"],
-        [["https://example.com/", "arr.zarr"], "https://example.com/arr.zarr"],
-        [["https://example.com/?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
-        [["https://example.com?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
-        [["https://example.com/arr.zarr/my-store/", ".zarray"], "https://example.com/arr.zarr/my-store/.zarray"],
+        [["https://example.com/my-store", "data.zarr"], "https://example.com/my-store/data.zarr"],
+        [["https://example.com/", "data.zarr"], "https://example.com/data.zarr"],
+        [["https://example.com/?hello=world", "data.zarr"], "https://example.com/data.zarr?hello=world"],
+        [["https://example.com?hello=world", "data.zarr"], "https://example.com/data.zarr?hello=world"],
+        [["https://example.com/data.zarr/nested/arr/", ".zarray"], "https://example.com/data.zarr/nested/arr/.zarray"],
+        [["https://example.com/data.zarr/nested/arr", ".zarray"], "https://example.com/data.zarr/nested/arr/.zarray"],
         [["https://example.com/data.zarr/nested/group", "../.zgroup"], "https://example.com/data.zarr/nested/.zgroup"],
         [[(() => {
             const root = new URL("https://example.com/arr.zarr/my-store/");
@@ -91,6 +92,14 @@ describe("URL resolution works", () => {
             root.searchParams.set("foo", "bar");
             return root;
         })(), ".zarray"], "https://example.com/arr.zarr/my-store/.zarray?hello=world&foo=bar"],
+        [[(() => {
+            const root = new URL("https://example.com/arr.zarr/my-store/");
+            root.username = "foo";
+            root.password = "bar";
+            root.searchParams.set("hello", "world");
+            root.searchParams.set("foo", "bar");
+            return root;
+        })(), ".zarray"], "https://foo:bar@example.com/arr.zarr/my-store/.zarray?hello=world&foo=bar"],
     ])("joins parts as expected: output %s, expected %p", ([root, path]: [string | URL, string], expected: string) => {
         expect(util.resolveUrl(root, path)).toEqual(expected);
     });
