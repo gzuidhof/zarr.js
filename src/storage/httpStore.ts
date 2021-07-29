@@ -1,5 +1,5 @@
 import { ValidStoreType, AsyncStore } from './types';
-import { IS_NODE, createUrlResolver } from '../util';
+import { IS_NODE, resolveUrl } from '../util';
 import { KeyError, HTTPError } from '../errors';
 
 enum HTTPMethod {
@@ -15,18 +15,18 @@ interface HTTPStoreOptions {
     supportedMethods?: HTTPMethod[];
 }
 
-export class HTTPStore implements AsyncStore<ArrayBuffer> {
+export class HTTPStore<UrlRoot extends string | URL> implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
     rmDir?: undefined;
     getSize?: undefined;
     rename?: undefined;
 
-    private _resolve: (path?: string) => string;
+    public url: UrlRoot;
     public fetchOptions: RequestInit;
     private supportedMethods: Set<HTTPMethod>;
 
-    constructor(url: string | URL, options: HTTPStoreOptions = {}) {
-        this._resolve = createUrlResolver(url);
+    constructor(url: UrlRoot, options: HTTPStoreOptions = {}) {
+        this.url = url;
         const { fetchOptions = {}, supportedMethods = DEFAULT_METHODS } = options;
         this.fetchOptions = fetchOptions;
         this.supportedMethods = new Set(supportedMethods);
@@ -36,12 +36,8 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         throw new Error('Method not implemented.');
     }
 
-    get url() {
-        return this._resolve();
-    }
-
     async getItem(item: string, opts?: RequestInit) {
-        const url = this._resolve(item);
+        const url = resolveUrl(this.url, item);
         const value = await fetch(url, { ...this.fetchOptions, ...opts });
 
         if (value.status === 404) {
@@ -63,7 +59,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         if (!this.supportedMethods.has(HTTPMethod.PUT)) {
           throw new Error('HTTP PUT no a supported method for store.');
         }
-        const url = this._resolve(item);
+        const url = resolveUrl(this.url, item);
         if (typeof value === 'string') {
             value = new TextEncoder().encode(value).buffer;
         }
@@ -76,7 +72,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async containsItem(item: string): Promise<boolean> {
-        const url = this._resolve(item);
+        const url = resolveUrl(this.url, item);
         // Just check headers if HEAD method supported
         const method = this.supportedMethods.has(HTTPMethod.HEAD) ? HTTPMethod.HEAD : HTTPMethod.GET;
         const value = await fetch(url, { ...this.fetchOptions, method });

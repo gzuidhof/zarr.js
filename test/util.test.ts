@@ -77,16 +77,21 @@ describe("ArrayEquals1D works", () => {
 });
 
 describe("URL joining works", () => {
-    test.each<[[string, string | undefined], string]>([
+    test.each<[[string | URL, string | undefined], string]>([
         [["https://example.com", "bla"], "https://example.com/bla"],
         [["https://example.com/my-store", "arr.zarr"], "https://example.com/my-store/arr.zarr"],
         [["https://example.com/", "arr.zarr"], "https://example.com/arr.zarr"],
         [["https://example.com/?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
         [["https://example.com?hello=world", "arr.zarr"], "https://example.com/arr.zarr?hello=world"],
-        [["https://example.com/arr.zarr", undefined], "https://example.com/arr.zarr/"],
         [["https://example.com/arr.zarr/my-store/", ".zarray"], "https://example.com/arr.zarr/my-store/.zarray"],
-    ])("joins parts as expected: output %s, expected %p", ([root, path]: [string, string], expected: string) => {
-        expect(util.createUrlResolver(root)(path)).toEqual(expected);
+        [[(() => {
+            const root = new URL("https://example.com/arr.zarr/my-store/");
+            root.searchParams.set("hello", "world");
+            root.searchParams.set("foo", "bar");
+            return root;
+        })(), ".zarray"], "https://example.com/arr.zarr/my-store/.zarray?hello=world&foo=bar"],
+    ])("joins parts as expected: output %s, expected %p", ([root, path]: [string | URL, string], expected: string) => {
+        expect(util.resolveUrl(root, path)).toEqual(expected);
     });
 });
 

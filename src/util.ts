@@ -193,20 +193,16 @@ export function getStrides(shape: number[]): number[] {
     return strides;
 }
 
-export function createUrlResolver(url: string | URL): (path?: string) => string {
-    const base = typeof url === 'string' ? new URL(url) : url;
+export function resolveUrl(root: string | URL, path: string): string {
+    const base = typeof root === 'string' ? new URL(root) : root;
     if (!base.pathname.endsWith('/')) {
-        // ensure trailing slash
+        // ensure trailing slash so that base is resolved as _directory_
         base.pathname += '/';
     }
-    return (path?: string) => {
-        if (!path) return base.href;
-        // add trailing slash to resolve path relative to base _directory_
-        const fileUrl = new URL(path, base);
-        // copy search params to new URL
-        fileUrl.search = base.search;
-        return fileUrl.href;
-    }
+    const resolved = new URL(path, base);
+    // copy search params to new URL
+    resolved.search = base.search;
+    return resolved.href;
 }
 
 /**
