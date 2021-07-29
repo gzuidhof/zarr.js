@@ -15,7 +15,7 @@ interface HTTPStoreOptions {
     supportedMethods?: HTTPMethod[];
 }
 
-export class HTTPStore<UrlRoot extends string | URL> implements AsyncStore<ArrayBuffer> {
+export class HTTPStore<UrlRoot extends string | URL=string> implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
     rmDir?: undefined;
     getSize?: undefined;

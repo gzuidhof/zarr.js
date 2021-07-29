@@ -76,8 +76,8 @@ describe("ArrayEquals1D works", () => {
     });
 });
 
-describe("URL joining works", () => {
-    test.each<[[string | URL, string | undefined], string]>([
+describe("URL resolution works", () => {
+    test.each<[[string | URL, string], string]>([
         [["https://example.com", "bla"], "https://example.com/bla"],
         [["https://example.com/my-store", "arr.zarr"], "https://example.com/my-store/arr.zarr"],
         [["https://example.com/", "arr.zarr"], "https://example.com/arr.zarr"],
