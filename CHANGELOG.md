@@ -3,6 +3,8 @@
 ## Release 0.5.2
 **Date:** Unreleased
 
+* Use `URL`-based path resolution in `HTTPStore`. Allows for forwarding of `URL.searchParams` if specified.
+
 ## Release 0.5.1
 **Date:** 2021-07-19
 
