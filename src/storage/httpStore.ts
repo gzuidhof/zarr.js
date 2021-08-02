@@ -1,5 +1,5 @@
 import { ValidStoreType, AsyncStore } from './types';
-import { IS_NODE, joinUrlParts } from '../util';
+import { IS_NODE, resolveUrl } from '../util';
 import { KeyError, HTTPError } from '../errors';
 
 enum HTTPMethod {
@@ -15,17 +15,17 @@ interface HTTPStoreOptions {
     supportedMethods?: HTTPMethod[];
 }
 
-export class HTTPStore implements AsyncStore<ArrayBuffer> {
+export class HTTPStore<UrlRoot extends string | URL=string> implements AsyncStore<ArrayBuffer> {
     listDir?: undefined;
     rmDir?: undefined;
     getSize?: undefined;
     rename?: undefined;
 
-    public url: string;
+    public url: UrlRoot;
     public fetchOptions: RequestInit;
     private supportedMethods: Set<HTTPMethod>;
 
-    constructor(url: string, options: HTTPStoreOptions = {}) {
+    constructor(url: UrlRoot, options: HTTPStoreOptions = {}) {
         this.url = url;
         const { fetchOptions = {}, supportedMethods = DEFAULT_METHODS } = options;
         this.fetchOptions = fetchOptions;
@@ -37,7 +37,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async getItem(item: string, opts?: RequestInit) {
-        const url = joinUrlParts(this.url, item);
+        const url = resolveUrl(this.url, item);
         const value = await fetch(url, { ...this.fetchOptions, ...opts });
 
         if (value.status === 404) {
@@ -59,7 +59,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
         if (!this.supportedMethods.has(HTTPMethod.PUT)) {
           throw new Error('HTTP PUT no a supported method for store.');
         }
-        const url = joinUrlParts(this.url, item);
+        const url = resolveUrl(this.url, item);
         if (typeof value === 'string') {
             value = new TextEncoder().encode(value).buffer;
         }
@@ -72,7 +72,7 @@ export class HTTPStore implements AsyncStore<ArrayBuffer> {
     }
 
     async containsItem(item: string): Promise<boolean> {
-        const url = joinUrlParts(this.url, item);
+        const url = resolveUrl(this.url, item);
         // Just check headers if HEAD method supported
         const method = this.supportedMethods.has(HTTPMethod.HEAD) ? HTTPMethod.HEAD : HTTPMethod.GET;
         const value = await fetch(url, { ...this.fetchOptions, method });
