@@ -155,7 +155,7 @@ export class ZarrArray {
 
 
   private get _chunkDataShape() {
-    if (this.shape === []) {
+    if (this.shape.length === 0) {
       return [1];
     } else {
       const s = [];
@@ -289,7 +289,7 @@ export class ZarrArray {
     }
 
     // Check fields (TODO?)
-    if (this.shape === []) {
+    if (this.shape.length === 0) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
       return this.getBasicSelectionND(selection, asRaw, concurrencyLimit, progressCallback);
@@ -527,7 +527,7 @@ export class ZarrArray {
       await this.reloadMetadata();
     }
 
-    if (this.shape === []) {
+    if (this.shape.length === 0) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
       await this.setBasicSelectionND(selection, value, concurrencyLimit, progressCallback);
@@ -541,7 +541,7 @@ export class ZarrArray {
 
   private getChunkValue(proj: ChunkProjection, indexer: Indexer, value: number | NestedArray<TypedArray>, selectionShape: number[]): number | NestedArray<TypedArray> {
     let chunkValue: number | NestedArray<TypedArray>;
-    if (selectionShape === []) {
+    if (selectionShape.length === 0) {
       chunkValue = value;
     } else if (typeof value === "number") {
       chunkValue = value;
@@ -569,7 +569,7 @@ export class ZarrArray {
     const selectionShape = indexer.shape;
 
     // Check value shape
-    if (selectionShape === []) {
+    if (selectionShape.length === 0) {
       // Setting a single value
     } else if (typeof value === "number") {
       // Setting a scalar value
