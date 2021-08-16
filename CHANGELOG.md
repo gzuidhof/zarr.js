@@ -3,6 +3,7 @@
 ## Release 0.5.2
 **Date:** Unreleased
 
+* Fix unreachable code paths due to always `false` `Array === []` comparison when checking empty selection.
 * Use `URL`-based path resolution in `HTTPStore`. Allows for forwarding of `URL.searchParams` if specified.
 
 ## Release 0.5.1
