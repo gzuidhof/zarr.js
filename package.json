@@ -64,19 +64,6 @@
     "prepublishOnly": "npm run build && cp -r ./dist/* .",
     "postpublish": "git clean -fd"
   },
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "targets": {
-            "esmodules": true
-          }
-        }
-      ],
-      "@babel/preset-typescript"
-    ]
-  },
   "devDependencies": {
     "@babel/preset-env": "^7.13.9",
     "@babel/preset-typescript": "^7.13.0",
@@ -102,7 +89,7 @@
     "typescript": "^4.2.2"
   },
   "dependencies": {
-    "numcodecs": "^0.2.1",
+    "numcodecs": "^0.2.2",
     "p-queue": "6.2.0"
   }
 }
