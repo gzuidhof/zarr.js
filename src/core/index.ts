@@ -208,7 +208,7 @@ export class ZarrArray {
       if (await containsGroup(store, path)) {
         throw new ContainsGroupError(path ?? '');
       }
-      throw new Error("Failed to load metadata for ZarrArray:" + error.toString());
+      throw new Error("Failed to load metadata for ZarrArray:" + (error as any).toString());
     }
   }
 
