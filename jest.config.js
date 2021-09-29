@@ -10,7 +10,6 @@ function baseConfig() {
   }
 }
 
-
 module.exports = {
   ...baseConfig(),
   coverageThreshold: {
@@ -21,5 +20,7 @@ module.exports = {
       statements: 55
     }
   },
-  collectCoverageFrom: ["src/**/*.ts"]
+  collectCoverageFrom: ["src/**/*.ts"],
+  // nucodecs is ESM-only, so we need to include it in our transforms
+  transformIgnorePatterns: [`/node_modules/(?!numcodecs)`]
 }
