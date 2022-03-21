@@ -2,7 +2,7 @@ import { DtypeString } from '../types';
 import { ArraySelection } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
-import { normalizeShape, IS_NODE, getStrides } from '../util';
+import { normalizeShape, IS_NODE, getStrides, isArrayBufferLike } from '../util';
 import { TypedArray, getTypedArrayCtr, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
 import { setRawArrayFromChunkItem, setRawArrayToScalar, setRawArray } from './ops';
 
@@ -13,8 +13,8 @@ export class RawArray {
     data: TypedArray;
 
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString, strides?: number[])
-    constructor(data: Buffer | ArrayBuffer | null, shape?: number | number[], dtype?: DtypeString, strides?: number[])
-    constructor(data: Buffer | ArrayBuffer | TypedArray | null, shape?: number | number[], dtype?: DtypeString, strides?: number[]) {
+    constructor(data: Buffer | ArrayBufferLike | null, shape?: number | number[], dtype?: DtypeString, strides?: number[])
+    constructor(data: Buffer | ArrayBufferLike | TypedArray | null, shape?: number | number[], dtype?: DtypeString, strides?: number[]) {
         const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
 
         if (shape === undefined) {
@@ -50,9 +50,8 @@ export class RawArray {
         } else if (
             // tslint:disable-next-line: strict-type-predicates
             (IS_NODE && Buffer.isBuffer(data))
-            || data instanceof ArrayBuffer
+            || isArrayBufferLike(data)
             || data === null
-            || data.toString().startsWith("[object ArrayBuffer]") // Necessary for Node.js for some reason..
         ) {
             // Create from ArrayBuffer or Buffer
             const numShapeElements = shape.reduce((x, y) => x * y, 1);

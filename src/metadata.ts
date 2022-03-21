@@ -1,6 +1,6 @@
 import { ZarrMetadataType, UserAttributes } from './types';
 import { ValidStoreType } from './storage/types';
-import { IS_NODE } from './util';
+import { isArrayBufferLike, IS_NODE } from './util';
 
 export function parseMetadata(
     s: ValidStoreType | ZarrMetadataType
@@ -13,7 +13,7 @@ export function parseMetadata(
         // tslint:disable-next-line: strict-type-predicates
         if (IS_NODE && Buffer.isBuffer(s)) {
             return JSON.parse(s.toString());
-        } else if (s instanceof ArrayBuffer) {
+        } else if (isArrayBufferLike(s)) {
             const utf8Decoder = new TextDecoder();
             const bytes = new Uint8Array(s);
             return JSON.parse(utf8Decoder.decode(bytes));
