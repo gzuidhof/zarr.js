@@ -3,7 +3,7 @@ import { NestedArrayData, TypedArray, TypedArrayConstructor, getTypedArrayCtr, g
 import { ArraySelection, Slice } from '../core/types';
 import { slice } from '../core/slice';
 import { ValueError } from '../errors';
-import { normalizeShape, IS_NODE } from '../util';
+import { normalizeShape, IS_NODE, isArrayBufferLike } from '../util';
 import { setNestedArray, setNestedArrayToScalar, flattenNestedArray, sliceNestedArray } from './ops';
 
 export class NestedArray<T extends TypedArray> {
@@ -12,8 +12,8 @@ export class NestedArray<T extends TypedArray> {
     data: NestedArrayData;
 
     constructor(data: TypedArray, shape?: number | number[], dtype?: DtypeString)
-    constructor(data: Buffer | ArrayBuffer | NestedArrayData | null, shape: number | number[], dtype: DtypeString)
-    constructor(data: Buffer | ArrayBuffer | NestedArrayData | TypedArray | null, shape?: number | number[], dtype?: DtypeString) {
+    constructor(data: Buffer | ArrayBufferLike | NestedArrayData | null, shape: number | number[], dtype: DtypeString)
+    constructor(data: Buffer | ArrayBufferLike | NestedArrayData | TypedArray | null, shape?: number | number[], dtype?: DtypeString) {
         const dataIsTypedArray = data !== null && !!(data as TypedArray).BYTES_PER_ELEMENT;
 
         if (shape === undefined) {
@@ -45,9 +45,8 @@ export class NestedArray<T extends TypedArray> {
         else if (
             // tslint:disable-next-line: strict-type-predicates
             (IS_NODE && Buffer.isBuffer(data))
-            || data instanceof ArrayBuffer
+            || isArrayBufferLike(data)
             || data === null
-            || data.toString().startsWith("[object ArrayBuffer]") // Necessary for Node.js for some reason..
         ) {
             // Create from ArrayBuffer or Buffer
             const numShapeElements = shape.reduce((x, y) => x * y, 1);

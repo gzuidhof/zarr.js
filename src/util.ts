@@ -246,3 +246,20 @@ export function byteSwap(src: TypedArray): TypedArray {
     byteSwapInplace(copy);
     return copy;
 }
+
+export function isArrayBufferLike(obj: unknown | null): obj is ArrayBufferLike {
+    if (obj === null) {
+        return false;
+    }
+    if (obj instanceof ArrayBuffer) {
+        return true;
+    }
+    if (typeof SharedArrayBuffer === "function" && obj instanceof SharedArrayBuffer) {
+        return true;
+    }
+    if (IS_NODE) { // Necessary for Node.js for some reason..
+        return (obj as Record<string, unknown>).toString().startsWith("[object ArrayBuffer]")
+            || (obj as Record<string, unknown>).toString().startsWith("[object SharedArrayBuffer]");
+    }
+    return false;
+}
