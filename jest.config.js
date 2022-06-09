@@ -24,6 +24,6 @@ module.exports = {
   moduleNameMapper: {
     'p-queue': 'p-queue/dist'
   },
-  // nucodecs is ESM-only, so we need to include it in our transforms
+  // numcodecs is ESM-only, so we need to include it in our transforms
   transformIgnorePatterns: [`/node_modules/(?!numcodecs|p-queue|p-timeout)`]
 }
