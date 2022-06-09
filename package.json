@@ -51,7 +51,7 @@
     "node": ">=12"
   },
   "scripts": {
-    "lint": "eslint src/**/*.ts test/**/*.ts test/**/*.js",
+    "lint": "eslint src/**/* test/**/*",
     "prebuild": "rimraf dist",
     "build": "tsc && rollup -c rollup.config.ts",
     "start": "rollup -c rollup.config.ts -w",

@@ -1,17 +1,13 @@
 module.exports = {
-    "env": {
-        "browser": true,
-        "node": true
-    },
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "project": "tsconfig.eslint.json",
-        "sourceType": "module"
-    },
-    "plugins": [
-        "@typescript-eslint"
+    parser: "@typescript-eslint/parser",
+    plugins: ["@typescript-eslint"],
+    extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
     ],
-    "rules": {
+    env: { browser: true, node: true },
+    rules: {
         "@typescript-eslint/member-delimiter-style": [
             "error",
             {
@@ -49,9 +45,4 @@ module.exports = {
             }
         ]
     },
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended"
-    ]
 };
