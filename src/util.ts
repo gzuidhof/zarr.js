@@ -247,6 +247,64 @@ export function byteSwap(src: TypedArray): TypedArray {
     return copy;
 }
 
+
+const memoizedColMajorToRowMajorConverter = (() => {
+  type ConverterFunc = (src: TypedArray, out: TypedArray, shape: number[]) => void;
+  const cache: Map<number, ConverterFunc> = new Map();
+
+  return function colMajorToRowMajorConverter(nDims: number): ConverterFunc {
+    const cachedFunc = cache.get(nDims);
+    if (cachedFunc != null) {
+      return cachedFunc;
+    }
+    const code = ["let idx = 0;"];
+    for (let dim = 0; dim < nDims; dim++) {
+      // Cache shape values in variables
+      code.push(`const shape${dim} = shape[${dim}];`);
+    }
+    for (let dim = 0; dim < nDims - 1; dim++) {
+      // Calculate strides for output buffer
+      code.push(
+        `const stride${dim} = ${Array.from(
+          { length: nDims - 1 - dim },
+          (_, dim2) => `shape${nDims - 1 - dim2}`
+        ).join(" * ")};`
+      );
+    }
+
+    for (let dim = nDims - 1; dim >= 0; dim--) {
+      // Iterating in the original order (ie. column major) is beneficial for memory pre-fetching
+      code.push(`for (let i${dim} = 0; i${dim} < shape${dim}; i${dim}++) {`);
+    }
+
+    code.push(
+      `out[${[
+        ...Array.from({ length: nDims - 1 }, (_, dim) => `i${dim} * stride${dim}`),
+        `i${nDims - 1}`,
+      ].join(" + ")}] = src[idx++];`
+    );
+
+    for (let dim = 0; dim < nDims; dim++) {
+      code.push("}");
+    }
+
+    const func = new Function("src", "out", "shape", code.join("\n")) as ConverterFunc;
+    cache.set(nDims, func);
+    return func;
+  };
+})();
+
+/**
+ * Rewrites a copy of a TypedArray while converting it from column-major (F-order) to row-major (C-order).
+ * @param src TypedArray
+ * @param out TypedArray
+ * @param shape number[]
+ */
+export function convertColMajorToRowMajor(src: TypedArray, out: TypedArray, shape: number[]): void {
+  const func = memoizedColMajorToRowMajorConverter(shape.length);
+  func(src, out, shape);
+}
+
 export function isArrayBufferLike(obj: unknown | null): obj is ArrayBufferLike {
     if (obj === null) {
         return false;

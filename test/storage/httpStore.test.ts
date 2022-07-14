@@ -25,6 +25,26 @@ describe("Test MemoryStore", () => {
         expect(await z.get([4, 4])).toEqual(0);
     });
 
+    const simpleFixtureStoreF = new HTTPStore("http://localhost:3000/simple_F.zarr");
+    it("Can open simple fixture", async () => {
+        const z = await openArray({ store: simpleFixtureStoreF });
+        expect(z.shape).toEqual([8, 8]);
+        expect(await z.get([0, 0])).toEqual(1);
+        expect(await z.get([0, 1])).toEqual(2);
+        expect(await z.get([7, 7])).toEqual(3);
+        expect(await z.get([4, 4])).toEqual(0);
+    });
+
+    const simpleFixtureStoreF3D = new HTTPStore("http://localhost:3000/simple_F_3D.zarr");
+    it("Can open simple fixture", async () => {
+        const z = await openArray({ store: simpleFixtureStoreF3D });
+        expect(z.shape).toEqual([8, 8, 8]);
+        expect(await z.get([0, 0, 0])).toEqual(1);
+        expect(await z.get([0, 0, 1])).toEqual(2);
+        expect(await z.get([7, 0, 7])).toEqual(3);
+        expect(await z.get([4, 0, 4])).toEqual(0);
+    });
+
     const emptyFixtureStore = new HTTPStore("http://localhost:3000/empty.zarr");
     it("Can open empty fixture", async () => {
         const z = await openArray({ store: emptyFixtureStore });
