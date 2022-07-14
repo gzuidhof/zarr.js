@@ -247,52 +247,96 @@ export function byteSwap(src: TypedArray): TypedArray {
     return copy;
 }
 
-
-const memoizedColMajorToRowMajorConverter = (() => {
-  type ConverterFunc = (src: TypedArray, out: TypedArray, shape: number[]) => void;
-  const cache: Map<number, ConverterFunc> = new Map();
-
-  return function colMajorToRowMajorConverter(nDims: number): ConverterFunc {
-    const cachedFunc = cache.get(nDims);
-    if (cachedFunc != null) {
-      return cachedFunc;
+function convertColMajorToRowMajor2D(
+  src: TypedArray,
+  out: TypedArray,
+  shape: [number, number]
+): void {
+  let idx = 0;
+  const shape0 = shape[0];
+  const shape1 = shape[1];
+  const stride0 = shape1;
+  for (let i1 = 0; i1 < shape1; i1++) {
+    for (let i0 = 0; i0 < shape0; i0++) {
+      out[i0 * stride0 + i1] = src[idx++];
     }
-    const code = ["let idx = 0;"];
+  }
+}
+
+function convertColMajorToRowMajor3D(
+  src: TypedArray,
+  out: TypedArray,
+  shape: [number, number, number]
+): void {
+  let idx = 0;
+  const shape0 = shape[0];
+  const shape1 = shape[1];
+  const shape2 = shape[2];
+  const stride0 = shape2 * shape1;
+  const stride1 = shape2;
+  for (let i2 = 0; i2 < shape2; i2++) {
+    for (let i1 = 0; i1 < shape1; i1++) {
+      for (let i0 = 0; i0 < shape0; i0++) {
+        out[i0 * stride0 + i1 * stride1 + i2] = src[idx++];
+      }
+    }
+  }
+}
+
+function convertColMajorToRowMajor4D(
+  src: TypedArray,
+  out: TypedArray,
+  shape: [number, number, number, number]
+): void {
+  let idx = 0;
+  const shape0 = shape[0];
+  const shape1 = shape[1];
+  const shape2 = shape[2];
+  const shape3 = shape[3];
+  const stride0 = shape3 * shape2 * shape1;
+  const stride1 = shape3 * shape2;
+  const stride2 = shape3;
+  for (let i3 = 0; i3 < shape3; i3++) {
+    for (let i2 = 0; i2 < shape2; i2++) {
+      for (let i1 = 0; i1 < shape1; i1++) {
+        for (let i0 = 0; i0 < shape0; i0++) {
+          out[i0 * stride0 + i1 * stride1 + i2 * stride2 + i3] = src[idx++];
+        }
+      }
+    }
+  }
+}
+
+function convertColMajorToRowMajorGeneric(src: TypedArray, out: TypedArray, shape: number[]): void {
+  const nDims = shape.length;
+  const size = shape.reduce((r, a) => r * a);
+
+  const rowMajorStrides = shape.map((_, i) =>
+    i + 1 === nDims ? 1 : shape.slice(i + 1).reduce((r, a) => r * a, 1)
+  );
+
+  const index = Array(nDims).fill(0);
+
+  for (let colMajorIdx = 0; colMajorIdx < size; colMajorIdx++) {
+    let rowMajorIdx = 0;
     for (let dim = 0; dim < nDims; dim++) {
-      // Cache shape values in variables
-      code.push(`const shape${dim} = shape[${dim}];`);
+      rowMajorIdx += index[dim] * rowMajorStrides[dim];
     }
-    for (let dim = 0; dim < nDims - 1; dim++) {
-      // Calculate strides for output buffer
-      code.push(
-        `const stride${dim} = ${Array.from(
-          { length: nDims - 1 - dim },
-          (_, dim2) => `shape${nDims - 1 - dim2}`
-        ).join(" * ")};`
-      );
-    }
+    out[rowMajorIdx] = src[colMajorIdx];
 
-    for (let dim = nDims - 1; dim >= 0; dim--) {
-      // Iterating in the original order (ie. column major) is beneficial for memory pre-fetching
-      code.push(`for (let i${dim} = 0; i${dim} < shape${dim}; i${dim}++) {`);
-    }
-
-    code.push(
-      `out[${[
-        ...Array.from({ length: nDims - 1 }, (_, dim) => `i${dim} * stride${dim}`),
-        `i${nDims - 1}`,
-      ].join(" + ")}] = src[idx++];`
-    );
-
+    index[0] += 1;
+    // Handle carry-over
     for (let dim = 0; dim < nDims; dim++) {
-      code.push("}");
+      if (index[dim] === shape[dim]) {
+        if (dim + 1 === nDims) {
+          return;
+        }
+        index[dim] = 0;
+        index[dim + 1] += 1;
+      }
     }
-
-    const func = new Function("src", "out", "shape", code.join("\n")) as ConverterFunc;
-    cache.set(nDims, func);
-    return func;
-  };
-})();
+  }
+}
 
 /**
  * Rewrites a copy of a TypedArray while converting it from column-major (F-order) to row-major (C-order).
@@ -301,8 +345,19 @@ const memoizedColMajorToRowMajorConverter = (() => {
  * @param shape number[]
  */
 export function convertColMajorToRowMajor(src: TypedArray, out: TypedArray, shape: number[]): void {
-  const func = memoizedColMajorToRowMajorConverter(shape.length);
-  func(src, out, shape);
+  if (shape.length < 2) {
+    return;
+  }
+  if (shape.length === 2) {
+    return convertColMajorToRowMajor2D(src, out, shape as [number, number]);
+  }
+  if (shape.length === 3) {
+    return convertColMajorToRowMajor3D(src, out, shape as [number, number, number]);
+  }
+  if (shape.length === 4) {
+    return convertColMajorToRowMajor4D(src, out, shape as [number, number, number, number]);
+  }
+  return convertColMajorToRowMajorGeneric(src, out, shape);
 }
 
 export function isArrayBufferLike(obj: unknown | null): obj is ArrayBufferLike {
