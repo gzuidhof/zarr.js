@@ -247,11 +247,7 @@ export function byteSwap(src: TypedArray): TypedArray {
     return copy;
 }
 
-function convertColMajorToRowMajor2D(
-  src: TypedArray,
-  out: TypedArray,
-  shape: [number, number]
-): void {
+function convertColMajorToRowMajor2D(src: TypedArray, out: TypedArray, shape: number[]): void {
   let idx = 0;
   const shape0 = shape[0];
   const shape1 = shape[1];
@@ -263,11 +259,7 @@ function convertColMajorToRowMajor2D(
   }
 }
 
-function convertColMajorToRowMajor3D(
-  src: TypedArray,
-  out: TypedArray,
-  shape: [number, number, number]
-): void {
+function convertColMajorToRowMajor3D(src: TypedArray, out: TypedArray, shape: number[]): void {
   let idx = 0;
   const shape0 = shape[0];
   const shape1 = shape[1];
@@ -283,11 +275,7 @@ function convertColMajorToRowMajor3D(
   }
 }
 
-function convertColMajorToRowMajor4D(
-  src: TypedArray,
-  out: TypedArray,
-  shape: [number, number, number, number]
-): void {
+function convertColMajorToRowMajor4D(src: TypedArray, out: TypedArray, shape: number[]): void {
   let idx = 0;
   const shape0 = shape[0];
   const shape1 = shape[1];
@@ -338,6 +326,16 @@ function convertColMajorToRowMajorGeneric(src: TypedArray, out: TypedArray, shap
   }
 }
 
+const colMajorToRowMajorConverters: {
+  [dim: number]: (src: TypedArray, out: TypedArray, shape: number[]) => void;
+} = {
+  [0]: noop,
+  [1]: noop,
+  [2]: convertColMajorToRowMajor2D,
+  [3]: convertColMajorToRowMajor3D,
+  [4]: convertColMajorToRowMajor4D,
+};
+
 /**
  * Rewrites a copy of a TypedArray while converting it from column-major (F-order) to row-major (C-order).
  * @param src TypedArray
@@ -345,19 +343,11 @@ function convertColMajorToRowMajorGeneric(src: TypedArray, out: TypedArray, shap
  * @param shape number[]
  */
 export function convertColMajorToRowMajor(src: TypedArray, out: TypedArray, shape: number[]): void {
-  if (shape.length < 2) {
-    return;
-  }
-  if (shape.length === 2) {
-    return convertColMajorToRowMajor2D(src, out, shape as [number, number]);
-  }
-  if (shape.length === 3) {
-    return convertColMajorToRowMajor3D(src, out, shape as [number, number, number]);
-  }
-  if (shape.length === 4) {
-    return convertColMajorToRowMajor4D(src, out, shape as [number, number, number, number]);
-  }
-  return convertColMajorToRowMajorGeneric(src, out, shape);
+  return (colMajorToRowMajorConverters[shape.length] || convertColMajorToRowMajorGeneric)(
+    src,
+    out,
+    shape
+  );
 }
 
 export function isArrayBufferLike(obj: unknown | null): obj is ArrayBufferLike {
