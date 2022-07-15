@@ -175,17 +175,13 @@ NestedArray {
 ```
 
 ## Good to know
-Zarr.js is an early-stage project, use this in production at your own risk. Some notes on supported operations:
-
-* #### Setting data on remote stores
-  The current `HTTPStore` implementation for setting data is experimental and untested. *(contributions are welcome!)*
-It uses `PUT`.
+Zarr.js is fairly stable, but still using this in production is at your own risk. Some notes on supported operations:
 
 * #### Support for compressors and filters
-Only `zlib`, `gzip`, and `blosc` compressors are supported at this point. No other compressors or filters are supported yet - they just need to be implemented in [`numcodecs.js`](https://github.com/manzt/numcodecs.js) *(contributions are welcome)*.
+Only `zlib`, `gzip`, and `blosc` compressors are supported at this point. No other compressors or filters are supported yet - they need to be implemented in [`numcodecs.js`](https://github.com/manzt/numcodecs.js) *(contributions are welcome)*.
 
 * #### int64 support
-  int64 support in browsers is tricky. Because all numbers are internally represented as floating point numbers, whole numbers larger than `2^53-1` can not be reliably represented. `BigInt` and `BigInt64Array` solve this, but they are [not supported in every modern browser](https://caniuse.com/#search=BigInt64Array) yet (in particular Edge and Safari). For maximum compatability save yourself some hassle and try to avoid int64/uint64 zarr arrays.
+  int64 support in browsers is tricky. Because all numbers are internally represented as floating point numbers, whole numbers larger than `2^53-1` can not be reliably represented. `BigInt` and `BigInt64Array` solve this, but they are [not supported in every modern browser](https://caniuse.com/#search=BigInt64Array) yet (in particular Edge and Safari). For maximum compatibility save yourself some hassle and try to avoid int64/uint64 zarr arrays.
 
 * #### Ordering
 ~Only `C` order zarr arrays (default for numpy/zarr) are supported right now..~
