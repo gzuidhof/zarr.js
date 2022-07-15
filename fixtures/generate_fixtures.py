@@ -7,20 +7,26 @@ from zarr.util import json_dumps, json_loads
 FIXTURES_FOLDER = "./"
 
 
-def create_simple_array(store, dtype, compression=None, write_chunks=False):
+def create_simple_array(store, dtype, compression=None, order="C", ndim=2, write_chunks=False):
     arr = zarr.open(
         store=store,
-        shape=(8, 8),
-        chunks=(2, None),
+        shape=(8, 8) if ndim == 2 else (8, 8, 8),
+        chunks=(2, None) if ndim == 2 else (2, None, None),
         dtype=dtype,
         fill_value=0,
         mode="w",
         compression=compression,
+        order=order,
     )
     if write_chunks:
-        arr[0, 0] = 1
-        arr[0, 1] = 2
-        arr[7, 7] = 3
+        if ndim == 2:
+            arr[0, 0] = 1
+            arr[0, 1] = 2
+            arr[7, 7] = 3
+        elif ndim == 3:
+            arr[0, 0, 0] = 1
+            arr[0, 0, 1] = 2
+            arr[7, 0, 7] = 3
 
 
 def generate_fixtures():
@@ -51,6 +57,27 @@ def generate_fixtures():
             compression=codec,
             write_chunks=True,
         )
+
+    # F-order
+    path = os.path.join(FIXTURES_FOLDER, "simple_F.zarr")
+    create_simple_array(
+        store=path,
+        dtype="<i4",
+        compression=None,
+        order="F",
+        write_chunks=True,
+    )
+
+    # F-order 3D
+    path = os.path.join(FIXTURES_FOLDER, "simple_F_3D.zarr")
+    create_simple_array(
+        store=path,
+        dtype="<i4",
+        compression=None,
+        order="F",
+        ndim=3,
+        write_chunks=True,
+    )
 
     # nested
     # TODO: Use latest zarr-python once https://github.com/zarr-developers/zarr-python/pull/716 is merged

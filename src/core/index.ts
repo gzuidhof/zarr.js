@@ -1,7 +1,7 @@
 import { Store, ValidStoreType } from "../storage/types";
 
 import { containsGroup, pathToPrefix } from '../storage/index';
-import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap, byteSwapInplace } from '../util';
+import { normalizeStoragePath, isTotalSlice, arrayEquals1D, byteSwap, byteSwapInplace, convertColMajorToRowMajor } from '../util';
 import { ZarrArrayMetadata, UserAttributes, FillType } from '../types';
 import { ARRAY_META_KEY, ATTRS_META_KEY } from '../names';
 import { Attributes } from "../attributes";
@@ -489,6 +489,14 @@ export class ZarrArray {
       byteSwapInplace(this.toTypedArray(bytes.buffer));
     }
 
+    if (this.meta.order === "F" && this.nDims > 1) {
+      // We need to transpose the array, because this library only support C-order.
+      const src = this.toTypedArray(bytes.buffer);
+      const out = new (getTypedArrayCtr(this.dtype))(src.length);
+      convertColMajorToRowMajor(src, out, this.chunks);
+      return out.buffer;
+    }
+
     // TODO filtering etc
     return bytes.buffer;
   }
@@ -615,6 +623,10 @@ export class ZarrArray {
   }
 
   private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+    if (this.meta.order === "F" && this.nDims > 1) {
+      throw new Error("Setting content for arrays in F-order is not supported.");
+    }
+
     // Obtain key for chunk storage
     const chunkKey = this.chunkKey(chunkCoords);
 

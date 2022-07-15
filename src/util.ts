@@ -9,6 +9,9 @@ import { TypedArray } from "./nestedArray/types";
  */
 export const IS_NODE = typeof process !== "undefined" && process.versions && process.versions.node;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export function noop(): void {}
+
 export function humanReadableSize(size: number) {
     if (size < 2 ** 10) {
         return `${size}`;
@@ -245,6 +248,109 @@ export function byteSwap(src: TypedArray): TypedArray {
     const copy = src.slice();
     byteSwapInplace(copy);
     return copy;
+}
+
+function convertColMajorToRowMajor2D(src: TypedArray, out: TypedArray, shape: number[]): void {
+  let idx = 0;
+  const shape0 = shape[0];
+  const shape1 = shape[1];
+  const stride0 = shape1;
+  for (let i1 = 0; i1 < shape1; i1++) {
+    for (let i0 = 0; i0 < shape0; i0++) {
+      out[i0 * stride0 + i1] = src[idx++];
+    }
+  }
+}
+
+function convertColMajorToRowMajor3D(src: TypedArray, out: TypedArray, shape: number[]): void {
+  let idx = 0;
+  const shape0 = shape[0];
+  const shape1 = shape[1];
+  const shape2 = shape[2];
+  const stride0 = shape2 * shape1;
+  const stride1 = shape2;
+  for (let i2 = 0; i2 < shape2; i2++) {
+    for (let i1 = 0; i1 < shape1; i1++) {
+      for (let i0 = 0; i0 < shape0; i0++) {
+        out[i0 * stride0 + i1 * stride1 + i2] = src[idx++];
+      }
+    }
+  }
+}
+
+function convertColMajorToRowMajor4D(src: TypedArray, out: TypedArray, shape: number[]): void {
+  let idx = 0;
+  const shape0 = shape[0];
+  const shape1 = shape[1];
+  const shape2 = shape[2];
+  const shape3 = shape[3];
+  const stride0 = shape3 * shape2 * shape1;
+  const stride1 = shape3 * shape2;
+  const stride2 = shape3;
+  for (let i3 = 0; i3 < shape3; i3++) {
+    for (let i2 = 0; i2 < shape2; i2++) {
+      for (let i1 = 0; i1 < shape1; i1++) {
+        for (let i0 = 0; i0 < shape0; i0++) {
+          out[i0 * stride0 + i1 * stride1 + i2 * stride2 + i3] = src[idx++];
+        }
+      }
+    }
+  }
+}
+
+function convertColMajorToRowMajorGeneric(src: TypedArray, out: TypedArray, shape: number[]): void {
+  const nDims = shape.length;
+  const size = shape.reduce((r, a) => r * a);
+
+  const rowMajorStrides = shape.map((_, i) =>
+    i + 1 === nDims ? 1 : shape.slice(i + 1).reduce((r, a) => r * a, 1)
+  );
+
+  const index = Array(nDims).fill(0);
+
+  for (let colMajorIdx = 0; colMajorIdx < size; colMajorIdx++) {
+    let rowMajorIdx = 0;
+    for (let dim = 0; dim < nDims; dim++) {
+      rowMajorIdx += index[dim] * rowMajorStrides[dim];
+    }
+    out[rowMajorIdx] = src[colMajorIdx];
+
+    index[0] += 1;
+    // Handle carry-over
+    for (let dim = 0; dim < nDims; dim++) {
+      if (index[dim] === shape[dim]) {
+        if (dim + 1 === nDims) {
+          return;
+        }
+        index[dim] = 0;
+        index[dim + 1] += 1;
+      }
+    }
+  }
+}
+
+const colMajorToRowMajorConverters: {
+  [dim: number]: (src: TypedArray, out: TypedArray, shape: number[]) => void;
+} = {
+  [0]: noop,
+  [1]: noop,
+  [2]: convertColMajorToRowMajor2D,
+  [3]: convertColMajorToRowMajor3D,
+  [4]: convertColMajorToRowMajor4D,
+};
+
+/**
+ * Rewrites a copy of a TypedArray while converting it from column-major (F-order) to row-major (C-order).
+ * @param src TypedArray
+ * @param out TypedArray
+ * @param shape number[]
+ */
+export function convertColMajorToRowMajor(src: TypedArray, out: TypedArray, shape: number[]): void {
+  return (colMajorToRowMajorConverters[shape.length] || convertColMajorToRowMajorGeneric)(
+    src,
+    out,
+    shape
+  );
 }
 
 export function isArrayBufferLike(obj: unknown | null): obj is ArrayBufferLike {
