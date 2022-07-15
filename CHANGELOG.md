@@ -1,10 +1,11 @@
 # Changelog
 
 ## Release 0.5.2
-**Date:** Unreleased
+**Date:** 2022-07-15
 
 * Fix unreachable code paths due to always `false` `Array === []` comparison when checking empty selection.
 * Use `URL`-based path resolution in `HTTPStore`. Allows for forwarding of `URL.searchParams` if specified.
+* Added read-only support for `F`-ordered zarr arrays.
 
 ## Release 0.5.1
 **Date:** 2021-07-19
