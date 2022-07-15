@@ -188,7 +188,10 @@ Only `zlib`, `gzip`, and `blosc` compressors are supported at this point. No oth
   int64 support in browsers is tricky. Because all numbers are internally represented as floating point numbers, whole numbers larger than `2^53-1` can not be reliably represented. `BigInt` and `BigInt64Array` solve this, but they are [not supported in every modern browser](https://caniuse.com/#search=BigInt64Array) yet (in particular Edge and Safari). For maximum compatability save yourself some hassle and try to avoid int64/uint64 zarr arrays.
 
 * #### Ordering
-Only `C` order zarr arrays (default for numpy/zarr) are supported right now. NestedArrays will be C-ordered and little-endian (regardless of the store endianness). *(contributions are welcome!)*
+~Only `C` order zarr arrays (default for numpy/zarr) are supported right now..~
+
+  * `C` order zarr arrays are supported fully.
+  * `F` order zarr arrays are supported by automatically converting chunks when they are loaded ([PR](https://github.com/gzuidhof/zarr.js/pull/124)).
 
 * #### Broadcasting and complex indexing
 NumPy-like [broadcasting](https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html) is not supported.
