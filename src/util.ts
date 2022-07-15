@@ -9,6 +9,9 @@ import { TypedArray } from "./nestedArray/types";
  */
 export const IS_NODE = typeof process !== "undefined" && process.versions && process.versions.node;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export function noop(): void {}
+
 export function humanReadableSize(size: number) {
     if (size < 2 ** 10) {
         return `${size}`;
