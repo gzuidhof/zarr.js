@@ -28,6 +28,7 @@ export type DtypeString =
   | '<i2'
   | '<u4'
   | '<i4'
+  | '<f2'
   | '<f4'
   | '<f8'
   | '>u1'
@@ -39,6 +40,7 @@ export type DtypeString =
   | '>u4'
   | '>i4'
   | '>f4'
+  | '>f2'
   | '>f8';
 
 /**

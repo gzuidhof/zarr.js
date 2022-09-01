@@ -1,5 +1,11 @@
 import { DtypeString } from '../types';
 import { ValueError } from '../errors';
+import type { Float16Array, Float16ArrayConstructor } from '@petamoriken/float16';
+
+declare global {
+  // eslint-disable-next-line
+  var Float16Array: Float16ArrayConstructor;
+}
 
 export type NestedArrayData = TypedArray | NDNestedArrayData;
 export type NDNestedArrayData =
@@ -18,7 +24,8 @@ export type TypedArray =
   | Uint32Array
   | Int32Array
   | Float32Array
-  | Float64Array;
+  | Float64Array
+  | Float16Array;
 
 export type TypedArrayConstructor<T extends TypedArray> = {
   new(): T;
@@ -43,6 +50,7 @@ const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<Type
   '<u4': Uint32Array,
   '<i4': Int32Array,
   '<f4': Float32Array,
+  '<f2': globalThis.Float16Array,
   '<f8': Float64Array,
   '>b': Int8Array,
   '>B': Uint8Array,
@@ -53,6 +61,7 @@ const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<Type
   '>u4': Uint32Array,
   '>i4': Int32Array,
   '>f4': Float32Array,
+  '>f2': globalThis.Float16Array,
   '>f8': Float64Array
 };
 
