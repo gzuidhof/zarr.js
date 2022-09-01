@@ -94,6 +94,17 @@ def generate_fixtures():
     meta["dimension_separator"] = "/"
     store[".zarray"] = json_dumps(meta)
 
+    # Float 16
+    path = os.path.join(FIXTURES_FOLDER, "simple_float16_LE.zarr")
+    create_simple_array(
+        store=path, dtype="<f2", compression="blosc", write_chunks=True
+    )
+
+    path = os.path.join(FIXTURES_FOLDER, "simple_float16_BE.zarr")
+    create_simple_array(
+        store=path, dtype=">f2", compression="blosc", write_chunks=True
+    )
+
 
 if __name__ == "__main__":
     generate_fixtures()

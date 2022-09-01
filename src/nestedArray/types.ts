@@ -1,10 +1,9 @@
 import { DtypeString } from '../types';
 import { ValueError } from '../errors';
-import type { Float16Array, Float16ArrayConstructor } from '@petamoriken/float16';
 
 declare global {
   // eslint-disable-next-line
-  var Float16Array: Float16ArrayConstructor;
+  var Float16Array: import('@petamoriken/float16').Float16ArrayConstructor;
 }
 
 export type NestedArrayData = TypedArray | NDNestedArrayData;
@@ -25,7 +24,7 @@ export type TypedArray =
   | Int32Array
   | Float32Array
   | Float64Array
-  | Float16Array;
+  | import('@petamoriken/float16').Float16Array;
 
 export type TypedArrayConstructor<T extends TypedArray> = {
   new(): T;
@@ -36,7 +35,9 @@ export type TypedArrayConstructor<T extends TypedArray> = {
   BYTES_PER_ELEMENT: number;
 };
 
-const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
+// Making this a function means that we don't inspect `globalThis` on import but at runtime.
+// This allows `Float16Array` to be set after importing zarr.js
+const DTYPE_TYPEDARRAY_MAPPING: () => { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = () => ({
   '|b': Int8Array,
   '|B': Uint8Array,
   '|u1': Uint8Array,
@@ -63,12 +64,19 @@ const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<Type
   '>f4': Float32Array,
   '>f2': globalThis.Float16Array,
   '>f8': Float64Array
-};
+});
 
 
 export function getTypedArrayCtr(dtype: DtypeString) {
-  const ctr = DTYPE_TYPEDARRAY_MAPPING[dtype];
+  const ctr = DTYPE_TYPEDARRAY_MAPPING()[dtype];
   if (!ctr) {
+    if (dtype.slice(1) === 'f2') {
+      throw Error(
+        `'${dtype}' is not supported natively in zarr.js. ` +
+        `In order to access this dataset you must make Float16Array available as a global. ` +
+        `See https://github.com/gzuidhof/zarr.js/issues/127`
+      );
+    }
     throw Error(`Dtype not recognized or not supported in zarr.js, got ${dtype}.`);
   }
   return ctr;
