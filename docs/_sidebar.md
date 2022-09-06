@@ -5,6 +5,8 @@
   * [ZarrArrays](/getting-started/zarr-arrays.md)
   * [Remote Datasets](/getting-started/remote-data.md)
   * [RawArrays](/getting-started/raw-arrays.md)
+* **Advanced**
+  * [float16 data](/advanced/float16.md)
 * **Links**
     * [ 🗂️ Github repository](https://github.com/gzuidhof/zarr.js)
     * [ 📦 NPM package](https://www.npmjs.com/package/zarr)

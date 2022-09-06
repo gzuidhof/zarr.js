@@ -1,6 +1,12 @@
 import { DtypeString } from '../types';
 import { ValueError } from '../errors';
 
+// Conditionally get the type for `Float16Array` based on end user TS settings. If not
+// present, then the type if `never` (and thus excluded from unions).
+type Float16ArrayConstructor = typeof globalThis extends { Float16Array: infer T } ? T : never;
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const Float16Array = (globalThis as any).Float16Array as Float16ArrayConstructor;
+
 export type NestedArrayData = TypedArray | NDNestedArrayData;
 export type NDNestedArrayData =
   | TypedArray[]
@@ -18,7 +24,8 @@ export type TypedArray =
   | Uint32Array
   | Int32Array
   | Float32Array
-  | Float64Array;
+  | Float64Array
+  | InstanceType<Float16ArrayConstructor>;
 
 export type TypedArrayConstructor<T extends TypedArray> = {
   new(): T;
@@ -43,6 +50,7 @@ const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<Type
   '<u4': Uint32Array,
   '<i4': Int32Array,
   '<f4': Float32Array,
+  '<f2': Float16Array,
   '<f8': Float64Array,
   '>b': Int8Array,
   '>B': Uint8Array,
@@ -53,13 +61,20 @@ const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<Type
   '>u4': Uint32Array,
   '>i4': Int32Array,
   '>f4': Float32Array,
+  '>f2': Float16Array,
   '>f8': Float64Array
 };
-
 
 export function getTypedArrayCtr(dtype: DtypeString) {
   const ctr = DTYPE_TYPEDARRAY_MAPPING[dtype];
   if (!ctr) {
+    if (dtype.slice(1) === 'f2') {
+      throw Error(
+        `'${dtype}' is not supported natively in zarr.js. ` +
+        `In order to access this dataset you must make Float16Array available as a global. ` +
+        `See https://github.com/gzuidhof/zarr.js/issues/127`
+      );
+    }
     throw Error(`Dtype not recognized or not supported in zarr.js, got ${dtype}.`);
   }
   return ctr;
