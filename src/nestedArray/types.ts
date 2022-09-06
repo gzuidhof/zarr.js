@@ -1,10 +1,11 @@
 import { DtypeString } from '../types';
 import { ValueError } from '../errors';
 
-declare global {
-  // eslint-disable-next-line
-  var Float16Array: import('@petamoriken/float16').Float16ArrayConstructor;
-}
+// Conditionally get the type for `Float16Array` based on end user TS settings. If not
+// present, then the type if `never` (and thus excluded from unions).
+type Float16ArrayConstructor = typeof globalThis extends { Float16Array: infer T } ? T : never;
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const Float16Array = (globalThis as any).Float16Array as Float16ArrayConstructor;
 
 export type NestedArrayData = TypedArray | NDNestedArrayData;
 export type NDNestedArrayData =
@@ -24,7 +25,7 @@ export type TypedArray =
   | Int32Array
   | Float32Array
   | Float64Array
-  | import('@petamoriken/float16').Float16Array;
+  | InstanceType<Float16ArrayConstructor>;
 
 export type TypedArrayConstructor<T extends TypedArray> = {
   new(): T;
@@ -35,9 +36,7 @@ export type TypedArrayConstructor<T extends TypedArray> = {
   BYTES_PER_ELEMENT: number;
 };
 
-// Making this a function means that we don't inspect `globalThis` on import but at runtime.
-// This allows `Float16Array` to be set after importing zarr.js
-const DTYPE_TYPEDARRAY_MAPPING: () => { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = () => ({
+const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
   '|b': Int8Array,
   '|B': Uint8Array,
   '|u1': Uint8Array,
@@ -51,7 +50,7 @@ const DTYPE_TYPEDARRAY_MAPPING: () => { [A in DtypeString]: TypedArrayConstructo
   '<u4': Uint32Array,
   '<i4': Int32Array,
   '<f4': Float32Array,
-  '<f2': globalThis.Float16Array,
+  '<f2': Float16Array,
   '<f8': Float64Array,
   '>b': Int8Array,
   '>B': Uint8Array,
@@ -62,13 +61,12 @@ const DTYPE_TYPEDARRAY_MAPPING: () => { [A in DtypeString]: TypedArrayConstructo
   '>u4': Uint32Array,
   '>i4': Int32Array,
   '>f4': Float32Array,
-  '>f2': globalThis.Float16Array,
+  '>f2': Float16Array,
   '>f8': Float64Array
-});
-
+};
 
 export function getTypedArrayCtr(dtype: DtypeString) {
-  const ctr = DTYPE_TYPEDARRAY_MAPPING()[dtype];
+  const ctr = DTYPE_TYPEDARRAY_MAPPING[dtype];
   if (!ctr) {
     if (dtype.slice(1) === 'f2') {
       throw Error(
