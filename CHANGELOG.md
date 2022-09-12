@@ -1,5 +1,10 @@
 # Changelog
 
+## Release 0.6.0
+**Date:** 2022-09-12
+
+* Add (optional) support for `f2` data types (see: https://guido.io/zarr.js/#/advanced/float16).
+
 ## Release 0.5.2
 **Date:** 2022-07-15
 
