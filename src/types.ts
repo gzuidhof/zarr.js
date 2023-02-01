@@ -19,6 +19,7 @@ export type DtypeString =
   | '|u1'
   | '|i1'
   | '|b'
+  | '|b1'
   | '|B'
   | '<u1'
   | '<i1'

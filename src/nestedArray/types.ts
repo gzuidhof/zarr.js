@@ -38,6 +38,7 @@ export type TypedArrayConstructor<T extends TypedArray> = {
 
 const DTYPE_TYPEDARRAY_MAPPING: { [A in DtypeString]: TypedArrayConstructor<TypedArray> } = {
   '|b': Int8Array,
+  '|b1': Uint8Array,
   '|B': Uint8Array,
   '|u1': Uint8Array,
   '|i1': Int8Array,
