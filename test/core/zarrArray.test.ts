@@ -69,7 +69,7 @@ describe("ZarrArray Creation", () => {
 
     it("errors for unsupported/invalid dtype", async () => {
         const store = new ObjectStore<Buffer>();
-        await initArray(store, 100, 5, '<i8' as any);
+        await initArray(store, 100, 5, '<i64' as any);
         const z = await ZarrArray.create(store);
         await expect(z.get(null)).rejects.toBeTruthy();
     });
