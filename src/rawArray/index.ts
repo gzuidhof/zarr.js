@@ -5,6 +5,7 @@ import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE, getStrides, isArrayBufferLike } from '../util';
 import { TypedArray, getTypedArrayCtr, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
 import { setRawArrayFromChunkItem, setRawArrayToScalar, setRawArray } from './ops';
+import { type } from 'os';
 
 export class RawArray {
     dtype: DtypeString;

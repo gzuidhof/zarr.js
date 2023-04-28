@@ -81,10 +81,10 @@ export class NestedArray<T extends TypedArray> {
         if (selection === null) {
             selection = [slice(null)];
         }
-        if (typeof value === "number") {
+        if (typeof value === "number" || typeof value === "bigint") {
             if (this.shape.length === 0) {
                 // Zero dimension array..
-                this.data[0] = value;
+                this.data[0] = value as number;
             } else {
                 setNestedArrayToScalar(this.data, value, this.shape, selection);
             }
@@ -120,7 +120,7 @@ export function rangeTypedArray<T extends TypedArray>(shape: number[], tContruct
     const data = new tContructor(size);
     let values: any[] = [];
     if (data[Symbol.toStringTag] === 'BigUint64Array' || data[Symbol.toStringTag] === 'BigInt64Array') {
-        values = [...Array(size).keys()].map(BigInt);      
+        values = [...Array(size).keys()].map(BigInt);
     } else {
         values = [...Array(size).keys()];
     }

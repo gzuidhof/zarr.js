@@ -326,7 +326,6 @@ export class ZarrArray {
         return out;
       }
     }
-
     const out = asRaw
       ? new RawArray(null, outShape, outDtype)
       : new NestedArray(null, outShape, outDtype);
@@ -383,6 +382,7 @@ export class ZarrArray {
     }
 
     const cKey = this.chunkKey(chunkCoords);
+
     try {
       const cdata = await this.chunkStore.getItem(cKey);
       const decodedChunk = await this.decodeChunk(cdata);
@@ -395,7 +395,7 @@ export class ZarrArray {
           // into the destination array
 
           // TODO check order
-          // TODO filters..
+          // TODO filters...
           out.set(outSelection, this.toNestedArray<T>(decodedChunk));
           return;
         }
@@ -407,7 +407,6 @@ export class ZarrArray {
         if (dropAxes !== null) {
           throw new Error("Drop axes is not supported yet");
         }
-
         out.set(outSelection, tmp as NestedArray<T>);
 
       } else {
