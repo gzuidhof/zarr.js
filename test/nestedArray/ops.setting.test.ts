@@ -192,14 +192,14 @@ describe("NestedArray setting", () => {
             selection: [0],
             expected: [BigInt64Array.from([0n, 1n, 2n]), BigInt64Array.from([3n, 4n, 5n])],
         },
-        // {
-        //     name: "2d_2x3_s",
-        //     destShape: [2, 3],
-        //     sourceShape: [2],
-        //     constr: BigInt64Array,
-        //     selection: [slice(null), 0],
-        //     expected: [BigInt64Array.from([0n, 1n, 2n]), BigInt64Array.from([1n, 4n, 5n])],
-        // },
+        {
+            name: "2d_2x3_s",
+            destShape: [2, 3],
+            sourceShape: [2],
+            constr: BigInt64Array,
+            selection: [slice(null), 0],
+            expected: [BigInt64Array.from([0n, 1n, 2n]), BigInt64Array.from([1n, 4n, 5n])],
+        },
         {
             name: "2d_2x3_int_index",
             destShape: [2, 3],
