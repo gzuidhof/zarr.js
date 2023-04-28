@@ -123,8 +123,8 @@ describe("GetBasicSelection1DSimple", () => {
     // // Error: Cannot convert 0 to a BigInt (nestedArrayindex.ts:87)
     const storeBigInt = new MemoryStore<ArrayBuffer>();
 
-    const u8BigInt = new BigInt64Array(5);
-    u8BigInt.set([0n, 1n, 2n, 3n, 4n]);
+    const i8 = new BigInt64Array(5);
+    i8.set([0n, 1n, 2n, 3n, 4n]);
 
     const setupBigInt = async (arrName: string) => {
         await initArray(storeBigInt, 8, 5, '<i8', arrName);
@@ -142,7 +142,7 @@ describe("GetBasicSelection1DSimple", () => {
             ],
             "zarr_format": 2
         })));
-        storeBigInt.setItem(arrName + "/0", u8BigInt.buffer);
+        storeBigInt.setItem(arrName + "/0", i8.buffer);
     };
 
     it("can select slices and single values, uses fill value", async () => {

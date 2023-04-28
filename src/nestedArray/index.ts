@@ -83,7 +83,7 @@ export class NestedArray<T extends TypedArray> {
         }
         if (typeof value === "number" || typeof value === "bigint") {
             if (this.shape.length === 0) {
-                // Zero dimension array..
+                // Zero dimension array...
                 this.data[0] = value;
             } else {
                 setNestedArrayToScalar(this.data, value, this.shape, selection);
