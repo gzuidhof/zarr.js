@@ -121,40 +121,40 @@ describe("GetBasicSelection1DSimple", () => {
     });
 
     // // Error: Cannot convert 0 to a BigInt (nestedArrayindex.ts:87)
-    // const storeBigInt = new MemoryStore<ArrayBuffer>();
+    const storeBigInt = new MemoryStore<ArrayBuffer>();
 
-    // const u8BigInt = new BigInt64Array(5);
-    // u8BigInt.set([0n, 1n, 2n, 3n, 4n]);
+    const u8BigInt = new BigInt64Array(5);
+    u8BigInt.set([0n, 1n, 2n, 3n, 4n]);
 
-    // const setupBigInt = async (arrName: string) => {
-    //     await initArray(storeBigInt, 8, 5, '<i8', arrName);
-    //     storeBigInt.setItem(arrName + "/.zarray", Buffer.from(JSON.stringify({
-    //         "chunks": [
-    //             5
-    //         ],
-    //         "compressor": null,
-    //         "dtype": "<i8",
-    //         "fill_value": 0,
-    //         "filters": null,
-    //         "order": "C",
-    //         "shape": [
-    //             8
-    //         ],
-    //         "zarr_format": 2
-    //     })));
-    //     storeBigInt.setItem(arrName + "/0", u8BigInt.buffer);
-    // };
+    const setupBigInt = async (arrName: string) => {
+        await initArray(storeBigInt, 8, 5, '<i8', arrName);
+        storeBigInt.setItem(arrName + "/.zarray", Buffer.from(JSON.stringify({
+            "chunks": [
+                5
+            ],
+            "compressor": null,
+            "dtype": "<i8",
+            "fill_value": 0,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                8
+            ],
+            "zarr_format": 2
+        })));
+        storeBigInt.setItem(arrName + "/0", u8BigInt.buffer);
+    };
 
-    // it("can select slices and single values, uses fill value", async () => {
-    //     await setupBigInt("array_name_0");
-    //     const z = await ZarrArray.create(storeBigInt, "array_name_0");
-    //     expect((await z.getBasicSelection([slice(1, 3)]) as NestedArray<BigInt64Array>).data).toEqual(BigInt64Array.from([1n, 2n]));
-    //     expect(await z.getBasicSelection(0)).toEqual(0n);
-    //     expect(await z.getBasicSelection(3)).toEqual(3n);
+    it("can select slices and single values, uses fill value", async () => {
+        await setupBigInt("array_name_1");
+        const z = await ZarrArray.create(storeBigInt, "array_name_1");
+        expect((await z.getBasicSelection([slice(1, 3)]) as NestedArray<BigInt64Array>).data).toEqual(BigInt64Array.from([1n, 2n]));
+        expect(await z.getBasicSelection(0)).toEqual(0n);
+        expect(await z.getBasicSelection(3)).toEqual(3n);
 
-    //     // // Uses fill value
-    //     expect(await z.getBasicSelection(6)).toEqual(0n);
-    // });
+        // Uses fill value
+        // expect(await z.getBasicSelection(6)).toEqual(0n);
+    });
 });
 
 
@@ -240,8 +240,8 @@ describe("GetBasicSelections2D", () => {
         42,
         -1,
         // Throws wometines an error
-        // [42, slice(null)],
-        // [-1, slice(null)],
+        [42, slice(null)],
+        [-1, slice(null)],
         // single value
         [0, 5],
         [-5, 5],
@@ -276,7 +276,7 @@ describe("GetBasicSelections2D", () => {
         [null],
         [null, null],
         // Throws sometimes an error
-        // [null, 0]
+        [null, 0]
     ];
 
     const data = rangeTypedArray([1000, 10], Int32Array);
