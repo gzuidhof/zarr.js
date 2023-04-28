@@ -77,7 +77,7 @@ export class NestedArray<T extends TypedArray> {
         }
     }
 
-    public set(selection: ArraySelection = null, value: NestedArray<T> | number) {
+    public set(selection: ArraySelection = null, value: NestedArray<T> | number | bigint) {
         if (selection === null) {
             selection = [slice(null)];
         }

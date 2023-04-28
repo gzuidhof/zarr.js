@@ -546,11 +546,11 @@ export class ZarrArray {
     await this.setSelection(indexer, value, concurrencyLimit, progressCallback);
   }
 
-  private getChunkValue(proj: ChunkProjection, indexer: Indexer, value: number | NestedArray<TypedArray>, selectionShape: number[]): number | NestedArray<TypedArray> {
-    let chunkValue: number | NestedArray<TypedArray>;
+  private getChunkValue(proj: ChunkProjection, indexer: Indexer, value: bigint | number | NestedArray<TypedArray>, selectionShape: number[]): bigint | number | NestedArray<TypedArray> {
+    let chunkValue: bigint | number | NestedArray<TypedArray>;
     if (selectionShape.length === 0) {
       chunkValue = value;
-    } else if (typeof value === "number") {
+    } else if (typeof value === "number" || typeof value === "bigint") {
       chunkValue = value;
     } else {
       chunkValue = value.get(proj.outSelection);
@@ -562,7 +562,7 @@ export class ZarrArray {
     return chunkValue;
   }
 
-  private async setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
+  private async setSelection(indexer: Indexer, value: bigint | number | NestedArray<TypedArray>, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be replaced. Each chunk is processed in turn, extracting the
     // necessary data from the value array and storing into the chunk array.
@@ -578,7 +578,7 @@ export class ZarrArray {
     // Check value shape
     if (selectionShape.length === 0) {
       // Setting a single value
-    } else if (typeof value === "number") {
+    } else if (typeof value === "number" || typeof value === "bigint") {
       // Setting a scalar value
     } else if (value instanceof NestedArray) {
       // TODO: non stringify equality check
@@ -621,7 +621,7 @@ export class ZarrArray {
     await queue.onIdle();
   }
 
-  private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+  private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: bigint | number | NestedArray<TypedArray>) {
     if (this.meta.order === "F" && this.nDims > 1) {
       throw new Error("Setting content for arrays in F-order is not supported.");
     }
@@ -640,7 +640,7 @@ export class ZarrArray {
       // Optimization: we are completely replacing the chunk, so no need
       // to access the existing chunk data
 
-      if (typeof value === "number") {
+      if (typeof value === "number" || typeof value === "bigint") {
         // TODO get the right type here
         chunk = new dtypeConstr(chunkSize);
         chunk.fill(value as never);
