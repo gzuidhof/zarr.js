@@ -513,7 +513,7 @@ export class ZarrArray {
       if (isKeyError(error)) {
         // fill with scalar if item doesn't exist
         const data = new (getTypedArrayCtr(this.dtype))(outSize);
-        return new RawArray(data.fill(this.fillValue as number), outShape);
+        return new RawArray(data.fill(this.fillValue as never), outShape);
       } else {
         // Different type of error - rethrow
         throw error;
@@ -643,7 +643,7 @@ export class ZarrArray {
       if (typeof value === "number") {
         // TODO get the right type here
         chunk = new dtypeConstr(chunkSize);
-        chunk.fill(value);
+        chunk.fill(value as never);
       } else {
         chunk = value.flatten();
       }
@@ -664,7 +664,7 @@ export class ZarrArray {
           // Chunk is not initialized
           chunkData = new dtypeConstr(chunkSize);
           if (this.fillValue !== null) {
-            chunkData.fill(this.fillValue);
+            chunkData.fill(this.fillValue as never);
           }
         } else {
           // Different type of error - rethrow
