@@ -72,7 +72,7 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection, value: RawArray | number): void;
+    public set(selection: ArraySelection, value: RawArray | number | bigint): void;
     public set(selection: ArraySelection, chunk: RawArray, chunkSelection: ArraySelection): void;
     public set(selection: ArraySelection = null, value: RawArray | number | bigint, chunkSelection?: ArraySelection) {
         if (selection === null) {

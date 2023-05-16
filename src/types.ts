@@ -4,7 +4,7 @@ export type UserAttributes = Record<string, any>;
 /**
  * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
  */
-export type FillType = number | null;
+export type FillType = number | null | bigint;
 
 export type FillTypeSerialized = number | 'NaN' | 'Infinity' | '-Infinity' | null;
 

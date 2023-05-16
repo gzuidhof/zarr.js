@@ -120,7 +120,6 @@ describe("GetBasicSelection1DSimple", () => {
         expect(await z.getBasicSelection(6)).toEqual(0);
     });
 
-    // // Error: Cannot convert 0 to a BigInt (nestedArrayindex.ts:87)
     const storeBigInt = new MemoryStore<ArrayBuffer>();
 
     const i8 = new BigInt64Array(5);
@@ -153,7 +152,7 @@ describe("GetBasicSelection1DSimple", () => {
         expect(await z.getBasicSelection(3)).toEqual(3n);
 
         // Uses fill value
-        // expect(await z.getBasicSelection(6)).toEqual(0n);
+        expect(await z.getBasicSelection(6)).toEqual(0n);
     });
 });
 
