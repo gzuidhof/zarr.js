@@ -40,7 +40,7 @@ export class ArrayNotFoundError extends Error implements ZarrError {
 export class GroupNotFoundError extends Error implements ZarrError {
     __zarr__ = 'GroupNotFoundError';
     constructor(path: string) {
-        super(`ground not found at path ${path}`);
+        super(`group not found at path ${path}`);
         Object.setPrototypeOf(this, GroupNotFoundError.prototype);
     }
 }
@@ -48,7 +48,7 @@ export class GroupNotFoundError extends Error implements ZarrError {
 export class PathNotFoundError extends Error implements ZarrError {
     __zarr__ = 'PathNotFoundError';
     constructor(path: string) {
-        super(`nothing not found at path ${path}`);
+        super(`nothing found at path ${path}`);
         Object.setPrototypeOf(this, PathNotFoundError.prototype);
     }
 }
