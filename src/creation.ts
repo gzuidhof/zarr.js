@@ -16,7 +16,7 @@ export type CreateArrayOptions = {
     compressor?: CompressorConfig | null;
     fillValue?: FillType;
     order?: Order;
-    store?: Store;
+    store?: Store | string;
     overwrite?: boolean;
     path?: string | null;
     chunkStore?: Store;
@@ -54,10 +54,10 @@ export type CreateArrayOptions = {
  * @param dimensionSeparator if specified, defines an alternate string separator placed between the dimension chunks.
  */
 export async function create(
-    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, dimensionSeparator }: CreateArrayOptions,
+    { shape, chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store: storeArgument, overwrite = false, path, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, readOnly = false, dimensionSeparator }: CreateArrayOptions,
 ): Promise<ZarrArray> {
-
-    store = normalizeStoreArgument(store);
+    
+    const store = normalizeStoreArgument(storeArgument);
 
     await initArray(store, shape, chunks, dtype, path, compressor, fillValue, order, overwrite, chunkStore, filters, dimensionSeparator);
     const z = await ZarrArray.create(store, path, readOnly, chunkStore, cacheMetadata, cacheAttrs);
@@ -127,9 +127,9 @@ export async function array(data: Buffer | ArrayBuffer | NestedArray<TypedArray>
 type OpenArrayOptions = Partial<CreateArrayOptions & { mode: PersistenceMode }>;
 
 export async function openArray(
-    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, dimensionSeparator }: OpenArrayOptions = {},
+    { shape, mode = "a", chunks = true, dtype = "<i4", compressor = null, fillValue = null, order = "C", store: storeArgument, overwrite = false, path = null, chunkStore, filters, cacheMetadata = true, cacheAttrs = true, dimensionSeparator }: OpenArrayOptions = {},
 ) {
-    store = normalizeStoreArgument(store);
+    const store = normalizeStoreArgument(storeArgument);
     if (chunkStore === undefined) {
         chunkStore = normalizeStoreArgument(store);
     }

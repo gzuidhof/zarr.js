@@ -194,7 +194,7 @@ export class ZarrArray<StoreGetOptions = any> {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  public static async create(store: Store, path: null | string = null, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  public static async create<StoreGetOptions>(store: Store<StoreGetOptions>, path: null | string = null, readOnly = false, chunkStore: Store<StoreGetOptions> | null = null, cacheMetadata = true, cacheAttrs = true) {
     const metadata = await this.loadMetadataForConstructor(store, path);
     return new ZarrArray(store, path, metadata as ZarrArrayMetadata, readOnly, chunkStore, cacheMetadata, cacheAttrs);
   }
@@ -225,7 +225,7 @@ export class ZarrArray<StoreGetOptions = any> {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  private constructor(store: Store<StoreGetOptions>, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  private constructor(store: Store<StoreGetOptions>, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: Store<StoreGetOptions> | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 
