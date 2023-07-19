@@ -338,6 +338,8 @@ export class ZarrArray {
     // create promise queue with concurrency control
     const queue = new PQueue({ concurrency: concurrencyLimit });
 
+    const allTasks = [];
+
     if (progressCallback) {
 
       let progress = 0;
@@ -345,21 +347,21 @@ export class ZarrArray {
       for (const _ of indexer.iter()) queueSize += 1;
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
-        (async () => {
+        allTasks.push((async () => {
           await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
           progress += 1;
           progressCallback({ progress: progress, queueSize: queueSize });
-        })();
+        })());
       }
 
     } else {
       for (const proj of indexer.iter()) {
-        queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
+        allTasks.push(queue.add(async () => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes)));
       }
     }
 
-    // guarantees that all work on queue has finished
-    await queue.onIdle();
+    // guarantees that all work on queue has finished and throws if any of the tasks errored.
+    await Promise.all(allTasks);
 
     // Return scalar instead of zero-dimensional array.
     if (out.shape.length === 0) {
@@ -593,6 +595,8 @@ export class ZarrArray {
 
     const queue = new PQueue({ concurrency: concurrencyLimit });
 
+    const allTasks = [];
+
     if (progressCallback) {
 
       let queueSize = 0;
@@ -602,24 +606,24 @@ export class ZarrArray {
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         const chunkValue = this.getChunkValue(proj, indexer, value, selectionShape);
-        (async () => {
+        allTasks.push((async () => {
           await queue.add(() => this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue));
           progress += 1;
           progressCallback({ progress: progress, queueSize: queueSize });
-        })();
+        })());
       }
 
     } else {
 
       for (const proj of indexer.iter()) {
         const chunkValue = this.getChunkValue(proj, indexer, value, selectionShape);
-        queue.add(() => this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue));
+        allTasks.push(queue.add(() => this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue)));
       }
 
     }
 
-    // guarantees that all work on queue has finished
-    await queue.onIdle();
+    // guarantees that all work on queue has finished and throws if any of the tasks errored.
+    await Promise.all(allTasks);
   }
 
   private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
