@@ -18,12 +18,13 @@ import { getCodec } from "../compression/registry";
 import type { Codec } from 'numcodecs';
 import PQueue from 'p-queue';
 
-export interface GetOptions {
+export interface GetOptions<StoreGetOptions> {
   concurrencyLimit?: number;
   progressCallback?: (progressUpdate: {
     progress: number;
     queueSize: number;
   }) => void;
+  storeOptions?: StoreGetOptions;
 }
 
 export interface SetOptions {
@@ -34,20 +35,20 @@ export interface SetOptions {
   }) => void;
 }
 
-export interface GetRawChunkOptions<O> {
-  storeOptions: O;
+export interface GetRawChunkOptions<StoreGetOptions> {
+  storeOptions: StoreGetOptions;
 }
 
-export class ZarrArray {
+export class ZarrArray<StoreGetOptions = any> {
 
-  public store: Store;
+  public store: Store<StoreGetOptions>;
   private compressor: Promise<Codec> | null;
 
-  private _chunkStore: Store | null;
+  private _chunkStore: Store<StoreGetOptions> | null;
   /**
    * A `Store` providing the underlying storage for array chunks.
    */
-  public get chunkStore(): Store {
+  public get chunkStore(): Store<StoreGetOptions> {
     if (this._chunkStore) {
       return this._chunkStore;
     }
@@ -193,7 +194,7 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  public static async create(store: Store, path: null | string = null, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  public static async create<StoreGetOptions>(store: Store<StoreGetOptions>, path: null | string = null, readOnly = false, chunkStore: Store<StoreGetOptions> | null = null, cacheMetadata = true, cacheAttrs = true) {
     const metadata = await this.loadMetadataForConstructor(store, path);
     return new ZarrArray(store, path, metadata as ZarrArrayMetadata, readOnly, chunkStore, cacheMetadata, cacheAttrs);
   }
@@ -224,7 +225,7 @@ export class ZarrArray {
    * @param cacheAttrs If true (default), user attributes will be cached for attribute read operations.
    * If false, user attributes are reloaded from the store prior to all attribute read operations.
    */
-  private constructor(store: Store, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: Store | null = null, cacheMetadata = true, cacheAttrs = true) {
+  private constructor(store: Store<StoreGetOptions>, path: null | string = null, metadata: ZarrArrayMetadata, readOnly = false, chunkStore: Store<StoreGetOptions> | null = null, cacheMetadata = true, cacheAttrs = true) {
     // N.B., expect at this point store is fully initialized with all
     // configuration metadata fully specified and normalized
 
@@ -263,26 +264,26 @@ export class ZarrArray {
     }
   }
 
-  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public get(selection?: ArraySelection, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public get(selection: ArraySelection = null, opts: GetOptions = {}): Promise<NestedArray<TypedArray> | number> {
+  public get(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions<StoreGetOptions>): Promise<NestedArray<TypedArray> | number>;
+  public get(selection?: ArraySelection, opts?: GetOptions<StoreGetOptions>): Promise<NestedArray<TypedArray> | number>;
+  public get(selection: ArraySelection = null, opts: GetOptions<StoreGetOptions> = {}): Promise<NestedArray<TypedArray> | number> {
     return this.getBasicSelection(selection, false, opts);
   }
 
-  public getRaw(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions): Promise<RawArray | number>;
-  public getRaw(selection?: ArraySelection, opts?: GetOptions): Promise<RawArray | number>;
-  public getRaw(selection: ArraySelection = null, opts: GetOptions = {}): Promise<RawArray | number> {
+  public getRaw(selection?: undefined | Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], opts?: GetOptions<StoreGetOptions>): Promise<RawArray | number>;
+  public getRaw(selection?: ArraySelection, opts?: GetOptions<StoreGetOptions>): Promise<RawArray | number>;
+  public getRaw(selection: ArraySelection = null, opts: GetOptions<StoreGetOptions> = {}): Promise<RawArray | number> {
     return this.getBasicSelection(selection, true, opts);
   }
 
   // asRaw = false
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: false, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
-  public async getBasicSelection(selection: ArraySelection, asRaw?: false, opts?: GetOptions): Promise<NestedArray<TypedArray> | number>;
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: false, opts?: GetOptions<StoreGetOptions>): Promise<NestedArray<TypedArray> | number>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: false, opts?: GetOptions<StoreGetOptions>): Promise<NestedArray<TypedArray> | number>;
   // asRaw = true
-  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: true, opts?: GetOptions): Promise<RawArray | number>;
-  public async getBasicSelection(selection: ArraySelection, asRaw?: true, opts?: GetOptions): Promise<RawArray | number>;
+  public async getBasicSelection(selection: Slice | ":" | "..." | null | (Slice | null | ":" | "...")[], asRaw?: true, opts?: GetOptions<StoreGetOptions>): Promise<RawArray | number>;
+  public async getBasicSelection(selection: ArraySelection, asRaw?: true, opts?: GetOptions<StoreGetOptions>): Promise<RawArray | number>;
 
-  public async getBasicSelection(selection: ArraySelection, asRaw = false, { concurrencyLimit = 10, progressCallback }: GetOptions = {}): Promise<NestedArray<TypedArray> | RawArray | number> {
+  public async getBasicSelection(selection: ArraySelection, asRaw = false, { concurrencyLimit = 10, progressCallback, storeOptions }: GetOptions<StoreGetOptions> = {}): Promise<NestedArray<TypedArray> | RawArray | number> {
     // Refresh metadata
     if (!this.cacheMetadata) {
       await this.reloadMetadata();
@@ -292,16 +293,16 @@ export class ZarrArray {
     if (this.shape.length === 0) {
       throw new Error("Shape [] indexing is not supported yet");
     } else {
-      return this.getBasicSelectionND(selection, asRaw, concurrencyLimit, progressCallback);
+      return this.getBasicSelectionND(selection, asRaw, concurrencyLimit, progressCallback, storeOptions);
     }
   }
 
-  private getBasicSelectionND(selection: ArraySelection, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void): Promise<number | NestedArray<TypedArray> | RawArray> {
+  private getBasicSelectionND(selection: ArraySelection, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void, storeOptions?: StoreGetOptions): Promise<number | NestedArray<TypedArray> | RawArray> {
     const indexer = new BasicIndexer(selection, this);
-    return this.getSelection(indexer, asRaw, concurrencyLimit, progressCallback);
+    return this.getSelection(indexer, asRaw, concurrencyLimit, progressCallback, storeOptions);
   }
 
-  private async getSelection(indexer: BasicIndexer, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void): Promise<number | NestedArray<TypedArray> | RawArray> {
+  private async getSelection(indexer: BasicIndexer, asRaw: boolean, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void, storeOptions?: StoreGetOptions): Promise<number | NestedArray<TypedArray> | RawArray> {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be extracted. Each chunk is processed in turn, extracting the
     // necessary data and storing into the correct location in the output array.
@@ -346,7 +347,7 @@ export class ZarrArray {
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         (async () => {
-          await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
+          await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes, storeOptions));
           progress += 1;
           progressCallback({ progress: progress, queueSize: queueSize });
         })();
@@ -354,7 +355,7 @@ export class ZarrArray {
 
     } else {
       for (const proj of indexer.iter()) {
-        queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes));
+        queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes, storeOptions));
       }
     }
 
@@ -377,14 +378,14 @@ export class ZarrArray {
    * @param outSelection Location of region within output array to store results in.
    * @param dropAxes Axes to squeeze out of the chunk.
    */
-  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T> | RawArray, outSelection: DimensionSelection[], dropAxes: null | number[]) {
+  private async chunkGetItem<T extends TypedArray>(chunkCoords: number[], chunkSelection: DimensionSelection[], out: NestedArray<T> | RawArray, outSelection: DimensionSelection[], dropAxes: null | number[], storeOptions?: StoreGetOptions) {
     if (chunkCoords.length !== this._chunkDataShape.length) {
       throw new ValueError(`Inconsistent shapes: chunkCoordsLength: ${chunkCoords.length}, cDataShapeLength: ${this.chunkDataShape.length}`);
     }
 
     const cKey = this.chunkKey(chunkCoords);
     try {
-      const cdata = await this.chunkStore.getItem(cKey);
+      const cdata = await this.chunkStore.getItem(cKey, storeOptions);
       const decodedChunk = await this.decodeChunk(cdata);
 
       if (out instanceof NestedArray) {
@@ -431,7 +432,7 @@ export class ZarrArray {
     }
   }
 
-  public async getRawChunk<O>(chunkCoords: number[], opts?: GetRawChunkOptions<O>): Promise<RawArray> {
+  public async getRawChunk(chunkCoords: number[], opts?: GetRawChunkOptions<StoreGetOptions>): Promise<RawArray> {
     if (chunkCoords.length !== this.shape.length) {
       throw new Error(`Chunk coordinates ${chunkCoords.join(".")} do not correspond to shape ${this.shape}.`);
     }

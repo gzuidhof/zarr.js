@@ -13,11 +13,11 @@ import { TypedArray } from './nestedArray/types';
 import { ZarrArray } from './core';
 
 
-export class Group implements AsyncMutableMapping<Group | ZarrArray> {
+export class Group<StoreGetOptions = any> implements AsyncMutableMapping<Group<StoreGetOptions> | ZarrArray<StoreGetOptions>> {
     /**
      * A `Store` providing the underlying storage for the group.
      */
-    public store: Store;
+    public store: Store<StoreGetOptions>;
 
     /**
      * Storage path.
@@ -52,11 +52,11 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     public attrs: Attributes<UserAttributes>;
 
 
-    private _chunkStore: Store | null;
+    private _chunkStore: Store<StoreGetOptions> | null;
     /**
      * A `Store` providing the underlying storage for array chunks.
      */
-    public get chunkStore(): Store {
+    public get chunkStore(): Store<StoreGetOptions> {
         if (this._chunkStore) {
             return this._chunkStore;
         }
@@ -67,12 +67,12 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
     public readOnly: boolean;
     private meta: ZarrGroupMetadata;
 
-    public static async create(store: Store, path: string | null = null, readOnly = false, chunkStore: Store | null = null, cacheAttrs = true) {
+    public static async create<StoreGetOptions>(store: Store<StoreGetOptions>, path: string | null = null, readOnly = false, chunkStore: Store<StoreGetOptions> | null = null, cacheAttrs = true) {
         const metadata = await this.loadMetadataForConstructor(store, path);
         return new Group(store, path, metadata as ZarrGroupMetadata, readOnly, chunkStore, cacheAttrs);
     }
 
-    private static async loadMetadataForConstructor(store: Store, path: null | string) {
+    private static async loadMetadataForConstructor<StoreGetOptions>(store: Store<StoreGetOptions>, path: null | string) {
         path = normalizeStoragePath(path);
         const keyPrefix = pathToPrefix(path);
         try {
@@ -86,7 +86,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         }
     }
 
-    private constructor(store: Store, path: string | null = null, metadata: ZarrGroupMetadata, readOnly = false, chunkStore: Store | null = null, cacheAttrs = true) {
+    private constructor(store: Store<StoreGetOptions>, path: string | null = null, metadata: ZarrGroupMetadata, readOnly = false, chunkStore: Store<StoreGetOptions> | null = null, cacheAttrs = true) {
         this.store = store;
         this._chunkStore = chunkStore;
         this.path = normalizeStoragePath(path);
@@ -202,7 +202,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         }
         opts = this.getOptsForArrayCreation(name, opts);
 
-        let z: Promise<ZarrArray>;
+        let z: Promise<ZarrArray<StoreGetOptions>>;
         if (data === undefined) {
             if (shape === undefined) {
                 throw new ValueError("Shape must be set if no data is passed to CreateDataset");
@@ -242,7 +242,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
         return await containsArray(this.store, path) || containsGroup(this.store, path);
     }
 
-    proxy(): AsyncMutableMappingProxy<Group> {
+    proxy(): AsyncMutableMappingProxy<Group<StoreGetOptions>> {
         return createProxy(this);
     }
 }
@@ -256,7 +256,7 @@ export class Group implements AsyncMutableMapping<Group | ZarrArray> {
  * @param cacheAttrs If `true` (default), user attributes will be cached for attribute read operations.
  *   If `false`, user attributes are reloaded from the store prior to all attribute read operations.
  */
-export async function group(store?: Store | string, path: string | null = null, chunkStore?: Store, overwrite = false, cacheAttrs = true) {
+export async function group<StoreGetOptions>(store?: Store<StoreGetOptions> | string, path: string | null = null, chunkStore?: Store<StoreGetOptions>, overwrite = false, cacheAttrs = true) {
     store = normalizeStoreArgument(store);
     path = normalizeStoragePath(path);
 
@@ -277,7 +277,7 @@ export async function group(store?: Store | string, path: string | null = null, 
  *   If False, user attributes are reloaded from the store prior to all attribute read operations.
  *
  */
-export async function openGroup(store?: Store | string, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: Store, cacheAttrs = true) {
+export async function openGroup<StoreGetOptions>(store?: Store<StoreGetOptions> | string, path: string | null = null, mode: PersistenceMode = "a", chunkStore?: Store<StoreGetOptions>, cacheAttrs = true) {
     store = normalizeStoreArgument(store);
     if (chunkStore !== undefined) {
         chunkStore = normalizeStoreArgument(store);
