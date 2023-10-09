@@ -1,5 +1,10 @@
 # Changelog
 
+## Release 0.6.2
+**Date:** 2023-10-09
+
+* Added store get options pass through to `ZarrArray.get` and `ZarrArray.getRaw`.
+
 ## Release 0.6.1
 **Date:** 2023-02-01
 
