@@ -3,7 +3,7 @@ import { MutableMapping, AsyncMutableMapping } from "../mutableMapping";
 export type ValidStoreType = Buffer | string | ArrayBuffer;
 
 
-export type Store = SyncStore<ValidStoreType> | AsyncStore<ValidStoreType>;
+export type Store<StoreGetOptions = any> = SyncStore<ValidStoreType, StoreGetOptions> | AsyncStore<ValidStoreType, StoreGetOptions>;
 
 /**
  * This module contains storage classes for use with Zarr arrays and groups.
