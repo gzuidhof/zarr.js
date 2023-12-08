@@ -348,16 +348,16 @@ export class ZarrArray<StoreGetOptions = any> {
       for (const _ of indexer.iter()) queueSize += 1;
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
-        allTasks.push((async () => {
-          await queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes, storeOptions));
+        allTasks.push(queue.add(async () => {
+          await this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes, storeOptions);
           progress += 1;
           progressCallback({ progress: progress, queueSize: queueSize });
-        })());
+        }));
       }
 
     } else {
       for (const proj of indexer.iter()) {
-        allTasks.push(queue.add(async () => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes, storeOptions)));
+        allTasks.push(queue.add(() => this.chunkGetItem(proj.chunkCoords, proj.chunkSelection, out, proj.outSelection, indexer.dropAxes, storeOptions)));
       }
     }
 
@@ -607,11 +607,11 @@ export class ZarrArray<StoreGetOptions = any> {
       progressCallback({ progress: 0, queueSize: queueSize });
       for (const proj of indexer.iter()) {
         const chunkValue = this.getChunkValue(proj, indexer, value, selectionShape);
-        allTasks.push((async () => {
-          await queue.add(() => this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue));
+        allTasks.push(queue.add(async () => {
+          await this.chunkSetItem(proj.chunkCoords, proj.chunkSelection, chunkValue);
           progress += 1;
           progressCallback({ progress: progress, queueSize: queueSize });
-        })());
+        }));
       }
 
     } else {
