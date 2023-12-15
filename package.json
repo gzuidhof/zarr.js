@@ -10,32 +10,34 @@
     "async"
   ],
   "files": [
-    "lib/*",
-    "types/*",
-    "core.mjs",
-    "core.mjs.map",
-    "zarr.mjs",
-    "zarr.mjs.map",
-    "zarr.cjs",
-    "zarr.cjs.map",
-    "zarr.umd.js",
-    "zarr.umd.js.map"
+    "./dist/*"
   ],
   "sideEffects": [
-    "./zarr.mjs"
+    "./dist/zarr.mjs"
   ],
-  "main": "zarr.cjs",
-  "module": "zarr.mjs",
-  "umd:main": "zarr.umd.js",
-  "typings": "types/zarr.d.ts",
+  "main": "./dist/zarr.cjs",
+  "module": "./dist/zarr.mjs",
+  "umd:main": "./dist/zarr.umd.js",
+  "typings": "./dist/types/zarr.d.ts",
   "exports": {
     ".": {
-      "umd": "./zarr.umd.js",
-      "import": "./zarr.mjs",
-      "require": "./zarr.cjs"
+      "umd": "./dist/zarr.umd.js",
+      "import": "./dist/zarr.mjs",
+      "require": "./dist/zarr.cjs",
+      "types": "./dist/types/zarr.d.ts"
     },
     "./core": {
-      "import": "./core.mjs"
+      "import": "./dist/core.mjs",
+      "types": "./dist/types/core/index.d.ts"
+    },
+    "./types": {
+      "types": "./dist/types/types.d.ts"
+    },
+    "./core/types": {
+      "types": "./dist/types/core/types.d.ts"
+    },
+    "./storage/types": {
+      "types": "./dist/types/storage/types.d.ts"
     }
   },
   "author": "Guido Zuidhof <me@guido.io>",
@@ -61,7 +63,6 @@
     "test:prod": "npm run lint && npm run test -- --no-cache && npm run test:browser --no-cache",
     "generate-typedocs": "typedoc --out docs/typedocs --theme minimal --readme none src",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
-    "prepublishOnly": "npm run build && cp -r ./dist/* .",
     "postpublish": "git clean -fd"
   },
   "devDependencies": {
