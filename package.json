@@ -10,8 +10,7 @@
     "async"
   ],
   "files": [
-    "./dist/*",
-    "./dist/types/**"
+    "./dist/**"
   ],
   "sideEffects": [
     "./dist/zarr.mjs"
