@@ -10,7 +10,7 @@
     "async"
   ],
   "files": [
-    "./dist/*"
+    "./dist/**"
   ],
   "sideEffects": [
     "./dist/zarr.mjs"
@@ -63,7 +63,7 @@
     "test:prod": "npm run lint && npm run test -- --no-cache && npm run test:browser --no-cache",
     "generate-typedocs": "typedoc --out docs/typedocs --theme minimal --readme none src",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
-    "postpublish": "git clean -fd"
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.6",
