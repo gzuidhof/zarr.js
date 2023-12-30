@@ -10,7 +10,8 @@
     "async"
   ],
   "files": [
-    "./dist/*"
+    "./dist/*",
+    "./dist/types/**"
   ],
   "sideEffects": [
     "./dist/zarr.mjs"
@@ -62,8 +63,7 @@
     "test:watch": "jest --coverage --watch",
     "test:prod": "npm run lint && npm run test -- --no-cache && npm run test:browser --no-cache",
     "generate-typedocs": "typedoc --out docs/typedocs --theme minimal --readme none src",
-    "report-coverage": "cat ./coverage/lcov.info | coveralls",
-    "postpublish": "git clean -fd"
+    "report-coverage": "cat ./coverage/lcov.info | coveralls"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.15.6",
