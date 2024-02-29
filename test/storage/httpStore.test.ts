@@ -1,9 +1,10 @@
 (global as any).fetch = require('node-fetch');
 
+import { HTTPError } from "../../src/errors";
 import { HTTPStore } from "../../src/storage/httpStore";
 import { openArray } from "../../src/creation";
 
-describe("Test MemoryStore", () => {
+describe("Test HTTPStore", () => {
 
     const simpleFixtureStoreLE = new HTTPStore("http://localhost:3000/simple_LE.zarr");
     it("Can open simple fixture", async () => {
@@ -59,5 +60,10 @@ describe("Test MemoryStore", () => {
     it("Can open by path", async () => {
         const z = await openArray({ store: baseUrlStore, path: "simple_LE.zarr" });
         expect(z.shape).toEqual([8, 8]);
+    });
+
+    const forbiddenStore = new HTTPStore("http://localhost:3000/forbidden");
+    it("Propagates HTTP server error", async () => {
+        await expect(openArray({ store: forbiddenStore })).rejects.toThrowError(HTTPError);
     });
 });
