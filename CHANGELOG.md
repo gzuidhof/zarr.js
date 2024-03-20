@@ -1,5 +1,10 @@
 # Changelog
 
+## Release 0.6.3
+**Date:** 2024-03-20
+
+* Fix error passthrough in queued tasks.
+
 ## Release 0.6.2
 **Date:** 2023-10-09
 
