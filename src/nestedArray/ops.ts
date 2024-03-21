@@ -22,7 +22,7 @@ export function getNestedArrayConstructor<T extends TypedArray>(arr: any): Typed
  * @param shape The shape of the NestedArray
  * @param selection
  */
-export function sliceNestedArray(arr: NestedArrayData, shape: number[], selection: number | ArraySelection): [NestedArrayData | number, number[]] {
+export function sliceNestedArray(arr: NestedArrayData, shape: number[], selection: number | ArraySelection): [NestedArrayData | bigint | number, number[]] {
     // This translates "...", ":", null into a list of slices or integer selections
     const normalizedSelection = normalizeArraySelection(selection, shape);
     const [sliceIndices, outShape] = selectionToSliceIndices(normalizedSelection, shape);
@@ -30,9 +30,8 @@ export function sliceNestedArray(arr: NestedArrayData, shape: number[], selectio
     return [outArray, outShape];
 }
 
-function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: number[], selection: (SliceIndices | number)[]): NestedArrayData | number {
+function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: number[], selection: (SliceIndices | number)[]): NestedArrayData | number | bigint {
     const currentSlice = selection[0];
-
     // Is this necessary?
     // // This is possible when a slice list is passed shorter than the amount of dimensions
     // // tslint:disable-next-line: strict-type-predicates
@@ -75,7 +74,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: nu
 
     // This is necessary to ensure that the return value is a NestedArray if the last dimension is squeezed
     // e.g. shape [2,1] with slice [:, 0] would otherwise result in a list of numbers instead of a valid NestedArray
-    if (outputSize > 0 && typeof newArr[0] === "number") {
+    if (outputSize > 0 && (typeof newArr[0] === "number" || typeof newArr[0] === "bigint")) {
         const typedArrayConstructor = (arr[0] as TypedArray).constructor;
         newArr = (typedArrayConstructor as any).from(newArr);
     }
@@ -86,7 +85,7 @@ function _sliceNestedArray<T extends TypedArray>(arr: NestedArrayData, shape: nu
 
 
 
-export function setNestedArrayToScalar(dstArr: NestedArrayData, value: number, destShape: number[], selection: number | ArraySelection) {
+export function setNestedArrayToScalar(dstArr: NestedArrayData, value: number | bigint, destShape: number[], selection: number | ArraySelection) {
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedSelection = normalizeArraySelection(selection, destShape, true);
 
@@ -104,7 +103,6 @@ export function setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayDa
     if (JSON.stringify(outShape) !== JSON.stringify(sourceShape)) {
         throw new ValueError(`Shape mismatch in target and source NestedArray: ${outShape} and ${sourceShape}`);
     }
-
     _setNestedArray(dstArr, sourceArr, destShape, sliceIndices);
 }
 
@@ -112,8 +110,7 @@ export function setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayDa
 function _setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayData | number, shape: number[], selection: (SliceIndices | number)[]) {
 
     const currentSlice = selection[0];
-
-    if (typeof sourceArr === "number") {
+    if (typeof sourceArr === "number" || typeof sourceArr === "bigint") {
         _setNestedArrayToScalar(dstArr, sourceArr, shape, selection.map(x => typeof x === "number" ? [x, x + 1, 1, 1] : x));
         return;
     }
@@ -128,7 +125,9 @@ function _setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayData | n
 
     if (shape.length === 1) {
         if (step === 1) {
-            (dstArr as TypedArray).set(sourceArr as TypedArray, from);
+            type underlyingNumeric = typeof sourceArr[number];
+            const values: any[] = (sourceArr as ArrayLike<underlyingNumeric>[]);
+            (dstArr as TypedArray).set(values, from);
         } else {
             for (let i = 0; i < outputSize; i++) {
                 dstArr[from + i * step] = (sourceArr)[i];
@@ -136,20 +135,19 @@ function _setNestedArray(dstArr: NestedArrayData, sourceArr: NestedArrayData | n
         }
         return;
     }
-
     for (let i = 0; i < outputSize; i++) {
         _setNestedArray((dstArr as NDNestedArrayData)[from + i * step], (sourceArr as NDNestedArrayData)[i], shape.slice(1), selection.slice(1));
     }
 }
 
-function _setNestedArrayToScalar(dstArr: NestedArrayData, value: number, shape: number[], selection: SliceIndices[]) {
+function _setNestedArrayToScalar(dstArr: NestedArrayData, value: number | bigint, shape: number[], selection: SliceIndices[]) {
     const currentSlice = selection[0];
 
     const [from, to, step, outputSize] = currentSlice;
 
     if (shape.length === 1) {
         if (step === 1) {
-            (dstArr as TypedArray).fill(value, from, to);
+            (dstArr as TypedArray).fill(value as never, from, to);
         } else {
             for (let i = 0; i < outputSize; i++) {
                 dstArr[from + i * step] = value;
@@ -176,16 +174,20 @@ export function flattenNestedArray(arr: NestedArrayData, shape: number[], constr
 }
 
 function _flattenNestedArray(arr: NestedArrayData, shape: number[], outArr: TypedArray, offset: number) {
+    type underlyingNumeric = typeof outArr[number];
+
     if (shape.length === 1) {
         // This is only ever reached if called with rank 1 shape, never reached through recursion.
         // We just slice set the array directly from one level above to save some function calls.
-        outArr.set((arr as TypedArray), offset);
+        const values: any = (arr as ArrayLike<underlyingNumeric>);
+        outArr.set(values, offset);
         return;
     }
 
     if (shape.length === 2) {
         for (let i = 0; i < shape[0]; i++) {
-            outArr.set((arr as TypedArray[])[i], offset + shape[1] * i);
+            const values: any[] = (arr as ArrayLike<underlyingNumeric>[]);
+            outArr.set(values[i], offset + shape[1] * i);
         }
         return arr;
     }

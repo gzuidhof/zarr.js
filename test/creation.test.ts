@@ -99,4 +99,29 @@ describe("Read only arrays", () => {
         expect(y.readOnly).toBeTruthy();
         await expect(y.set(null, 0)).rejects.toBeInstanceOf(PermissionError);
     });
+
+
+    it("respects read only (i8)", async () => {
+        const z = await create({ shape: 100, chunks: 20, readOnly: true, dtype: "<i8" });
+        expect(z.readOnly).toBeTruthy();
+
+        await expect(z.set(null, 42n)).rejects.toBeInstanceOf(PermissionError);
+
+        z.readOnly = false;
+        await expect(z.set(null, 42n)).resolves.toBeUndefined();
+        expect((await z.get(null) as NestedArray<BigInt64Array>).flatten()).toEqual(new BigInt64Array(100).fill(42n));
+
+        z.readOnly = true;
+        await expect(z.set(null, 0)).rejects.toBeInstanceOf(PermissionError);
+
+        // This is subtly different, but here we want to create an array with data, and then
+        // have it be read only
+        const data = rangeTypedArray([100], BigInt64Array);
+        const nData = new NestedArray(data);
+        const y = await array(nData, { readOnly: true, chunks: 15 });
+
+        expect((await y.get(null) as NestedArray<BigInt64Array>).flatten()).toEqual(data);
+        expect(y.readOnly).toBeTruthy();
+        await expect(y.set(null, 0)).rejects.toBeInstanceOf(PermissionError);
+    });
 });
