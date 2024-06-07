@@ -76,6 +76,9 @@ export class HTTPStore<UrlRoot extends string | URL=string> implements AsyncStor
         // Just check headers if HEAD method supported
         const method = this.supportedMethods.has(HTTPMethod.HEAD) ? HTTPMethod.HEAD : HTTPMethod.GET;
         const value = await fetch(url, { ...this.fetchOptions, method });
+        if (value.status !== 200 && value.status !== 404) {
+            throw new HTTPError(String(value.status));
+        }
         return value.status === 200;
     }
 }
