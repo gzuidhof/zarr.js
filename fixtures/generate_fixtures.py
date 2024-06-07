@@ -7,13 +7,14 @@ from zarr.util import json_dumps, json_loads
 FIXTURES_FOLDER = "./"
 
 
-def create_simple_array(store, dtype, compression=None, order="C", ndim=2, write_chunks=False):
+def create_simple_array(store, dtype, compression=None, order="C", ndim=2, write_chunks=False, dimension_separator=None):
     arr = zarr.open(
         store=store,
         shape=(8, 8) if ndim == 2 else (8, 8, 8),
         chunks=(2, None) if ndim == 2 else (2, None, None),
         dtype=dtype,
         fill_value=0,
+        dimension_separator=dimension_separator,
         mode="w",
         compression=compression,
         order=order,
@@ -80,19 +81,18 @@ def generate_fixtures():
     )
 
     # nested
-    # TODO: Use latest zarr-python once https://github.com/zarr-developers/zarr-python/pull/716 is merged
     store = zarr.storage.FSStore(
         os.path.join(FIXTURES_FOLDER, "simple_nested.zarr"),
         key_separator="/",
         auto_mkdir=True,
     )
     create_simple_array(
-        store=store, dtype=">i4", compression="blosc", write_chunks=True
+        store=store,
+        dtype=">i4",
+        compression="blosc",
+        write_chunks=True,
+        dimension_separator="/",
     )
-    # Manually add dimension separator to array meta
-    meta = json_loads(store[".zarray"])
-    meta["dimension_separator"] = "/"
-    store[".zarray"] = json_dumps(meta)
 
     # Float 16
     path = os.path.join(FIXTURES_FOLDER, "simple_float16_LE.zarr")
