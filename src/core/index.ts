@@ -327,7 +327,6 @@ export class ZarrArray<StoreGetOptions = any> {
         return out;
       }
     }
-
     const out = asRaw
       ? new RawArray(null, outShape, outDtype)
       : new NestedArray(null, outShape, outDtype);
@@ -386,6 +385,7 @@ export class ZarrArray<StoreGetOptions = any> {
     }
 
     const cKey = this.chunkKey(chunkCoords);
+
     try {
       const cdata = await this.chunkStore.getItem(cKey, storeOptions);
       const decodedChunk = await this.decodeChunk(cdata);
@@ -398,7 +398,7 @@ export class ZarrArray<StoreGetOptions = any> {
           // into the destination array
 
           // TODO check order
-          // TODO filters..
+          // TODO filters...
           out.set(outSelection, this.toNestedArray<T>(decodedChunk));
           return;
         }
@@ -410,7 +410,6 @@ export class ZarrArray<StoreGetOptions = any> {
         if (dropAxes !== null) {
           throw new Error("Drop axes is not supported yet");
         }
-
         out.set(outSelection, tmp as NestedArray<T>);
 
       } else {
@@ -517,7 +516,7 @@ export class ZarrArray<StoreGetOptions = any> {
       if (isKeyError(error)) {
         // fill with scalar if item doesn't exist
         const data = new (getTypedArrayCtr(this.dtype))(outSize);
-        return new RawArray(data.fill(this.fillValue as number), outShape);
+        return new RawArray(data.fill(this.fillValue as never), outShape);
       } else {
         // Different type of error - rethrow
         throw error;
@@ -550,11 +549,11 @@ export class ZarrArray<StoreGetOptions = any> {
     await this.setSelection(indexer, value, concurrencyLimit, progressCallback);
   }
 
-  private getChunkValue(proj: ChunkProjection, indexer: Indexer, value: number | NestedArray<TypedArray>, selectionShape: number[]): number | NestedArray<TypedArray> {
-    let chunkValue: number | NestedArray<TypedArray>;
+  private getChunkValue(proj: ChunkProjection, indexer: Indexer, value: bigint | number | NestedArray<TypedArray>, selectionShape: number[]): bigint | number | NestedArray<TypedArray> {
+    let chunkValue: bigint | number | NestedArray<TypedArray>;
     if (selectionShape.length === 0) {
       chunkValue = value;
-    } else if (typeof value === "number") {
+    } else if (typeof value === "number" || typeof value === "bigint") {
       chunkValue = value;
     } else {
       chunkValue = value.get(proj.outSelection);
@@ -566,7 +565,7 @@ export class ZarrArray<StoreGetOptions = any> {
     return chunkValue;
   }
 
-  private async setSelection(indexer: Indexer, value: number | NestedArray<TypedArray>, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
+  private async setSelection(indexer: Indexer, value: bigint | number | NestedArray<TypedArray>, concurrencyLimit: number, progressCallback?: (progressUpdate: { progress: number; queueSize: number }) => void) {
     // We iterate over all chunks which overlap the selection and thus contain data
     // that needs to be replaced. Each chunk is processed in turn, extracting the
     // necessary data from the value array and storing into the chunk array.
@@ -582,7 +581,7 @@ export class ZarrArray<StoreGetOptions = any> {
     // Check value shape
     if (selectionShape.length === 0) {
       // Setting a single value
-    } else if (typeof value === "number") {
+    } else if (typeof value === "number" || typeof value === "bigint") {
       // Setting a scalar value
     } else if (value instanceof NestedArray) {
       // TODO: non stringify equality check
@@ -627,7 +626,7 @@ export class ZarrArray<StoreGetOptions = any> {
     await Promise.all(allTasks);
   }
 
-  private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: number | NestedArray<TypedArray>) {
+  private async chunkSetItem(chunkCoords: number[], chunkSelection: DimensionSelection[], value: bigint | number | NestedArray<TypedArray>) {
     if (this.meta.order === "F" && this.nDims > 1) {
       throw new Error("Setting content for arrays in F-order is not supported.");
     }
@@ -646,10 +645,10 @@ export class ZarrArray<StoreGetOptions = any> {
       // Optimization: we are completely replacing the chunk, so no need
       // to access the existing chunk data
 
-      if (typeof value === "number") {
+      if (typeof value === "number" || typeof value === "bigint") {
         // TODO get the right type here
         chunk = new dtypeConstr(chunkSize);
-        chunk.fill(value);
+        chunk.fill(value as never);
       } else {
         chunk = value.flatten();
       }
@@ -670,7 +669,7 @@ export class ZarrArray<StoreGetOptions = any> {
           // Chunk is not initialized
           chunkData = new dtypeConstr(chunkSize);
           if (this.fillValue !== null) {
-            chunkData.fill(this.fillValue);
+            chunkData.fill(this.fillValue as never);
           }
         } else {
           // Different type of error - rethrow

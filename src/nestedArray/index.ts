@@ -77,14 +77,18 @@ export class NestedArray<T extends TypedArray> {
         }
     }
 
-    public set(selection: ArraySelection = null, value: NestedArray<T> | number) {
+    public set(selection: ArraySelection = null, value: NestedArray<T> | number | bigint) {
         if (selection === null) {
             selection = [slice(null)];
         }
-        if (typeof value === "number") {
+        if (typeof value === "number" || typeof value === "bigint") {
             if (this.shape.length === 0) {
-                // Zero dimension array..
-                this.data[0] = value;
+                // Zero dimension array...
+                if (typeof this.data[0] === "number") {
+                    this.data[0] = value as number;
+                } else {
+                    this.data[0] = BigInt(value);
+                }
             } else {
                 setNestedArrayToScalar(this.data, value, this.shape, selection);
             }
@@ -118,7 +122,13 @@ export class NestedArray<T extends TypedArray> {
 export function rangeTypedArray<T extends TypedArray>(shape: number[], tContructor: TypedArrayConstructor<T>) {
     const size = shape.reduce((x, y) => x * y, 1);
     const data = new tContructor(size);
-    data.set([...Array(size).keys()]); // Sets range 0,1,2,3,4,5
+    let values: any[] = [];
+    if (data[Symbol.toStringTag] === 'BigUint64Array' || data[Symbol.toStringTag] === 'BigInt64Array') {
+        values = [...Array(size).keys()].map(BigInt);
+    } else {
+        values = [...Array(size).keys()];
+    }
+    data.set(values);
     return data;
 }
 

@@ -119,6 +119,41 @@ describe("GetBasicSelection1DSimple", () => {
         // Uses fill value
         expect(await z.getBasicSelection(6)).toEqual(0);
     });
+
+    const storeBigInt = new MemoryStore<ArrayBuffer>();
+
+    const i8 = new BigInt64Array(5);
+    i8.set([0n, 1n, 2n, 3n, 4n]);
+
+    const setupBigInt = async (arrName: string) => {
+        await initArray(storeBigInt, 8, 5, '<i8', arrName);
+        storeBigInt.setItem(arrName + "/.zarray", Buffer.from(JSON.stringify({
+            "chunks": [
+                5
+            ],
+            "compressor": null,
+            "dtype": "<i8",
+            "fill_value": 0,
+            "filters": null,
+            "order": "C",
+            "shape": [
+                8
+            ],
+            "zarr_format": 2
+        })));
+        storeBigInt.setItem(arrName + "/0", i8.buffer);
+    };
+
+    it("can select slices and single values, uses fill value", async () => {
+        await setupBigInt("array_name_1");
+        const z = await ZarrArray.create(storeBigInt, "array_name_1");
+        expect((await z.getBasicSelection([slice(1, 3)]) as NestedArray<BigInt64Array>).data).toEqual(BigInt64Array.from([1n, 2n]));
+        expect(await z.getBasicSelection(0)).toEqual(0n);
+        expect(await z.getBasicSelection(3)).toEqual(3n);
+
+        // Uses fill value
+        expect(await z.getBasicSelection(6)).toEqual(0n);
+    });
 });
 
 
@@ -182,12 +217,28 @@ describe("GetBasicSelections1D", () => {
         await z.set(null, nestedArr);
         await testGetBasicSelectionRaw(z, selection, nestedArr);
     });
+
+    const dataBigInt = rangeTypedArray([1050], BigInt64Array);
+    const nestedArrBigInt = new NestedArray(dataBigInt, [1050], "<i8");
+
+    test.each(basicSelections1D)(`%p`, async (selection) => {
+        const z = await create({ shape: nestedArrBigInt.shape, chunks: [100], dtype: nestedArrBigInt.dtype });
+        await z.set(null, nestedArrBigInt);
+        await testGetBasicSelection(z, selection, nestedArrBigInt);
+    });
+
+    test.each(basicSelections1D)(`%p`, async (selection) => {
+        const z = await create({ shape: nestedArr.shape, chunks: [100], dtype: nestedArr.dtype });
+        await z.set(null, nestedArr);
+        await testGetBasicSelectionRaw(z, selection, nestedArr);
+    });
 });
 
 describe("GetBasicSelections2D", () => {
     const basicSelections2D: any[] = [
         42,
         -1,
+        // Throws wometines an error
         [42, slice(null)],
         [-1, slice(null)],
         // single value
@@ -223,7 +274,8 @@ describe("GetBasicSelections2D", () => {
         ["...", slice(null), slice(null)],
         [null],
         [null, null],
-        [null, 0],
+        // Throws sometimes an error
+        [null, 0]
     ];
 
     const data = rangeTypedArray([1000, 10], Int32Array);
@@ -240,12 +292,27 @@ describe("GetBasicSelections2D", () => {
         await z.set(null, nestedArr);
         await testGetBasicSelectionRaw(z, selection, nestedArr);
     });
+
+    const dataBigInt = rangeTypedArray([1000, 10], BigInt64Array);
+    const nestedArrBigInt = new NestedArray(dataBigInt, [1000, 10], "<i8");
+
+    test.each(basicSelections2D)(`%p`, async (selection) => {
+        const z = await create({ shape: nestedArrBigInt.shape, chunks: [400, 3], dtype: nestedArrBigInt.dtype });
+        await z.set(null, nestedArrBigInt);
+        await testGetBasicSelection(z, selection, nestedArrBigInt);
+    });
+
+    test.each(basicSelections2D)(`%p`, async (selection) => {
+        const z = await create({ shape: nestedArrBigInt.shape, chunks: [400, 3], dtype: nestedArrBigInt.dtype });
+        await z.set(null, nestedArrBigInt);
+        await testGetBasicSelectionRaw(z, selection, nestedArrBigInt);
+    });
 });
 
 async function testGetBasicSelection(z: ZarrArray, selection: any, data: NestedArray<TypedArray>) {
     const selectedFromZarrArray = await z.getBasicSelection(selection);
     const selectedFromSource = data.get(selection);
-    if (typeof selectedFromZarrArray === "number") {
+    if (typeof selectedFromZarrArray === "number" || typeof selectedFromZarrArray === "bigint") {
         expect(selectedFromZarrArray).toEqual(selectedFromSource);
     }
     else {
@@ -257,7 +324,7 @@ async function testGetBasicSelection(z: ZarrArray, selection: any, data: NestedA
 async function testGetBasicSelectionRaw(z: ZarrArray, selection: any, data: NestedArray<TypedArray>) {
     const selectedFromZarrArray = await z.getBasicSelection(selection, true); // asRaw === true
     const selectedFromSource = data.get(selection);
-    if (typeof selectedFromZarrArray === "number") {
+    if (typeof selectedFromZarrArray === "number" || typeof selectedFromZarrArray === "bigint") {
         expect(selectedFromZarrArray).toEqual(selectedFromSource);
     }
     else {
@@ -278,6 +345,15 @@ describe("GetRawChunk", () => {
         const z = await create({ shape: nestedArr.shape, chunks: [100], dtype: nestedArr.dtype });
         await z.set(null, nestedArr);
         await testGetRawChunk(z, coords, nestedArr, 'x');
+    });
+
+    const dataBigInt = rangeTypedArray([1050], BigInt64Array);
+    const nestedArrBigInt = new NestedArray(dataBigInt, [1050], "<i8");
+
+    test.each(basicChunkCoords1D)(`%p`, async (coords) => {
+        const z = await create({ shape: nestedArrBigInt.shape, chunks: [100], dtype: nestedArrBigInt.dtype });
+        await z.set(null, nestedArrBigInt);
+        await testGetRawChunk(z, coords, nestedArrBigInt, 'x');
     });
 });
 
@@ -309,23 +385,41 @@ describe("getRawChunk2D", () => {
         await z.set(null, nestedArr);
         await testGetRawChunk(z, t.chunkCoords, nestedArr, t.pad);
     });
+
+    const dataBigInt = rangeTypedArray([1000, 10], BigInt64Array);
+    const nestedArrBigInt = new NestedArray(dataBigInt, [1000, 10], "<i8");
+
+    test.each(testCases)(`%p`, async (t) => {
+        const z = await create({ shape: nestedArrBigInt.shape, chunks: [400, 3], dtype: nestedArrBigInt.dtype });
+        await z.set(null, nestedArrBigInt);
+        await testGetRawChunk(z, t.chunkCoords, nestedArrBigInt, t.pad);
+    });
+
 });
 
 async function testGetRawChunk(z: ZarrArray, chunkCoords: number[], data: NestedArray<TypedArray>, padDim?: string) {
     const decodedChunk = await z.getRawChunk(chunkCoords);
-    const selection = [];
+    const selection: any[] = [];
     for (let i = 0; i < chunkCoords.length; i++) {
         const dimChunkSize = z.chunks[i];
         const coord = chunkCoords[i];
-        selection.push(slice(coord * dimChunkSize, dimChunkSize * (coord + 1)));
+        const items = slice(coord * dimChunkSize, dimChunkSize * (coord + 1));
+        selection.push(items);
     }
 
     const selectedFromSource = await data.get(selection);
     const flattened = selectedFromSource.flatten();
 
     if (padDim) {
+        let zeroPadded: any;
         // raw chunks will be zero-padded so need to pad source selection
-        const zeroPadded = new Int32Array(decodedChunk.data.length);
+        if (data.dtype === '<i8' || data.dtype === '<u8') {
+            zeroPadded = new BigInt64Array(decodedChunk.data.length);
+        } else {
+            zeroPadded = new Int32Array(decodedChunk.data.length);
+        }
+
+        // let zeroPadded: TypedArray;
         if (padDim === 'x') {
             zeroPadded.set(flattened);
         } else if (padDim === 'y') {

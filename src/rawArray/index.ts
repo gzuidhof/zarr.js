@@ -5,6 +5,7 @@ import { ValueError } from '../errors';
 import { normalizeShape, IS_NODE, getStrides, isArrayBufferLike } from '../util';
 import { TypedArray, getTypedArrayCtr, getTypedArrayDtypeString, TypedArrayConstructor } from '../nestedArray/types';
 import { setRawArrayFromChunkItem, setRawArrayToScalar, setRawArray } from './ops';
+import { type } from 'os';
 
 export class RawArray {
     dtype: DtypeString;
@@ -71,13 +72,13 @@ export class RawArray {
         }
     }
 
-    public set(selection: ArraySelection, value: RawArray | number): void;
+    public set(selection: ArraySelection, value: RawArray | number | bigint): void;
     public set(selection: ArraySelection, chunk: RawArray, chunkSelection: ArraySelection): void;
-    public set(selection: ArraySelection = null, value: RawArray | number, chunkSelection?: ArraySelection) {
+    public set(selection: ArraySelection = null, value: RawArray | number | bigint, chunkSelection?: ArraySelection) {
         if (selection === null) {
             selection = [slice(null)];
         }
-        if (typeof value === "number") {
+        if (typeof value === "number" || typeof value === "bigint") {
             if (this.shape.length === 0) {
                 // Zero dimension array..
                 this.data[0] = value;

@@ -170,6 +170,28 @@ describe('NestedArray creation', () => {
           [Uint32Array.from([8, 9, 10, 11]), Uint32Array.from([12, 13, 14, 15])]
         ]
       ]
+    },
+    {
+      name: '4d_1x2x2x4_u8',
+      shape: [1, 2, 2, 4],
+      constr: BigUint64Array,
+      expected: [
+        [
+          [BigUint64Array.from([0n, 1n, 2n, 3n]), BigUint64Array.from([4n, 5n, 6n, 7n])],
+          [BigUint64Array.from([8n, 9n, 10n, 11n]), BigUint64Array.from([12n, 13n, 14n, 15n])]
+        ]
+      ]
+    },
+    {
+      name: '4d_1x2x2x4_i8',
+      shape: [1, 2, 2, 4],
+      constr: BigInt64Array,
+      expected: [
+        [
+          [BigInt64Array.from([0n, 1n, 2n, 3n]), BigInt64Array.from([4n, 5n, 6n, 7n])],
+          [BigInt64Array.from([8n, 9n, 10n, 11n]), BigInt64Array.from([12n, 13n, 14n, 15n])]
+        ]
+      ]
     }
   ];
 

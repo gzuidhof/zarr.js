@@ -4,7 +4,7 @@ export type UserAttributes = Record<string, any>;
 /**
  * A scalar value providing the default value to use for uninitialized portions of the array, or `null` if no fill_value is to be used.
  */
-export type FillType = number | null;
+export type FillType = number | null | bigint;
 
 export type FillTypeSerialized = number | 'NaN' | 'Infinity' | '-Infinity' | null;
 
@@ -32,6 +32,8 @@ export type DtypeString =
   | '<f2'
   | '<f4'
   | '<f8'
+  | '<u8'
+  | '<i8'
   | '>u1'
   | '>i1'
   | '>b'
@@ -42,7 +44,9 @@ export type DtypeString =
   | '>i4'
   | '>f4'
   | '>f2'
-  | '>f8';
+  | '>f8'
+  | '>u8'
+  | '>i8';
 
 /**
  * User interface for chunking.

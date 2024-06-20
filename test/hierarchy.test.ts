@@ -186,6 +186,20 @@ describe("Groups", () => {
         expect(d3.fillValue).toEqual(null);
         expect(d3.store).toStrictEqual(g.store);
         expect((await d3.get(null) as NestedArray<TypedArray>).flatten()).toEqual(data);
+
+        // Create with data
+        const dataBigInt = rangeTypedArray([3000], BigInt64Array);
+        const nDataBigInt = new NestedArray(dataBigInt);
+        const d4 = await g.createDataset('barBigInt', undefined, nDataBigInt, { chunks: 300 });
+        expect(d4).toBeInstanceOf(ZarrArray);
+        expect(d4.shape).toEqual([3000]);
+        expect(d4.chunks).toEqual([300]);
+        expect(d4.path).toEqual("barBigInt");
+        expect(d4.name).toEqual("/barBigInt");
+        expect(d4.dtype).toEqual("<i8");
+        expect(d4.fillValue).toEqual(null);
+        expect(d4.store).toStrictEqual(g.store);
+        expect((await d4.get(null) as NestedArray<TypedArray>).flatten()).toEqual(dataBigInt);
     });
     // To be implemented
     // it("can require datasets", async() => {
