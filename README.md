@@ -9,6 +9,13 @@
 Typescript implementation of [**Zarr**](https://zarr.readthedocs.io/en/stable/).
 > Zarr is a library for chunked, compressed, N-dimensional arrays.
 
+## 🌌 Recommendation: use zarrita.js instead
+Zarr.js is not actively maintained anymore.
+
+**[manzt/zarrita.js](https://github.com/manzt/zarrita.js)** is recommended for new use-cases and projects. It has wider support (Zarr v2 and v3) and is more flexible.
+
+---
+
 ## Quick start
 
 ```
@@ -19,12 +26,3 @@ See the Getting Started section in the [**Documentation**](http://guido.io/zarr.
 
 ### Type Docs
 You can generate the type documentation for this project by running `npm run generate-typedocs`.
-
-## Why a Typescript implementation for Zarr?
-For better or for worse the browser environment is slowly becoming the world's operating system. Numerical computing with a lot of data is a poor fit for browsers, but for data visualization, exploration and result-sharing the browser is unparalleled.
-
-With this library a workflow as such becomes possible:
-* You run an experiment/workflow in Python or Julia.
-* You write results to a Zarr store, perhaps one that lives in some cloud storage.
-* In a browser you create a visualization suite which allows for some interactivity.
-* You share a link to a colleague or friend.
