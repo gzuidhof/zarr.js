@@ -3,7 +3,7 @@ import { normalizeArraySelection, selectionToSliceIndices } from '../core/indexi
 import { ValueError } from '../errors';
 import { TypedArray } from '../nestedArray/types';
 
-export function setRawArrayToScalar(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, value: number) {
+export function setRawArrayToScalar(dstArr: TypedArray, dstStrides: number[], dstShape: number[], dstSelection: number | ArraySelection, value: number | bigint) {
     // This translates "...", ":", null, etc into a list of slices.
     const normalizedSelection = normalizeArraySelection(dstSelection, dstShape, true);
     const [sliceIndices] = selectionToSliceIndices(normalizedSelection, dstShape);
@@ -39,7 +39,7 @@ export function setRawArrayFromChunkItem(dstArr: TypedArray, dstStrides: number[
     _setRawArrayFromChunkItem(dstArr, dstStrides, dstSliceIndices as SliceIndices[], sourceArr, sourceStrides, sourceSliceIndicies);
 }
 
-function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[]) {
+function _setRawArrayToScalar(value: number | bigint, dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[]) {
     const [currentDstSlice, ...nextDstSliceIndices] = dstSliceIndices;
     const [currentDstStride, ...nextDstStrides] = dstStrides;
 
@@ -47,10 +47,11 @@ function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: num
 
     if (dstStrides.length === 1) {
         if (step === 1 && currentDstStride === 1) {
-            dstArr.fill(value, from, from + outputSize);
+            dstArr.fill(value as never, from, from + outputSize);
         } else {
             for (let i = 0; i < outputSize; i++) {
-                dstArr[currentDstStride * (from + (step * i))] = value;
+                type underlyingNumeric = typeof dstArr[number];
+                dstArr[currentDstStride * (from + (step * i))] = value as underlyingNumeric;
             }
         }
         return;
@@ -67,8 +68,10 @@ function _setRawArrayToScalar(value: number, dstArr: TypedArray, dstStrides: num
 }
 
 function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: (number | SliceIndices)[], sourceArr: TypedArray, sourceStrides: number[]) {
+    type underlyingNumeric = typeof sourceArr[number];
     if (dstSliceIndices.length === 0) {
-        dstArr.set(sourceArr);
+        const values: any = (sourceArr as ArrayLike<underlyingNumeric>);
+        dstArr.set(values);
         return;
     }
 
@@ -92,7 +95,8 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstSliceIndices:
 
     if (dstStrides.length === 1) {
         if (step === 1 && currentDstStride === 1 && currentSourceStride === 1) {
-            dstArr.set(sourceArr.subarray(0, outputSize), from);
+            const values: any = sourceArr.subarray(0, outputSize) as ArrayLike<underlyingNumeric>;
+            dstArr.set(values, from);
         } else {
             for (let i = 0; i < outputSize; i++) {
                 dstArr[currentDstStride * (from + (step * i))] = sourceArr[currentSourceStride * i];
@@ -114,9 +118,11 @@ function _setRawArray(dstArr: TypedArray, dstStrides: number[], dstSliceIndices:
 }
 
 function _setRawArrayFromChunkItem(dstArr: TypedArray, dstStrides: number[], dstSliceIndices: SliceIndices[], sourceArr: TypedArray, sourceStrides: number[], sourceSliceIndices: (SliceIndices | number)[]) {
+    type underlyingNumeric = typeof sourceArr[number];
     if (sourceSliceIndices.length === 0) {
         // Case when last source dimension is squeezed
-        dstArr.set(sourceArr.subarray(0, dstArr.length));
+        const values: any = sourceArr.subarray(0, dstArr.length) as ArrayLike<underlyingNumeric>;
+        dstArr.set(values);
         return;
     }
 
@@ -153,7 +159,8 @@ function _setRawArrayFromChunkItem(dstArr: TypedArray, dstStrides: number[], dst
 
     if (dstStrides.length === 1 && sourceStrides.length === 1) {
         if (step === 1 && currentDstStride === 1 && sstep === 1 && currentSourceStride === 1) {
-            dstArr.set(sourceArr.subarray(sfrom, sfrom + outputSize), from);
+            const values: any = sourceArr.subarray(sfrom, sfrom + outputSize) as ArrayLike<underlyingNumeric>;
+            dstArr.set(values, from);
         } else {
             for (let i = 0; i < outputSize; i++) {
                 dstArr[currentDstStride * (from + (step * i))] = sourceArr[currentSourceStride * (sfrom + (sstep * i))];

@@ -30,6 +30,12 @@ describe("NestedArray slicing", () => {
             name: "2d_f32",
             shape: [3, 5],
             constr: Float32Array,
+        },
+        
+        {
+            name: "2d_i8",
+            shape: [3, 5],
+            constr: BigInt64Array,
         }
     ];
 
